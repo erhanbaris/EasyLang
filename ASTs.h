@@ -1,5 +1,5 @@
-#ifndef EASYLANG_LEXER_H
-#define EASYLANG_LEXER_H
+#ifndef EASYLANG_ASTS_H
+#define EASYLANG_ASTS_H
 
 
 #include <string>
@@ -10,94 +10,74 @@
 #include <sstream>
 #include <cmath>
 
-enum class TokenType
-{
-    NONE,
-    INTEGER,
-    DOUBLE,
-    SYMBOL,
-    OPERATOR,
-    TEXT,
-    VARIABLE
-};
+#include "Lexer.h"
 
-enum class OperatorType {
-    PLUS,
-    MINUS,
-    MULTIPLICATION,
-    DIVISION,
-    EQUAL,
-    GREATOR,
-    LOWER,
-    GREATOR_EQUAL,
-    LOWER_EQUAL,
-    SINGLE_QUOTES,
-    DOUBLE_QUOTES,
-    DOLLAR
-};
-
-class Token
+class Ast
 {
 public:
-    TokenType GetType() { return Type; }
 
-protected:
-    TokenType Type;
 };
 
-class IntegerToken : Token {
+class IntegerAst : public Ast
+{
 public:
     int Value;
-    IntegerToken() : Token() { Type = TokenType::INTEGER; }
+    IntegerAst(int pValue): Value(pValue) {}
 };
 
-class DoubleToken : Token {
-public:
-    double Value;
-    DoubleToken() : Token() { Type = TokenType::DOUBLE; }
-};
-
-class OperatorToken : Token {
-public:
-    OperatorType Value;
-    OperatorToken() : Token() { Type = TokenType::OPERATOR; }
-};
-
-class SymbolToken : Token {
-public:
-    std::wstring Value;
-    SymbolToken() : Token() { Type = TokenType::SYMBOL; }
-};
-
-class TextToken : Token {
-public:
-    std::wstring Value;
-    TextToken() : Token() { Type = TokenType::TEXT; }
-};
-
-class VariableToken : Token {
-public:
-    std::wstring Value;
-    VariableToken() : Token() { Type = TokenType::VARIABLE; }
-};
-
-class Tokinizer
+class DoubleAst : public Ast
 {
 public:
-    virtual void Parse(std::wstring const & data, std::shared_ptr<std::vector<Token*>> Tokens) = 0;
+    double Value;
+    DoubleAst(double pValue): Value(pValue) {}
 };
 
-class StandartTokinizerImpl;
-class StandartTokinizer : public Tokinizer {
+class TextAst : public Ast
+{
 public:
-    StandartTokinizer();
-    void Parse(std::wstring const &data, std::shared_ptr <std::vector<Token *>> Tokens) override;
-    bool HasError();
-    std::wstring ErrorMessage();
+    std::wstring Value;
+    TextAst(std::wstring && pValue): Value(pValue) {}
+    TextAst(std::wstring & pValue): Value(pValue) {}
+};
+
+class AssignmentAst : Ast {
+public:
+    std::wstring Name;
+    Ast* Data;
+};
+
+class VariableAst : Ast {
+public:
+    std::wstring Name;
+};
+
+class BinaryAst : Ast
+{
+public:
+    Ast* Left;
+    Ast* Right;
+    char Op;
+    BinaryAst(char pOp, Ast* pLeft, Ast* pRight): Op(pOp), Left(pLeft), Right(pRight) {}
+};
+
+class IfStatementAst : Ast
+{
+public:
+    Ast* BinartOpt;
+    Ast* True;
+    Ast* False;
+    IfStatementAst(Ast* pBinartOpt, Ast* pTrue, Ast* pFalse): BinartOpt(pBinartOpt), True(pTrue), False(pFalse) {}
+    IfStatementAst(Ast* pBinartOpt, Ast* pTrue): BinartOpt(pBinartOpt), True(pTrue){ False = nullptr; }
+};
+
+class AstParserImpl;
+class AstParser
+{
+public:
+    AstParser();
+    void Parse(std::shared_ptr<std::vector<Token*>> Tokens);
 
 private:
-    StandartTokinizerImpl *impl;
+    AstParserImpl* impl;
 };
-
-
-#endif //EASYLANG_LEXER_H
+#endif //EASYLANG_ASTS_H
