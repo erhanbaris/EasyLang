@@ -11,51 +11,7 @@
 #include <cmath>
 #include <unordered_map>
 #include <unordered_set>
-
-
-enum class EASY_TOKEN_TYPE
-{
-    TOKEN_NONE,
-    INTEGER,
-    DOUBLE,
-    SYMBOL,
-    OPERATOR,
-    TEXT,
-    VARIABLE,
-	KEYWORD
-};
-
-enum class EASY_OPERATOR_TYPE {
-    OPERATOR_NONE,
-    PLUS,
-    MINUS,
-    MULTIPLICATION,
-    DIVISION,
-    EQUAL,
-	NOT_EQUAL,
-    GREATOR,
-    LOWER,
-    GREATOR_EQUAL,
-    LOWER_EQUAL,
-    SINGLE_QUOTES,
-    DOUBLE_QUOTES,
-    LEFT_PARENTHESES,
-    RIGHT_PARENTHESES,
-	OR,
-	AND
-};
-
-enum class EASY_KEYWORD_TYPE {
-	KEYWORD_NONE,
-	IF,
-	ASSIGNMENT,
-	ELSE,
-	THEN,
-	ASSIGNMENT_SUFFIX,
-	PRINT,
-	OR,
-	AND
-};
+#include "Enums.h"
 
 static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE> Operators {
         { L"topla", EASY_OPERATOR_TYPE::PLUS },

@@ -375,7 +375,7 @@ void StandartTokinizer::Dump(std::shared_ptr <std::vector<Token *>> Tokens)
 			break;
 
 		case EASY_TOKEN_TYPE::OPERATOR:
-			std::wcout << L"OPERATOR : " << (int)(reinterpret_cast<OperatorToken*>(*it)->Value) << std::endl;
+			std::wcout << L"OPERATOR : " << GetStringEASY_OPERATOR_TYPE(reinterpret_cast<OperatorToken*>(*it)->Value) << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::SYMBOL:
@@ -391,7 +391,7 @@ void StandartTokinizer::Dump(std::shared_ptr <std::vector<Token *>> Tokens)
 			break;
 
 		case EASY_TOKEN_TYPE::KEYWORD:
-			std::wcout << L"KEYWORD : " << (int)reinterpret_cast<KeywordToken*>(*it)->Value << std::endl;
+			std::wcout << L"KEYWORD : " << GetStringEASY_KEYWORD_TYPE(reinterpret_cast<KeywordToken*>(*it)->Value) << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::TOKEN_NONE:

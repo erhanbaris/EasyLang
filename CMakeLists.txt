@@ -3,4 +3,4 @@ project(EasyLang)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(EasyLang main.cpp Lexer.cpp ASTs.cpp ASTs.h Tests/LexerTests.h)
+add_executable(EasyLang main.cpp Lexer.cpp ASTs.cpp ASTs.h Tests/LexerTests.h EnumToString.cpp EnumToString.h Enums.h)
