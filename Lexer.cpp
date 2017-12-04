@@ -75,9 +75,25 @@ public:
             ++index;
         }
 
-        auto *token = new SymbolToken;
-        token->Value = stream.str();
-        TokenList->push_back(reinterpret_cast<Token*>(token));
+		auto data = stream.str();
+		if (Operators.find(data) != OperatorsEnd)
+		{
+			auto *token = new OperatorToken;
+			token->Value = Operators.find(data)->second;
+			TokenList->push_back(reinterpret_cast<Token*>(token));
+		}
+		else if (Keywords.find(data) != KeywordsEnd)
+		{
+			auto *token = new KeywordToken;
+			token->Value = Keywords.find(data)->second;
+			TokenList->push_back(reinterpret_cast<Token*>(token));
+		}
+		else
+		{
+			auto *token = new SymbolToken;
+			token->Value = stream.str();
+			TokenList->push_back(reinterpret_cast<Token*>(token));
+		}
     }
 
     void getVariable()
@@ -175,63 +191,63 @@ public:
             switch (ch)
             {
                 case '-':
-                    opt->Value = OperatorType::MINUS;
+                    opt->Value = EASY_OPERATOR_TYPE::MINUS;
                     break;
 
                 case '+':
-                    opt->Value = OperatorType::PLUS;
+                    opt->Value = EASY_OPERATOR_TYPE::PLUS;
                     break;
 
                 case '*':
-                    opt->Value = OperatorType::MULTIPLICATION;
+                    opt->Value = EASY_OPERATOR_TYPE::MULTIPLICATION;
                     break;
 
                 case '/':
-                    opt->Value = OperatorType::DIVISION;
+                    opt->Value = EASY_OPERATOR_TYPE::DIVISION;
                     break;
 
                 case '=':
-                    opt->Value = OperatorType::EQUAL;
+                    opt->Value = EASY_OPERATOR_TYPE::EQUAL;
                     break;
 
                 case '>':
                     if (chNext == '=')
                     {
-                        opt->Value = OperatorType::GREATOR_EQUAL;
+                        opt->Value = EASY_OPERATOR_TYPE::GREATOR_EQUAL;
                         ++index;
                     }
                     else
-                        opt->Value = OperatorType::GREATOR;
+                        opt->Value = EASY_OPERATOR_TYPE::GREATOR;
                     break;
 
                 case '<':
                     if (chNext == '=')
                     {
-                        opt->Value = OperatorType::LOWER_EQUAL;
+                        opt->Value = EASY_OPERATOR_TYPE::LOWER_EQUAL;
                         ++index;
                     }
                     else
-                        opt->Value = OperatorType::LOWER;
+                        opt->Value = EASY_OPERATOR_TYPE::LOWER;
                     break;
 
                 case '\'':
-                    opt->Value = OperatorType::SINGLE_QUOTES;
+                    opt->Value = EASY_OPERATOR_TYPE::SINGLE_QUOTES;
                     break;
 
                 case '"':
-                    opt->Value = OperatorType::DOUBLE_QUOTES;
+                    opt->Value = EASY_OPERATOR_TYPE::DOUBLE_QUOTES;
                     break;
 
                 case '$':
-                    opt->Value = OperatorType::DOLLAR;
+                    opt->Value = EASY_OPERATOR_TYPE::DOLLAR;
                     break;
 
                 case '(':
-                    opt->Value = OperatorType::LEFT_PARENTHESES;
+                    opt->Value = EASY_OPERATOR_TYPE::LEFT_PARENTHESES;
                     break;
 
                 case ')':
-                    opt->Value = OperatorType::RIGHT_PARENTHESES;
+                    opt->Value = EASY_OPERATOR_TYPE::RIGHT_PARENTHESES;
                     break;
 
                 default:
@@ -344,6 +360,48 @@ void StandartTokinizer::Parse(std::wstring const & data, std::shared_ptr<std::ve
     impl->TokenList->clear();
 
     impl->startParse();
+}
+
+void StandartTokinizer::Dump(std::shared_ptr <std::vector<Token *>> Tokens)
+{
+	auto TokenEnd = Tokens->cend();
+
+	for (auto it = Tokens->cbegin(); it != TokenEnd; ++it)
+	{
+		switch ((*it)->GetType())
+		{
+		case EASY_TOKEN_TYPE::DOUBLE:
+			std::wcout << L"DOUBLE : " << reinterpret_cast<DoubleToken*>(*it)->Value << std::endl;
+			break;
+
+		case EASY_TOKEN_TYPE::INTEGER:
+			std::wcout << L"INTEGER : " << reinterpret_cast<IntegerToken*>(*it)->Value << std::endl;
+			break;
+
+		case EASY_TOKEN_TYPE::OPERATOR:
+			std::wcout << L"OPERATOR : " << (int)(reinterpret_cast<OperatorToken*>(*it)->Value) << std::endl;
+			break;
+
+		case EASY_TOKEN_TYPE::SYMBOL:
+			std::wcout << L"SYMBOL : " << reinterpret_cast<SymbolToken*>(*it)->Value << std::endl;
+			break;
+
+		case EASY_TOKEN_TYPE::TEXT:
+			std::wcout << L"TEXT : " << reinterpret_cast<TextToken*>(*it)->Value << std::endl;
+			break;
+
+		case EASY_TOKEN_TYPE::VARIABLE:
+			std::wcout << L"VARIABLE : " << reinterpret_cast<VariableToken*>(*it)->Value << std::endl;
+			break;
+
+		case EASY_TOKEN_TYPE::KEYWORD:
+			std::wcout << L"KEYWORD : " << (int)reinterpret_cast<KeywordToken*>(*it)->Value << std::endl;
+			break;
+
+		case EASY_TOKEN_TYPE::TOKEN_NONE:
+			break;
+		}
+	}
 }
 
 bool StandartTokinizer::HasError()

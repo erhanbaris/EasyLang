@@ -11,19 +11,21 @@
 #include <cmath>
 #include <unordered_map>
 
-enum class TokenType
+
+enum class EASY_TOKEN_TYPE
 {
-    NONE,
+    TOKEN_NONE,
     INTEGER,
     DOUBLE,
     SYMBOL,
     OPERATOR,
     TEXT,
-    VARIABLE
+    VARIABLE,
+	KEYWORD
 };
 
-enum class OperatorType {
-    NONE,
+enum class EASY_OPERATOR_TYPE {
+    OPERATOR_NONE,
     PLUS,
     MINUS,
     MULTIPLICATION,
@@ -40,63 +42,103 @@ enum class OperatorType {
     RIGHT_PARENTHESES
 };
 
-std::unordered_map<std::wstring, OperatorType> BinaryOperators {
-        { L"topla", OperatorType::PLUS },
-        { L"küçük", OperatorType::LOWER },
-        { L"küçükeşit", OperatorType::LOWER_EQUAL },
-        { L"küçükeşit", OperatorType::GREATOR_EQUAL },
-        { L"e", OperatorType::LOWER },
+enum class EASY_KEYWORD_TYPE {
+	KEYWORD_NONE,
+	IF,
+	ASSIGNMENT,
+	ELSE,
+	THEN,
+	ASSIGNMENT_SUFFIX,
+	PRINT
 };
+
+static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE> Operators {
+        { L"topla", EASY_OPERATOR_TYPE::PLUS },
+		{ L"toplam", EASY_OPERATOR_TYPE::PLUS },
+		{ L"eşit", EASY_OPERATOR_TYPE::EQUAL },
+		{ L"ekle", EASY_OPERATOR_TYPE::PLUS },
+		{ L"çıkar", EASY_OPERATOR_TYPE::DIVISION},
+		{ L"çıkart", EASY_OPERATOR_TYPE::DIVISION },
+        { L"küçük", EASY_OPERATOR_TYPE::LOWER },
+		{ L"küçükse", EASY_OPERATOR_TYPE::LOWER },
+		{ L"küçükise", EASY_OPERATOR_TYPE::LOWER },
+		{ L"küçüktür", EASY_OPERATOR_TYPE::LOWER },
+		{ L"küçükeşit", EASY_OPERATOR_TYPE::LOWER_EQUAL },
+		{ L"büyük", EASY_OPERATOR_TYPE::GREATOR },
+		{ L"büyükse", EASY_OPERATOR_TYPE::GREATOR },
+		{ L"büyükise", EASY_OPERATOR_TYPE::GREATOR },
+		{ L"büyüktür", EASY_OPERATOR_TYPE::GREATOR },
+		{ L"küçükeşit", EASY_OPERATOR_TYPE::GREATOR_EQUAL },
+};
+static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE>::const_iterator OperatorsEnd = Operators.cend();
+
+static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE> Keywords {
+	{ L"eğer", EASY_KEYWORD_TYPE::IF },
+	{ L"atama", EASY_KEYWORD_TYPE::ASSIGNMENT },
+	{ L"değilse", EASY_KEYWORD_TYPE::ELSE },
+	{ L"sonra", EASY_KEYWORD_TYPE::THEN },
+	{ L"a", EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX },
+	{ L"e", EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX },
+	{ L"yaz", EASY_KEYWORD_TYPE::PRINT }
+};
+static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE>::const_iterator KeywordsEnd = Keywords.cend();
 
 class Token
 {
 public:
-    TokenType GetType() { return Type; }
+	EASY_TOKEN_TYPE GetType() { return Type; }
 
 protected:
-    TokenType Type;
+	EASY_TOKEN_TYPE Type;
 };
 
 class IntegerToken : Token {
 public:
     int Value;
-    IntegerToken() : Token() { Type = TokenType::INTEGER; }
+    IntegerToken() : Token() { Type = EASY_TOKEN_TYPE::INTEGER; }
 };
 
 class DoubleToken : Token {
 public:
     double Value;
-    DoubleToken() : Token() { Type = TokenType::DOUBLE; }
+    DoubleToken() : Token() { Type = EASY_TOKEN_TYPE::DOUBLE; }
 };
 
 class OperatorToken : Token {
 public:
-    OperatorType Value;
-    OperatorToken() : Token() { Type = TokenType::OPERATOR; }
+    EASY_OPERATOR_TYPE Value;
+    OperatorToken() : Token() { Type = EASY_TOKEN_TYPE::OPERATOR; }
 };
 
 class SymbolToken : Token {
 public:
     std::wstring Value;
-    SymbolToken() : Token() { Type = TokenType::SYMBOL; }
+    SymbolToken() : Token() { Type = EASY_TOKEN_TYPE::SYMBOL; }
 };
 
 class TextToken : Token {
 public:
     std::wstring Value;
-    TextToken() : Token() { Type = TokenType::TEXT; }
+    TextToken() : Token() { Type = EASY_TOKEN_TYPE::TEXT; }
 };
 
 class VariableToken : Token {
 public:
     std::wstring Value;
-    VariableToken() : Token() { Type = TokenType::VARIABLE; }
+    VariableToken() : Token() { Type = EASY_TOKEN_TYPE::VARIABLE; }
+};
+
+class KeywordToken : Token {
+public:
+	EASY_KEYWORD_TYPE Value;
+	KeywordToken() : Token() { Type = EASY_TOKEN_TYPE::KEYWORD; }
 };
 
 class Tokinizer
 {
 public:
     virtual void Parse(std::wstring const & data, std::shared_ptr<std::vector<Token*>> Tokens) = 0;
+	virtual void Dump(std::shared_ptr <std::vector<Token *>> Tokens) = 0;
 };
 
 class StandartTokinizerImpl;
@@ -104,6 +146,7 @@ class StandartTokinizer : public Tokinizer {
 public:
     StandartTokinizer();
     void Parse(std::wstring const &data, std::shared_ptr <std::vector<Token *>> Tokens) override;
+	void Dump(std::shared_ptr <std::vector<Token *>> Tokens) override;
     bool HasError();
     std::wstring ErrorMessage();
 

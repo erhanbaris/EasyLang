@@ -13,61 +13,78 @@
 
 #include "Lexer.h"
 
+enum class AstType {
+	NONE,
+	IF_STATEMENT,
+	ASSIGNMENT,
+	PRIMATIVE,
+	BINARY_OPERATION
+};
+
 class Ast
 {
 public:
+	AstType GetType() { return Type; }
 
+protected:
+	AstType Type;
 };
 
-class IntegerAst : public Ast
-{
+class AssignmentAst : public Ast {
 public:
-    int Value;
-    IntegerAst(int pValue): Value(pValue) {}
+	std::wstring Name;
+	Ast* Data{ nullptr };
+	AssignmentAst() { Type = AstType::ASSIGNMENT; }
 };
 
-class DoubleAst : public Ast
-{
+enum class PrimativeValueType {
+	PRI_NONE,
+	PRI_INTEGER,
+	PRI_DOUBLE,
+	PRI_STRING,
+	PRI_BOOL
+};
+
+union PrimativeValue {
+	int Integer;
+	double Double;
+	std::wstring String;
+	bool Bool;
+	PrimativeValue(int value) { Integer = value; }
+	PrimativeValue(double value) { Double = value; }
+	PrimativeValue(std::wstring value) { String = value; }
+	PrimativeValue(bool value) { Bool = value; }
+	~PrimativeValue() {}
+};
+
+class PrimativeAst : public Ast {
 public:
-    double Value;
-    DoubleAst(double pValue): Value(pValue) {}
+	PrimativeValue* Value;
+	PrimativeValueType ValueType;
+
+	PrimativeAst() { Type = AstType::PRIMATIVE; }
+	PrimativeAst(int value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); ValueType = PrimativeValueType::PRI_INTEGER; }
+	PrimativeAst(double value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); ValueType = PrimativeValueType::PRI_DOUBLE; }
+	PrimativeAst(std::wstring value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); ValueType = PrimativeValueType::PRI_STRING; }
+	PrimativeAst(bool value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); ValueType = PrimativeValueType::PRI_BOOL; }
 };
 
-class TextAst : public Ast
-{
-public:
-    std::wstring Value;
-    TextAst(std::wstring && pValue): Value(pValue) {}
-    TextAst(std::wstring & pValue): Value(pValue) {}
-};
-
-class AssignmentAst : Ast {
-public:
-    std::wstring Name;
-    Ast* Data{nullptr};
-};
-
-class VariableAst : Ast {
-public:
-    std::wstring Name;
-};
-
-class BinaryAst : Ast
+class BinaryAst : public Ast
 {
 public:
     Ast* Left{nullptr};
     Ast* Right{nullptr};
-    OperatorType Op;
-    BinaryAst(): Op(OperatorType::NONE), Left(nullptr), Right(nullptr) {}
+    EASY_OPERATOR_TYPE Op;
+	BinaryAst() : Op(EASY_OPERATOR_TYPE::OPERATOR_NONE), Left(nullptr), Right(nullptr) { Type = AstType::BINARY_OPERATION; }
 };
 
-class IfStatementAst : Ast
+class IfStatementAst : public Ast
 {
 public:
     Ast* BinartOpt{nullptr};
     Ast* True{nullptr};
     Ast* False{nullptr};
-    IfStatementAst() = default;;
+	IfStatementAst() { Type = AstType::IF_STATEMENT; }
 
 };
 
@@ -76,7 +93,7 @@ class AstParser
 {
 public:
     AstParser();
-    void Parse(std::shared_ptr<std::vector<Token*>> Tokens);
+    void Parse(std::shared_ptr<std::vector<Token*>> tokens, std::shared_ptr<std::vector<Ast*>> asts);
 
 private:
     AstParserImpl* impl{nullptr};
