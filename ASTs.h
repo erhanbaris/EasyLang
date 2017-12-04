@@ -113,6 +113,7 @@ public:
     AstParser();
 	void AddMethod(std::wstring const & method, MethodCallback callback);
     void Parse(std::shared_ptr<std::vector<Token*>> tokens, std::shared_ptr<std::vector<Ast*>> asts);
+	void Dump(std::shared_ptr<std::vector<Ast*>> asts);
 
 private:
     AstParserImpl* impl{nullptr};

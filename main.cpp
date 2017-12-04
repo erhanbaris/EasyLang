@@ -35,6 +35,7 @@ int main( int argc, char* argv[] ) {
     astParser->AddMethod(L"yaz", &ekranaYaz);
 
     astParser->Parse(tokens, asts);
+    astParser->Dump(asts);
 
     getchar();
 

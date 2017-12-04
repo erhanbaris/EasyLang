@@ -211,6 +211,98 @@ public:
             ++index;
         }
     }
+
+	void dump(std::shared_ptr<std::vector<Ast*>> asts)
+	{
+		auto astsEnd = asts->end();
+		for (auto it = asts->begin(); it != astsEnd; ++it) {
+			dumpLevel(*it, 0);
+		}
+	}
+
+	void levelPadding(int level)
+	{
+		for (int i = 0; i < level; ++i)
+			std::cout << "  ";
+	}
+
+	void dumpLevel(Ast* ast, int level)
+	{
+		if (ast == nullptr)
+			return;
+
+		levelPadding(level);
+		switch(ast->GetType())
+		{
+			case AstType::IF_STATEMENT:
+			{
+				auto* ifStatement = reinterpret_cast<IfStatementAst*>(ast);
+
+				dumpLevel(ifStatement->BinaryOpt, level+1);
+				dumpLevel(ifStatement->True, level+1);
+				dumpLevel(ifStatement->False, level+1);
+			}
+				break;
+
+			case AstType::ASSIGNMENT: {
+				auto *assignment = reinterpret_cast<AssignmentAst *>(ast);
+				levelPadding(level);
+				std::wcout << assignment->Name << std::endl;
+				dumpLevel(assignment->Data, level+1);
+			}
+				break;
+
+			case AstType::VARIABLE: {
+				auto *variable = reinterpret_cast<VariableAst *>(ast);
+				levelPadding(level);
+				std::wcout << variable->Value << std::endl;
+			}
+				break;
+
+			case AstType::PRIMATIVE: {
+				auto *primative = reinterpret_cast<PrimativeAst *>(ast);
+				levelPadding(level);
+				switch (primative->ValueType) {
+					case PrimativeValueType::PRI_INTEGER:
+						std::wcout << primative->Value->Integer << std::endl;
+						break;
+
+					case PrimativeValueType::PRI_DOUBLE:
+						std::wcout << primative->Value->Double << std::endl;
+						break;
+
+					case PrimativeValueType::PRI_STRING:
+						std::wcout << primative->Value->String << std::endl;
+						break;
+
+					case PrimativeValueType::PRI_BOOL:
+						std::wcout << primative->Value->Bool << std::endl;
+						break;
+				}
+			}
+				break;
+
+			case AstType::BINARY_OPERATION: {
+				auto *binary = reinterpret_cast<BinaryAst *>(ast);
+				dumpLevel(binary->Left, level+1);
+				levelPadding(level);
+				std::wcout << EASY_OPERATOR_TYPEToString(binary->Op) << std::endl;
+				dumpLevel(binary->Right, level+1);
+			}
+				break;
+
+			case AstType::FUNCTION_CALL:
+			{
+				auto* functionCall = reinterpret_cast<FunctionCallAst*>(ast);
+				levelPadding(level);
+				std::wcout << functionCall->Function << std::endl;
+				auto astsEnd = functionCall->Args.end();
+				for (auto it = functionCall->Args.begin(); it != astsEnd; ++it)
+					dumpLevel(*it, level+1);
+			}
+				break;
+		}
+	}
 };
 
 AstParser::AstParser()
@@ -230,4 +322,9 @@ void AstParser::Parse(std::shared_ptr<std::vector<Token*>> tokens, std::shared_p
 	impl->tokens = tokens;
 	impl->asts = asts;
 	impl->parse();
+}
+
+void AstParser::Dump(std::shared_ptr<std::vector<Ast*>> asts)
+{
+	impl->dump(asts);
 }
