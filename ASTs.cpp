@@ -5,6 +5,8 @@ class AstParserImpl
 public:
     std::shared_ptr<std::vector<Token*>> tokens;
 	std::shared_ptr<std::vector<Ast*>> asts;
+	std::unordered_map<std::wstring, MethodCallback> systemMethods;
+    //std::unordered_map<std::wstring, MethodCallback>::iterator systemMethodsEnd;
 
     size_t tokensCount;
     size_t index;
@@ -39,10 +41,16 @@ public:
         if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::ASSIGNMENT)
             return AstType::ASSIGNMENT;
 
-        if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::IF)
-            return AstType::IF_STATEMENT;
+		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::IF)
+			return AstType::IF_STATEMENT;
 
-        return AstType ::NONE;
+		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && systemMethods.find(reinterpret_cast<SymbolToken*>(token)->Value) != systemMethods.end())
+			return AstType::FUNCTION_CALL;
+
+		if (isPrimative(token))
+			return AstType::PRIMATIVE;
+
+		return AstType ::NONE;
     }
 
 	inline bool isPrimative()
@@ -57,12 +65,12 @@ public:
 			token->GetType() == EASY_TOKEN_TYPE::DOUBLE);
 	}
 
-	inline Ast* getPrimative()
+	inline Ast* parsePrimative()
 	{
-		return getPrimative(getToken());
+		return parsePrimative(getToken());
 	}
 
-	Ast* getPrimative(Token* token)
+	Ast* parsePrimative(Token* token)
 	{
 		PrimativeAst* ast = nullptr;
 
@@ -106,7 +114,7 @@ public:
         token = getToken();
         tokenNext = getNextToken();
 
-		ast->Data = getPrimative(token);
+		ast->Data = parsePrimative(token);
               
         return reinterpret_cast<Ast*>(ast);
     }
@@ -114,9 +122,34 @@ public:
     Ast* parseIfStatement()
     {
         auto* ast = new IfStatementAst;
-        ast->BinartOpt = parseBinaryOperationStatement();
+        ast->BinaryOpt = parseBinaryOperationStatement();
+		index += 2;
+
+        auto* token = getToken();
+		ast->True = parseAst();
+		++index;
+
+		token = getToken();
+
+		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::ELSE)
+		{
+			++index;
+			ast->False = parseAst();
+		}
+
         return reinterpret_cast<Ast*>(ast);
     }
+
+	Ast* parseFunctionCall()
+	{
+		auto* ast = new FunctionCallAst;
+		auto* token = getToken();
+		ast->Function = reinterpret_cast<SymbolToken*>(token)->Value;
+		++index;
+		ast->Args.push_back(parseAst());
+
+		return reinterpret_cast<Ast*>(ast);
+	}
 
     Ast* parseBinaryOperationStatement()
     {
@@ -125,7 +158,7 @@ public:
 		auto* token = getToken();
 
 		if (isPrimative(token))
-			ast->Left = getPrimative(token);
+			ast->Left = parsePrimative(token);
 		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
 			ast->Left = new VariableAst(reinterpret_cast<SymbolToken*>(token)->Value);
 
@@ -141,11 +174,30 @@ public:
 		++index;
 		token = getToken();
 		if (isPrimative(token))
-			ast->Right = getPrimative(token);
+			ast->Right = parsePrimative(token);
 		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
 			ast->Right = new VariableAst(reinterpret_cast<SymbolToken*>(token)->Value);
 
         return reinterpret_cast<Ast*>(ast);
+    }
+
+    Ast* parseAst()
+    {
+        auto* token = getToken();
+        auto* tokenNext = getNextToken();
+
+        Ast* ast = nullptr;
+
+        if (detectType() == AstType::ASSIGNMENT)
+            ast = parseAssignment();
+        else if (detectType() == AstType::IF_STATEMENT)
+            ast = parseIfStatement();
+		else if (detectType() == AstType::FUNCTION_CALL)
+			ast = parseFunctionCall();
+		else if (detectType() == AstType::PRIMATIVE)
+			ast = parsePrimative();
+
+        return ast;
     }
 
     void parse()
@@ -155,14 +207,7 @@ public:
 
         while(index < tokensCount)
         {
-            auto* token = getToken();
-            auto* tokenNext = getNextToken();
-
-            if (detectType() == AstType::ASSIGNMENT)
-                asts->push_back(parseAssignment());
-            else if (detectType() == AstType::IF_STATEMENT)
-				asts->push_back(parseIfStatement());
-
+            asts->push_back(parseAst());
             ++index;
         }
     }
@@ -171,6 +216,11 @@ public:
 AstParser::AstParser()
 {
     impl = new AstParserImpl;
+}
+void AstParser::AddMethod(std::wstring const & method, MethodCallback callback)
+{
+	impl->systemMethods[method] = callback;
+    //impl->systemMethodsEnd = impl->systemMethods.end();
 }
 
 void AstParser::Parse(std::shared_ptr<std::vector<Token*>> tokens, std::shared_ptr<std::vector<Ast*>> asts)

@@ -16,6 +16,10 @@
 
 using namespace std;
 
+void ekranaYaz(std::wstring const & message)
+{
+    std::wcout << message << std::endl;
+}
 
 int main( int argc, char* argv[] ) {
     // Unit tests
@@ -24,12 +28,17 @@ int main( int argc, char* argv[] ) {
 	auto* tokinizer = new StandartTokinizer();
 	auto tokens = make_shared<std::vector<Token*>>();
     auto asts = make_shared<std::vector<Ast*>>();
-	tokinizer->Parse(L"atama erhan'a 15 eğer erhan büyükise 13 sonra yaz \"büyük\" degilse yaz \"küçük\"", tokens);
+	tokinizer->Parse(L"atama erhan'a 15 eğer erhan büyükise 13 sonra yaz \"büyük\" değilse yaz \"küçük\"", tokens);
 	tokinizer->Dump(tokens);
 
     auto* astParser = new AstParser;
+    astParser->AddMethod(L"yaz", &ekranaYaz);
+
     astParser->Parse(tokens, asts);
 
     getchar();
+
+    delete tokinizer;
+    delete astParser;
     return 0;
 }

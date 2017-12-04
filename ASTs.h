@@ -2,7 +2,6 @@
 #define EASYLANG_ASTS_H
 
 
-#include <string>
 #include <vector>
 #include <memory>
 #include <cstdio>
@@ -13,13 +12,16 @@
 
 #include "Lexer.h"
 
+typedef void (*MethodCallback)(std::wstring const & message);
+
 enum class AstType {
 	NONE,
 	IF_STATEMENT,
 	ASSIGNMENT,
 	VARIABLE,
 	PRIMATIVE,
-	BINARY_OPERATION
+	BINARY_OPERATION,
+	FUNCTION_CALL
 };
 
 class Ast
@@ -90,11 +92,18 @@ public:
 class IfStatementAst : public Ast
 {
 public:
-    Ast* BinartOpt{nullptr};
+    Ast* BinaryOpt{nullptr};
     Ast* True{nullptr};
     Ast* False{nullptr};
-	IfStatementAst() { Type = AstType::IF_STATEMENT; }
+    IfStatementAst() { Type = AstType::IF_STATEMENT; }
+};
 
+class FunctionCallAst : public Ast
+{
+public:
+    std::wstring Function;
+    std::vector<Ast*> Args;
+    FunctionCallAst() { Type = AstType::FUNCTION_CALL; }
 };
 
 class AstParserImpl;
@@ -102,6 +111,7 @@ class AstParser
 {
 public:
     AstParser();
+	void AddMethod(std::wstring const & method, MethodCallback callback);
     void Parse(std::shared_ptr<std::vector<Token*>> tokens, std::shared_ptr<std::vector<Ast*>> asts);
 
 private:

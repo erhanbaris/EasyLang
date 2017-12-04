@@ -11,7 +11,53 @@
 #include <cmath>
 #include <unordered_map>
 #include <unordered_set>
-#include "Enums.h"
+
+#include "Macros.h"
+
+DECLARE_ENUM(EASY_TOKEN_TYPE, TOKEN_NONE,
+			 INTEGER,
+			 DOUBLE,
+			 SYMBOL,
+			 OPERATOR,
+			 TEXT,
+			 VARIABLE,
+			 KEYWORD)
+
+DECLARE_ENUM(EASY_OPERATOR_TYPE,
+	OPERATOR_NONE,
+	PLUS,
+	MINUS,
+	MULTIPLICATION,
+	DIVISION,
+	EQUAL,
+	NOT_EQUAL,
+	GREATOR,
+	LOWER,
+	GREATOR_EQUAL,
+	LOWER_EQUAL,
+	SINGLE_QUOTES,
+	DOUBLE_QUOTES,
+	LEFT_PARENTHESES,
+	RIGHT_PARENTHESES)
+
+DECLARE_ENUM(EASY_KEYWORD_TYPE,
+	KEYWORD_NONE,
+	IF,
+	ASSIGNMENT,
+	ELSE,
+	THEN,
+	ASSIGNMENT_SUFFIX,
+	OR,
+	AND)
+
+struct EnumClassHash
+{
+	template <typename T>
+	std::size_t operator()(T t) const
+	{
+		return static_cast<std::size_t>(t);
+	}
+};
 
 static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE> Operators {
         { L"topla", EASY_OPERATOR_TYPE::PLUS },
@@ -36,7 +82,7 @@ static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE> Operators {
 };
 static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE>::const_iterator OperatorsEnd = Operators.cend();
 
-static std::unordered_set<EASY_OPERATOR_TYPE> BinaryOperators {
+static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash> BinaryOperators {
 	EASY_OPERATOR_TYPE::GREATOR,
 	EASY_OPERATOR_TYPE::GREATOR_EQUAL,
 	EASY_OPERATOR_TYPE::LOWER,
@@ -44,7 +90,7 @@ static std::unordered_set<EASY_OPERATOR_TYPE> BinaryOperators {
 	EASY_OPERATOR_TYPE::NOT_EQUAL,
 	EASY_OPERATOR_TYPE::EQUAL
 };
-static std::unordered_set<EASY_OPERATOR_TYPE>::const_iterator BinaryOperatorsEnd = BinaryOperators.cend();
+static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash>::const_iterator BinaryOperatorsEnd = BinaryOperators.cend();
 
 static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE> Keywords {
 	{ L"eğer", EASY_KEYWORD_TYPE::IF },
@@ -53,7 +99,6 @@ static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE> Keywords {
 	{ L"sonra", EASY_KEYWORD_TYPE::THEN },
 	{ L"a", EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX },
 	{ L"e", EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX },
-	{ L"yaz", EASY_KEYWORD_TYPE::PRINT },
 	{ L"ve", EASY_KEYWORD_TYPE::AND},
 	{ L"veya", EASY_KEYWORD_TYPE::OR}
 };
