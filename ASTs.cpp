@@ -1,8 +1,16 @@
 #include "ASTs.h"
 
+enum class AstType {
+    NONE,
+    IF_STATEMENT,
+    ASSIGNMENT,
+    BINARY_OPERATION
+};
+
 class AstParserImpl
 {
 public:
+    std::unordered_map<std::wstring, TokenType> reservedWords { {L"atama", TokenType:: }, L"eğer", L"büyükise"};
     std::shared_ptr<std::vector<Token*>> tokens;
     size_t tokensCount;
     size_t index;
@@ -29,6 +37,74 @@ public:
         return getSeekToken(1);
     }
 
+    AstType detectType()
+    {
+        auto* token = getToken();
+        auto* tokenNext = getNextToken();
+
+        if (token->GetType() == TokenType::SYMBOL && reinterpret_cast<SymbolToken*>(token)->Value == L"atama")
+            return AstType::ASSIGNMENT;
+
+        if (token->GetType() == TokenType::SYMBOL && reinterpret_cast<SymbolToken*>(token)->Value == L"eğer")
+            return AstType::IF_STATEMENT;
+
+        return AstType ::NONE;
+    }
+
+    // atama erhan'a 15
+    Ast* parseAssignment()
+    {
+        ++index;
+        auto* token = getToken();
+        auto* tokenNext = getNextToken();
+
+        auto* ast = new AssignmentAst;
+        ast->Name = reinterpret_cast<SymbolToken*>(token)->Value;
+
+        if (tokenNext->GetType() == TokenType::OPERATOR)
+        {
+            if (reinterpret_cast<OperatorToken*>(tokenNext)->Value == OperatorType::SINGLE_QUOTES)
+                index += 3;
+            else
+                index += 1;
+        }
+
+        token = getToken();
+        tokenNext = getNextToken();
+
+        switch(token->GetType())
+        {
+            case TokenType::INTEGER:
+                ast->Data = new IntegerAst(reinterpret_cast<IntegerToken*>(token)->Value);
+                break;
+
+            case TokenType::DOUBLE:
+                ast->Data = new DoubleAst(reinterpret_cast<DoubleToken*>(token)->Value);
+                break;
+
+            case TokenType::TEXT:
+                ast->Data = new TextAst(reinterpret_cast<TextToken*>(token)->Value);
+                break;
+        }
+
+        return reinterpret_cast<Ast*>(ast);
+    }
+
+    Ast* parseIfStatement()
+    {
+        auto* ast = new IfStatementAst;
+        ast->BinartOpt = parseBinaryOperationStatement();
+        return reinterpret_cast<Ast*>(ast);
+    }
+
+    Ast* parseBinaryOperationStatement()
+    {
+        auto* ast = new BinaryAst;
+
+
+        return reinterpret_cast<Ast*>(ast);
+    }
+
     void parse()
     {
         tokensCount = tokens->size();
@@ -40,35 +116,10 @@ public:
             auto* token = getToken();
             auto* tokenNext = getNextToken();
 
-            if (token->GetType() == TokenType::SYMBOL &&
-                    tokenNext->GetType() == TokenType::OPERATOR &&
-                    reinterpret_cast<OperatorToken*>(tokenNext)->Value == OperatorType::SINGLE_QUOTES)
-            {
-                // erhan'a 15 ata
-                auto* ast = new AssignmentAst;
-                ast->Name = reinterpret_cast<SymbolToken*>(token)->Value;
-
-                token = getSeekToken(3);
-                tokenNext = getSeekToken(4);
-
-                switch(token->GetType())
-                {
-                    case TokenType::INTEGER:
-                        ast->Data = new IntegerAst(reinterpret_cast<IntegerToken*>(token)->Value);
-                        break;
-
-                    case TokenType::DOUBLE:
-                        ast->Data = new DoubleAst(reinterpret_cast<DoubleToken*>(token)->Value);
-                        break;
-
-                    case TokenType::TEXT:
-                        ast->Data = new TextAst(reinterpret_cast<TextToken*>(token)->Value);
-                        break;
-                }
-
-                index += 4;
-                astList.push_back(reinterpret_cast<Ast*>(ast));
-            }
+            if (detectType() == AstType::ASSIGNMENT)
+                astList.push_back(parseAssignment());
+            else if (detectType() == AstType::IF_STATEMENT)
+                astList.push_back(parseIfStatement());
 
             ++index;
         }
@@ -82,6 +133,5 @@ AstParser::AstParser()
 
 void AstParser::Parse(std::shared_ptr<std::vector<Token *>> Tokens) {
     impl->tokens = Tokens;
-
     impl->parse();
 }

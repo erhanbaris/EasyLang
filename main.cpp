@@ -22,7 +22,7 @@ int main( int argc, char* argv[] ) {
     /* eğer 127 > 80 sonra yaz büyük değilse yaz küçük */
     Tokinizer* parser = new StandartTokinizer();
     auto Tokens = make_shared<std::vector<Token*>>();
-    parser->Parse(L"erhan'a 15 ata; eger erhan buyukise 13 sonra ekranayaz \"buyuk\" degilse ekranayaz \"kucuk\"", Tokens);
+    parser->Parse(L"atama erhan'a 15 eğer erhan büyükise 13 sonra ekranayaz \"büyük\" degilse ekranayaz \"küçük\"", Tokens);
 
     AstParser* astParser = new AstParser;
     astParser->Parse(Tokens);

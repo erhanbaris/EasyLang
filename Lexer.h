@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sstream>
 #include <cmath>
+#include <unordered_map>
 
 enum class TokenType
 {
@@ -22,6 +23,7 @@ enum class TokenType
 };
 
 enum class OperatorType {
+    NONE,
     PLUS,
     MINUS,
     MULTIPLICATION,
@@ -36,6 +38,14 @@ enum class OperatorType {
     DOLLAR,
     LEFT_PARENTHESES,
     RIGHT_PARENTHESES
+};
+
+std::unordered_map<std::wstring, OperatorType> BinaryOperators {
+        { L"topla", OperatorType::PLUS },
+        { L"küçük", OperatorType::LOWER },
+        { L"küçükeşit", OperatorType::LOWER_EQUAL },
+        { L"küçükeşit", OperatorType::GREATOR_EQUAL },
+        { L"e", OperatorType::LOWER },
 };
 
 class Token

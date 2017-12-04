@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sstream>
 #include <cmath>
+#include <unordered_map>
 
 #include "Lexer.h"
 
@@ -43,7 +44,7 @@ public:
 class AssignmentAst : Ast {
 public:
     std::wstring Name;
-    Ast* Data;
+    Ast* Data{nullptr};
 };
 
 class VariableAst : Ast {
@@ -54,20 +55,20 @@ public:
 class BinaryAst : Ast
 {
 public:
-    Ast* Left;
-    Ast* Right;
-    char Op;
-    BinaryAst(char pOp, Ast* pLeft, Ast* pRight): Op(pOp), Left(pLeft), Right(pRight) {}
+    Ast* Left{nullptr};
+    Ast* Right{nullptr};
+    OperatorType Op;
+    BinaryAst(): Op(OperatorType::NONE), Left(nullptr), Right(nullptr) {}
 };
 
 class IfStatementAst : Ast
 {
 public:
-    Ast* BinartOpt;
-    Ast* True;
-    Ast* False;
-    IfStatementAst(Ast* pBinartOpt, Ast* pTrue, Ast* pFalse): BinartOpt(pBinartOpt), True(pTrue), False(pFalse) {}
-    IfStatementAst(Ast* pBinartOpt, Ast* pTrue): BinartOpt(pBinartOpt), True(pTrue){ False = nullptr; }
+    Ast* BinartOpt{nullptr};
+    Ast* True{nullptr};
+    Ast* False{nullptr};
+    IfStatementAst() = default;;
+
 };
 
 class AstParserImpl;
@@ -78,6 +79,6 @@ public:
     void Parse(std::shared_ptr<std::vector<Token*>> Tokens);
 
 private:
-    AstParserImpl* impl;
+    AstParserImpl* impl{nullptr};
 };
 #endif //EASYLANG_ASTS_H
