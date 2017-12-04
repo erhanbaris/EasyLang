@@ -238,10 +238,6 @@ public:
                     opt->Value = EASY_OPERATOR_TYPE::DOUBLE_QUOTES;
                     break;
 
-                case '$':
-                    opt->Value = EASY_OPERATOR_TYPE::DOLLAR;
-                    break;
-
                 case '(':
                     opt->Value = EASY_OPERATOR_TYPE::LEFT_PARENTHESES;
                     break;

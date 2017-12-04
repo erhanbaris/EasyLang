@@ -17,6 +17,7 @@ enum class AstType {
 	NONE,
 	IF_STATEMENT,
 	ASSIGNMENT,
+	VARIABLE,
 	PRIMATIVE,
 	BINARY_OPERATION
 };
@@ -37,6 +38,13 @@ public:
 	AssignmentAst() { Type = AstType::ASSIGNMENT; }
 };
 
+class VariableAst : public Ast {
+public:
+	std::wstring Value;
+	VariableAst() { Type = AstType::VARIABLE; }
+	VariableAst(std::wstring value) { Type = AstType::VARIABLE; Value = value; }
+};
+
 enum class PrimativeValueType {
 	PRI_NONE,
 	PRI_INTEGER,
@@ -50,9 +58,10 @@ union PrimativeValue {
 	double Double;
 	std::wstring String;
 	bool Bool;
+
 	PrimativeValue(int value) { Integer = value; }
 	PrimativeValue(double value) { Double = value; }
-	PrimativeValue(std::wstring value) { String = value; }
+	PrimativeValue(std::wstring value) { new (&String) std::wstring(value); }
 	PrimativeValue(bool value) { Bool = value; }
 	~PrimativeValue() {}
 };

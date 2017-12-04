@@ -10,6 +10,7 @@
 #include <sstream>
 #include <cmath>
 #include <unordered_map>
+#include <unordered_set>
 
 
 enum class EASY_TOKEN_TYPE
@@ -31,15 +32,17 @@ enum class EASY_OPERATOR_TYPE {
     MULTIPLICATION,
     DIVISION,
     EQUAL,
+	NOT_EQUAL,
     GREATOR,
     LOWER,
     GREATOR_EQUAL,
     LOWER_EQUAL,
     SINGLE_QUOTES,
     DOUBLE_QUOTES,
-    DOLLAR,
     LEFT_PARENTHESES,
-    RIGHT_PARENTHESES
+    RIGHT_PARENTHESES,
+	OR,
+	AND
 };
 
 enum class EASY_KEYWORD_TYPE {
@@ -49,13 +52,18 @@ enum class EASY_KEYWORD_TYPE {
 	ELSE,
 	THEN,
 	ASSIGNMENT_SUFFIX,
-	PRINT
+	PRINT,
+	OR,
+	AND
 };
 
 static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE> Operators {
         { L"topla", EASY_OPERATOR_TYPE::PLUS },
 		{ L"toplam", EASY_OPERATOR_TYPE::PLUS },
 		{ L"eşit", EASY_OPERATOR_TYPE::EQUAL },
+		{ L"eşittir", EASY_OPERATOR_TYPE::EQUAL },
+		{ L"eşitdeğil", EASY_OPERATOR_TYPE::NOT_EQUAL },
+		{ L"eşitdeğildir", EASY_OPERATOR_TYPE::NOT_EQUAL },
 		{ L"ekle", EASY_OPERATOR_TYPE::PLUS },
 		{ L"çıkar", EASY_OPERATOR_TYPE::DIVISION},
 		{ L"çıkart", EASY_OPERATOR_TYPE::DIVISION },
@@ -72,6 +80,16 @@ static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE> Operators {
 };
 static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE>::const_iterator OperatorsEnd = Operators.cend();
 
+static std::unordered_set<EASY_OPERATOR_TYPE> BinaryOperators {
+	EASY_OPERATOR_TYPE::GREATOR,
+	EASY_OPERATOR_TYPE::GREATOR_EQUAL,
+	EASY_OPERATOR_TYPE::LOWER,
+	EASY_OPERATOR_TYPE::LOWER_EQUAL,
+	EASY_OPERATOR_TYPE::NOT_EQUAL,
+	EASY_OPERATOR_TYPE::EQUAL
+};
+static std::unordered_set<EASY_OPERATOR_TYPE>::const_iterator BinaryOperatorsEnd = BinaryOperators.cend();
+
 static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE> Keywords {
 	{ L"eğer", EASY_KEYWORD_TYPE::IF },
 	{ L"atama", EASY_KEYWORD_TYPE::ASSIGNMENT },
@@ -79,7 +97,9 @@ static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE> Keywords {
 	{ L"sonra", EASY_KEYWORD_TYPE::THEN },
 	{ L"a", EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX },
 	{ L"e", EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX },
-	{ L"yaz", EASY_KEYWORD_TYPE::PRINT }
+	{ L"yaz", EASY_KEYWORD_TYPE::PRINT },
+	{ L"ve", EASY_KEYWORD_TYPE::AND},
+	{ L"veya", EASY_KEYWORD_TYPE::OR}
 };
 static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE>::const_iterator KeywordsEnd = Keywords.cend();
 

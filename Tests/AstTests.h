@@ -32,6 +32,62 @@ TEST_CASE( "Assignment test" ) {
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Integer == 50);
 
 	REQUIRE(assignment->Data != nullptr);
+
+	tokinizer->Parse(L"atama erhan 50", tokens);
+	astParser->Parse(tokens, asts);
+
+	REQUIRE(asts.get()->size() == 1);
+	assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
+	REQUIRE(assignment->Name == L"erhan");
+	REQUIRE(assignment->Data != nullptr);
+	REQUIRE(assignment->Data->GetType() == AstType::PRIMATIVE);
+	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->ValueType == PrimativeValueType::PRI_INTEGER);
+	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Integer == 50);
+
+	tokinizer->Parse(L"atama erhan \"deneme\"", tokens);
+	astParser->Parse(tokens, asts);
+
+	REQUIRE(asts.get()->size() == 1);
+	assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
+	REQUIRE(assignment->Name == L"erhan");
+	REQUIRE(assignment->Data != nullptr);
+	REQUIRE(assignment->Data->GetType() == AstType::PRIMATIVE);
+	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->ValueType == PrimativeValueType::PRI_STRING);
+	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->String == L"deneme");
+
+	tokinizer->Parse(L"atama erhan'a \"deneme\"", tokens);
+	astParser->Parse(tokens, asts);
+
+	REQUIRE(asts.get()->size() == 1);
+	assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
+	REQUIRE(assignment->Name == L"erhan");
+	REQUIRE(assignment->Data != nullptr);
+	REQUIRE(assignment->Data->GetType() == AstType::PRIMATIVE);
+	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->ValueType == PrimativeValueType::PRI_STRING);
+	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->String == L"deneme");
+
+
+	tokinizer->Parse(L"atama erhan'a 0.15", tokens);
+	astParser->Parse(tokens, asts);
+
+	REQUIRE(asts.get()->size() == 1);
+	assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
+	REQUIRE(assignment->Name == L"erhan");
+	REQUIRE(assignment->Data != nullptr);
+	REQUIRE(assignment->Data->GetType() == AstType::PRIMATIVE);
+	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->ValueType == PrimativeValueType::PRI_DOUBLE);
+	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Double == 0.15);
+
+	tokinizer->Parse(L"atama erhan'a .15", tokens);
+	astParser->Parse(tokens, asts);
+
+	REQUIRE(asts.get()->size() == 1);
+	assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
+	REQUIRE(assignment->Name == L"erhan");
+	REQUIRE(assignment->Data != nullptr);
+	REQUIRE(assignment->Data->GetType() == AstType::PRIMATIVE);
+	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->ValueType == PrimativeValueType::PRI_DOUBLE);
+	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Double == 0.15);
 }
 
 #endif
