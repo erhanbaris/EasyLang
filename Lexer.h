@@ -83,14 +83,22 @@ static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE> Operators {
 static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE>::const_iterator OperatorsEnd = Operators.cend();
 
 static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash> BinaryOperators {
-	EASY_OPERATOR_TYPE::GREATOR,
-	EASY_OPERATOR_TYPE::GREATOR_EQUAL,
-	EASY_OPERATOR_TYPE::LOWER,
-	EASY_OPERATOR_TYPE::LOWER_EQUAL,
-	EASY_OPERATOR_TYPE::NOT_EQUAL,
-	EASY_OPERATOR_TYPE::EQUAL
+	EASY_OPERATOR_TYPE::MINUS,
+	EASY_OPERATOR_TYPE::PLUS,
+	EASY_OPERATOR_TYPE::DIVISION,
+	EASY_OPERATOR_TYPE::MULTIPLICATION
 };
 static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash>::const_iterator BinaryOperatorsEnd = BinaryOperators.cend();
+
+static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash> ControlOperators{
+	EASY_OPERATOR_TYPE::EQUAL,
+	EASY_OPERATOR_TYPE::NOT_EQUAL,
+	EASY_OPERATOR_TYPE::LOWER,
+	EASY_OPERATOR_TYPE::LOWER_EQUAL,
+	EASY_OPERATOR_TYPE::GREATOR,
+	EASY_OPERATOR_TYPE::GREATOR_EQUAL,
+};
+static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash>::const_iterator ControlOperatorsEnd = ControlOperators.cend();
 
 static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE> Keywords {
 	{ L"eğer", EASY_KEYWORD_TYPE::IF },

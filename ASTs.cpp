@@ -169,7 +169,7 @@ public:
 			BinaryOperators.find(reinterpret_cast<OperatorToken*>(token)->Value) != BinaryOperatorsEnd)
 			ast->Op = reinterpret_cast<OperatorToken*>(token)->Value;
 		else
-			ast->Op == EASY_OPERATOR_TYPE::OPERATOR_NONE;
+			ast->Op = EASY_OPERATOR_TYPE::OPERATOR_NONE;
 
 		++index;
 		token = getToken();
@@ -214,6 +214,8 @@ public:
 
 	void dump(std::shared_ptr<std::vector<Ast*>> asts)
 	{
+		std::wcout << std::endl << std::endl << "### AST TREE ###" << std::endl << std::endl;
+
 		auto astsEnd = asts->end();
 		for (auto it = asts->begin(); it != astsEnd; ++it) {
 			dumpLevel(*it, 0);
@@ -226,57 +228,71 @@ public:
 			std::cout << "  ";
 	}
 
-	void dumpLevel(Ast* ast, int level)
+	void dumpLevel(Ast* ast, int level, bool printPadding = true)
 	{
 		if (ast == nullptr)
+		{
+			std::cout << "[NONE]";
 			return;
+		}
 
-		levelPadding(level);
+		if (printPadding)
+			levelPadding(level);
+
 		switch(ast->GetType())
 		{
 			case AstType::IF_STATEMENT:
 			{
 				auto* ifStatement = reinterpret_cast<IfStatementAst*>(ast);
 
-				dumpLevel(ifStatement->BinaryOpt, level+1);
-				dumpLevel(ifStatement->True, level+1);
-				dumpLevel(ifStatement->False, level+1);
+				std::wcout << "#IF STATEMENT : " << std::endl;
+				std::wcout << "  Binary Operation : ";
+				dumpLevel(ifStatement->BinaryOpt, level+1, false);
+				std::wcout << "  True : " << std::endl;
+				dumpLevel(ifStatement->True, level+1, printPadding);
+				std::wcout << " False : " << std::endl;
+				dumpLevel(ifStatement->False, level+1, printPadding);
 			}
 				break;
 
 			case AstType::ASSIGNMENT: {
 				auto *assignment = reinterpret_cast<AssignmentAst *>(ast);
 				levelPadding(level);
-				std::wcout << assignment->Name << std::endl;
-				dumpLevel(assignment->Data, level+1);
+
+				std::wcout << "#ASSIGNMENT : " << assignment->Name << " ";
+				dumpLevel(assignment->Data, level+1, false);
 			}
 				break;
 
 			case AstType::VARIABLE: {
 				auto *variable = reinterpret_cast<VariableAst *>(ast);
-				levelPadding(level);
-				std::wcout << variable->Value << std::endl;
+				if (printPadding)
+					levelPadding(level);
+
+				std::wcout << "$" << variable->Value;
 			}
 				break;
 
 			case AstType::PRIMATIVE: {
 				auto *primative = reinterpret_cast<PrimativeAst *>(ast);
-				levelPadding(level);
+				if (printPadding)
+					levelPadding(level);
+
 				switch (primative->ValueType) {
 					case PrimativeValueType::PRI_INTEGER:
-						std::wcout << primative->Value->Integer << std::endl;
+						std::wcout << primative->Value->Integer << " [INTEGER]" << std::endl;
 						break;
 
 					case PrimativeValueType::PRI_DOUBLE:
-						std::wcout << primative->Value->Double << std::endl;
+						std::wcout << primative->Value->Double << " [DOUBLE]" << std::endl;
 						break;
 
 					case PrimativeValueType::PRI_STRING:
-						std::wcout << primative->Value->String << std::endl;
+						std::wcout << "'" << primative->Value->String << "'" << " [STRING]" << std::endl;
 						break;
 
 					case PrimativeValueType::PRI_BOOL:
-						std::wcout << primative->Value->Bool << std::endl;
+						std::wcout << primative->Value->Bool << " [BOOL]" << std::endl;
 						break;
 				}
 			}
@@ -284,21 +300,26 @@ public:
 
 			case AstType::BINARY_OPERATION: {
 				auto *binary = reinterpret_cast<BinaryAst *>(ast);
-				dumpLevel(binary->Left, level+1);
-				levelPadding(level);
-				std::wcout << EASY_OPERATOR_TYPEToString(binary->Op) << std::endl;
-				dumpLevel(binary->Right, level+1);
+				dumpLevel(binary->Left, level+1, false);
+
+				std::wcout << " " << EASY_OPERATOR_TYPEToString(binary->Op) << " ";
+				dumpLevel(binary->Right, level+1, false);
 			}
 				break;
 
 			case AstType::FUNCTION_CALL:
 			{
 				auto* functionCall = reinterpret_cast<FunctionCallAst*>(ast);
-				levelPadding(level);
-				std::wcout << functionCall->Function << std::endl;
+				if (printPadding)
+					levelPadding(level);
+
+				std::wcout << "#METHOD CALL : " << functionCall->Function << " ";
 				auto astsEnd = functionCall->Args.end();
 				for (auto it = functionCall->Args.begin(); it != astsEnd; ++it)
-					dumpLevel(*it, level+1);
+				{
+					dumpLevel(*it, level + 1, false);
+					std::wcout << " ";
+				}
 			}
 				break;
 		}
