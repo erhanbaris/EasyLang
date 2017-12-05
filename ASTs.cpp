@@ -114,7 +114,21 @@ public:
         token = getToken();
         tokenNext = getNextToken();
 
-		ast->Data = parsePrimative(token);
+		if (tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR)
+		{
+			auto* operatorToken = reinterpret_cast<OperatorToken*>(tokenNext);
+			if (BinaryOperators.find(operatorToken->Value) != BinaryOperatorsEnd)
+			{
+				// 1 + 1
+				--index;
+				ast->Data = parseBinaryOperationStatement();
+			}
+			else if (ControlOperators.find(operatorToken->Value) != ControlOperatorsEnd) {
+				// TODO: FIXIT 1 < 2
+			}
+		}
+		else if (isPrimative())
+			ast->Data = parsePrimative(token);
               
         return reinterpret_cast<Ast*>(ast);
     }
@@ -122,7 +136,7 @@ public:
     Ast* parseIfStatement()
     {
         auto* ast = new IfStatementAst;
-        ast->BinaryOpt = parseBinaryOperationStatement();
+        ast->ControlOpt = parseControlOperationStatement();
 		index += 2;
 
         auto* token = getToken();
@@ -181,7 +195,38 @@ public:
         return reinterpret_cast<Ast*>(ast);
     }
 
-    Ast* parseAst()
+	Ast* parseControlOperationStatement()
+	{
+		++index;
+		auto* ast = new ControlAst;
+		auto* token = getToken();
+
+		if (isPrimative(token))
+			ast->Left = parsePrimative(token);
+		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
+			ast->Left = new VariableAst(reinterpret_cast<SymbolToken*>(token)->Value);
+
+		++index;
+		token = getToken();
+
+		if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR &&
+			ControlOperators.find(reinterpret_cast<OperatorToken*>(token)->Value) != ControlOperatorsEnd)
+			ast->Op = reinterpret_cast<OperatorToken*>(token)->Value;
+		else
+			ast->Op = EASY_OPERATOR_TYPE::OPERATOR_NONE;
+
+		++index;
+		token = getToken();
+		if (isPrimative(token))
+			ast->Right = parsePrimative(token);
+		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
+			ast->Right = new VariableAst(reinterpret_cast<SymbolToken*>(token)->Value);
+
+		return reinterpret_cast<Ast*>(ast);
+	}
+
+
+	Ast* parseAst()
     {
         auto* token = getToken();
         auto* tokenNext = getNextToken();
@@ -246,8 +291,8 @@ public:
 				auto* ifStatement = reinterpret_cast<IfStatementAst*>(ast);
 
 				std::wcout << "#IF STATEMENT : " << std::endl;
-				std::wcout << "  Binary Operation : ";
-				dumpLevel(ifStatement->BinaryOpt, level+1, false);
+				std::wcout << "  Control Operation : ";
+				dumpLevel(ifStatement->ControlOpt, level+1, false);
 				std::wcout << "  True : " << std::endl;
 				dumpLevel(ifStatement->True, level+1, printPadding);
 				std::wcout << " False : " << std::endl;
@@ -300,6 +345,15 @@ public:
 
 			case AstType::BINARY_OPERATION: {
 				auto *binary = reinterpret_cast<BinaryAst *>(ast);
+				dumpLevel(binary->Left, level+1, false);
+
+				std::wcout << " " << EASY_OPERATOR_TYPEToString(binary->Op) << " ";
+				dumpLevel(binary->Right, level+1, false);
+			}
+				break;
+
+			case AstType::CONTROL_OPERATION: {
+				auto *binary = reinterpret_cast<ControlAst *>(ast);
 				dumpLevel(binary->Left, level+1, false);
 
 				std::wcout << " " << EASY_OPERATOR_TYPEToString(binary->Op) << " ";

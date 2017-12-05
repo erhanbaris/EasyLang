@@ -18,7 +18,12 @@ public:
         {
             wchar_t ch = getChar();
 
-            if (isSymbol(ch))
+            if (isWhitespace(ch))
+            {
+                ++index;
+                continue;
+            }
+            else if (isSymbol(ch))
             {
                 getSymbol();
                 continue;
@@ -36,11 +41,6 @@ public:
             else if ((ch >= '0' && ch <= '9') || ch == '.')
             {
                 getNumber();
-                continue;
-            }
-            else if (isWhitespace(ch))
-            {
-                ++index;
                 continue;
             }
             else

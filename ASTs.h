@@ -21,6 +21,7 @@ enum class AstType {
 	VARIABLE,
 	PRIMATIVE,
 	BINARY_OPERATION,
+	CONTROL_OPERATION,
 	FUNCTION_CALL
 };
 
@@ -80,6 +81,15 @@ public:
 	PrimativeAst(bool value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); ValueType = PrimativeValueType::PRI_BOOL; }
 };
 
+class ControlAst : public Ast
+{
+public:
+	Ast* Left{nullptr};
+	Ast* Right{nullptr};
+	EASY_OPERATOR_TYPE Op;
+	ControlAst() : Op(EASY_OPERATOR_TYPE::OPERATOR_NONE), Left(nullptr), Right(nullptr) { Type = AstType::CONTROL_OPERATION; }
+};
+
 class BinaryAst : public Ast
 {
 public:
@@ -92,7 +102,7 @@ public:
 class IfStatementAst : public Ast
 {
 public:
-    Ast* BinaryOpt{nullptr};
+    Ast* ControlOpt{nullptr};
     Ast* True{nullptr};
     Ast* False{nullptr};
     IfStatementAst() { Type = AstType::IF_STATEMENT; }

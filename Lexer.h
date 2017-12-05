@@ -60,24 +60,53 @@ struct EnumClassHash
 };
 
 static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE> Operators {
-        { L"topla", EASY_OPERATOR_TYPE::PLUS },
+
+		// '-'
+		{ L"çıkar", EASY_OPERATOR_TYPE::MINUS },
+		{ L"çıkart", EASY_OPERATOR_TYPE::MINUS },
+		{ L"eksi", EASY_OPERATOR_TYPE::MINUS },
+
+		// '+'
+		{ L"ekle", EASY_OPERATOR_TYPE::PLUS },
+		{ L"artı", EASY_OPERATOR_TYPE::PLUS },
+		{ L"topla", EASY_OPERATOR_TYPE::PLUS },
 		{ L"toplam", EASY_OPERATOR_TYPE::PLUS },
+
+		// '*'
+		{ L"çarp", EASY_OPERATOR_TYPE::MULTIPLICATION },
+		{ L"çarpım", EASY_OPERATOR_TYPE::MULTIPLICATION },
+		{ L"çarpma", EASY_OPERATOR_TYPE::MULTIPLICATION },
+
+		// '='
 		{ L"eşit", EASY_OPERATOR_TYPE::EQUAL },
 		{ L"eşittir", EASY_OPERATOR_TYPE::EQUAL },
+
+		// '!='
 		{ L"eşitdeğil", EASY_OPERATOR_TYPE::NOT_EQUAL },
 		{ L"eşitdeğildir", EASY_OPERATOR_TYPE::NOT_EQUAL },
-		{ L"ekle", EASY_OPERATOR_TYPE::PLUS },
-		{ L"çıkar", EASY_OPERATOR_TYPE::DIVISION},
-		{ L"çıkart", EASY_OPERATOR_TYPE::DIVISION },
+
+		// '/'
+		{ L"böl", EASY_OPERATOR_TYPE::DIVISION},
+		{ L"bölü", EASY_OPERATOR_TYPE::DIVISION },
+		{ L"bölüm", EASY_OPERATOR_TYPE::DIVISION },
+		{ L"bölme", EASY_OPERATOR_TYPE::DIVISION },
+
+		// '<'
         { L"küçük", EASY_OPERATOR_TYPE::LOWER },
 		{ L"küçükse", EASY_OPERATOR_TYPE::LOWER },
 		{ L"küçükise", EASY_OPERATOR_TYPE::LOWER },
 		{ L"küçüktür", EASY_OPERATOR_TYPE::LOWER },
+
+		// '<='
 		{ L"küçükeşit", EASY_OPERATOR_TYPE::LOWER_EQUAL },
+
+		// '>'
 		{ L"büyük", EASY_OPERATOR_TYPE::GREATOR },
 		{ L"büyükse", EASY_OPERATOR_TYPE::GREATOR },
 		{ L"büyükise", EASY_OPERATOR_TYPE::GREATOR },
 		{ L"büyüktür", EASY_OPERATOR_TYPE::GREATOR },
+
+		// '>='
 		{ L"küçükeşit", EASY_OPERATOR_TYPE::GREATOR_EQUAL },
 };
 static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE>::const_iterator OperatorsEnd = Operators.cend();
