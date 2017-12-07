@@ -50,7 +50,9 @@ DECLARE_ENUM(EASY_KEYWORD_TYPE,
 	OR,
 	AND,
 	BLOCK_START,
-	BLOCK_END)
+	BLOCK_END,
+    BOOL_TRUE,
+    BOOL_FALSE)
 
 struct EnumClassHash
 {
@@ -145,7 +147,11 @@ static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE> Keywords {
 	{ L"başla", EASY_KEYWORD_TYPE::BLOCK_START },
 	{ L"başlangıç", EASY_KEYWORD_TYPE::BLOCK_START },
 	{ L"bitir", EASY_KEYWORD_TYPE::BLOCK_END },
-	{ L"bitiş", EASY_KEYWORD_TYPE::BLOCK_END }
+	{ L"bitiş", EASY_KEYWORD_TYPE::BLOCK_END },
+    { L"evet", EASY_KEYWORD_TYPE::BOOL_TRUE },
+    { L"hayır", EASY_KEYWORD_TYPE::BOOL_FALSE },
+    { L"doğru", EASY_KEYWORD_TYPE::BOOL_TRUE },
+    { L"yanlış", EASY_KEYWORD_TYPE::BOOL_FALSE }
 };
 static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE>::const_iterator KeywordsEnd = Keywords.cend();
 

@@ -37,8 +37,6 @@ public:
     AstType detectType()
     {
         auto* token = getToken();
-        auto* tokenNext = getNextToken();
-
         if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::ASSIGNMENT)
             return AstType::ASSIGNMENT;
 
@@ -66,7 +64,9 @@ public:
 	{
 		return (token->GetType() == EASY_TOKEN_TYPE::INTEGER ||
 			token->GetType() == EASY_TOKEN_TYPE::TEXT ||
-			token->GetType() == EASY_TOKEN_TYPE::DOUBLE);
+			token->GetType() == EASY_TOKEN_TYPE::DOUBLE ||
+            (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BOOL_TRUE) ||
+            (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BOOL_FALSE));
 	}
 
 	inline Ast* parsePrimative()
@@ -91,6 +91,13 @@ public:
 		case EASY_TOKEN_TYPE::TEXT:
 			ast = new PrimativeAst(reinterpret_cast<TextToken*>(token)->Value);
 			break;
+                
+            case EASY_TOKEN_TYPE::KEYWORD:
+                if (reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BOOL_TRUE)
+                    ast = new PrimativeAst(true);
+                else if (reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BOOL_FALSE)
+                    ast = new PrimativeAst(false);
+            break;
 		}
 		
 		++index;
@@ -239,7 +246,7 @@ public:
 			ast->Op = reinterpret_cast<OperatorToken*>(token)->Value;
 		else
 			ast->Op = EASY_OPERATOR_TYPE::OPERATOR_NONE;
-
+	
 		++index;
 		token = getToken();
 		if (isPrimative(token))
@@ -253,24 +260,34 @@ public:
 
 	Ast* parseAst()
     {
-        auto* token = getToken();
-        auto* tokenNext = getNextToken();
-
         Ast* ast = nullptr;
 
 		AstType astType = detectType();
-		if (astType == AstType::ASSIGNMENT)
-			ast = parseAssignment();
-		else if (astType == AstType::IF_STATEMENT)
-			ast = parseIfStatement();
-		else if (astType == AstType::FUNCTION_CALL)
-			ast = parseFunctionCall();
-		else if (astType == AstType::PRIMATIVE)
-			ast = parsePrimative();
-		else if (astType == AstType::BLOCK)
-			ast = parseBlock();
-		else
-			++index;
+        switch (astType) {
+            case AstType::ASSIGNMENT:
+                ast = parseAssignment();
+                break;
+                
+            case AstType::IF_STATEMENT:
+                ast = parseIfStatement();
+                break;
+                
+            case AstType::FUNCTION_CALL:
+                ast = parseFunctionCall();
+                break;
+                
+            case AstType::PRIMATIVE:
+                ast = parsePrimative();
+                break;
+                
+            case AstType::BLOCK:
+                ast = parseBlock();
+                break;
+                
+            default:
+                ++index;
+                break;
+        }
 
         return ast;
     }

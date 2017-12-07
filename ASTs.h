@@ -90,7 +90,7 @@ public:
 	Ast* Left{nullptr};
 	Ast* Right{nullptr};
 	EASY_OPERATOR_TYPE Op;
-	ControlAst() : Op(EASY_OPERATOR_TYPE::OPERATOR_NONE), Left(nullptr), Right(nullptr) { Type = AstType::CONTROL_OPERATION; }
+    ControlAst() : Left(nullptr), Right(nullptr) { Type = AstType::CONTROL_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
 };
 
 class BlockAst : public Ast
@@ -106,7 +106,7 @@ public:
     Ast* Left{nullptr};
     Ast* Right{nullptr};
     EASY_OPERATOR_TYPE Op;
-	BinaryAst() : Op(EASY_OPERATOR_TYPE::OPERATOR_NONE), Left(nullptr), Right(nullptr) { Type = AstType::BINARY_OPERATION; }
+    BinaryAst() : Left(nullptr), Right(nullptr) { Type = AstType::BINARY_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
 };
 
 class IfStatementAst : public Ast

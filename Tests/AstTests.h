@@ -267,4 +267,72 @@ TEST_CASE("Function call test") {
 	}
 }
 
+
+
+TEST_CASE("Bool test") {
+    Tokinizer* tokinizer = new StandartTokinizer();
+    AstParser* astParser = new AstParser();
+
+    std::shared_ptr<std::vector<Token* > > tokens = make_shared<std::vector<Token* > >();
+    std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
+
+
+    SECTION("yaz evet") {
+        tokinizer->Parse(L"yaz evet", tokens);
+        astParser->Parse(tokens, asts);
+        REQUIRE(asts.get()->size() == 1);
+
+        auto* functionCall = reinterpret_cast<FunctionCallAst*>(asts.get()->at(0));
+
+        REQUIRE(functionCall->Function == L"yaz");
+        REQUIRE(functionCall->Args.size() == 1);
+        REQUIRE(functionCall->Args.at(0)->GetType() == AstType::PRIMATIVE);
+        REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_BOOL);
+        REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Bool == true);
+    }
+    
+    SECTION("yaz hayır") {
+        tokinizer->Parse(L"yaz hayır", tokens);
+        astParser->Parse(tokens, asts);
+        REQUIRE(asts.get()->size() == 1);
+        
+        auto* functionCall = reinterpret_cast<FunctionCallAst*>(asts.get()->at(0));
+        
+        REQUIRE(functionCall->Function == L"yaz");
+        REQUIRE(functionCall->Args.size() == 1);
+        REQUIRE(functionCall->Args.at(0)->GetType() == AstType::PRIMATIVE);
+        REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_BOOL);
+        REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Bool == false);
+    }
+    
+    
+    SECTION("yaz doğru") {
+        tokinizer->Parse(L"yaz doğru", tokens);
+        astParser->Parse(tokens, asts);
+        REQUIRE(asts.get()->size() == 1);
+        
+        auto* functionCall = reinterpret_cast<FunctionCallAst*>(asts.get()->at(0));
+        
+        REQUIRE(functionCall->Function == L"yaz");
+        REQUIRE(functionCall->Args.size() == 1);
+        REQUIRE(functionCall->Args.at(0)->GetType() == AstType::PRIMATIVE);
+        REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_BOOL);
+        REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Bool == true);
+    }
+    
+    SECTION("yaz yanlış") {
+        tokinizer->Parse(L"yaz yanlış", tokens);
+        astParser->Parse(tokens, asts);
+        REQUIRE(asts.get()->size() == 1);
+        
+        auto* functionCall = reinterpret_cast<FunctionCallAst*>(asts.get()->at(0));
+        
+        REQUIRE(functionCall->Function == L"yaz");
+        REQUIRE(functionCall->Args.size() == 1);
+        REQUIRE(functionCall->Args.at(0)->GetType() == AstType::PRIMATIVE);
+        REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_BOOL);
+        REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Bool == false);
+    }
+}
+
 #endif
