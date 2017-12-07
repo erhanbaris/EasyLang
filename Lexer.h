@@ -48,7 +48,9 @@ DECLARE_ENUM(EASY_KEYWORD_TYPE,
 	THEN,
 	ASSIGNMENT_SUFFIX,
 	OR,
-	AND)
+	AND,
+	BLOCK_START,
+	BLOCK_END)
 
 struct EnumClassHash
 {
@@ -79,6 +81,8 @@ static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE> Operators {
 
 		// '='
 		{ L"eşit", EASY_OPERATOR_TYPE::EQUAL },
+		{ L"eşitise", EASY_OPERATOR_TYPE::EQUAL },
+		{ L"eşitse", EASY_OPERATOR_TYPE::EQUAL },
 		{ L"eşittir", EASY_OPERATOR_TYPE::EQUAL },
 
 		// '!='
@@ -107,7 +111,7 @@ static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE> Operators {
 		{ L"büyüktür", EASY_OPERATOR_TYPE::GREATOR },
 
 		// '>='
-		{ L"küçükeşit", EASY_OPERATOR_TYPE::GREATOR_EQUAL },
+		{ L"küçükeşit", EASY_OPERATOR_TYPE::GREATOR_EQUAL }
 };
 static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE>::const_iterator OperatorsEnd = Operators.cend();
 
@@ -137,7 +141,11 @@ static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE> Keywords {
 	{ L"a", EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX },
 	{ L"e", EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX },
 	{ L"ve", EASY_KEYWORD_TYPE::AND},
-	{ L"veya", EASY_KEYWORD_TYPE::OR}
+	{ L"veya", EASY_KEYWORD_TYPE::OR},
+	{ L"başla", EASY_KEYWORD_TYPE::BLOCK_START },
+	{ L"başlangıç", EASY_KEYWORD_TYPE::BLOCK_START },
+	{ L"bitir", EASY_KEYWORD_TYPE::BLOCK_END },
+	{ L"bitiş", EASY_KEYWORD_TYPE::BLOCK_END }
 };
 static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE>::const_iterator KeywordsEnd = Keywords.cend();
 

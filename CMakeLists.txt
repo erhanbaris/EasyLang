@@ -3,4 +3,4 @@ project(EasyLang)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(EasyLang main.cpp Lexer.cpp ASTs.cpp ASTs.h Tests/LexerTests.h Macros.h)
+add_executable(EasyLang main.cpp Lexer.cpp ASTs.cpp ASTs.h Tests/LexerTests.h Macros.h Backend.h)

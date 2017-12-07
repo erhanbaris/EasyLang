@@ -22,7 +22,8 @@ enum class AstType {
 	PRIMATIVE,
 	BINARY_OPERATION,
 	CONTROL_OPERATION,
-	FUNCTION_CALL
+	FUNCTION_CALL,
+	BLOCK
 };
 
 class Ast
@@ -48,37 +49,39 @@ public:
 	VariableAst(std::wstring value) { Type = AstType::VARIABLE; Value = value; }
 };
 
-enum class PrimativeValueType {
-	PRI_NONE,
-	PRI_INTEGER,
-	PRI_DOUBLE,
-	PRI_STRING,
-	PRI_BOOL
-};
+struct PrimativeValue {
+	enum class Type {
+		PRI_NONE,
+		PRI_INTEGER,
+		PRI_DOUBLE,
+		PRI_STRING,
+		PRI_BOOL
+	};
 
-union PrimativeValue {
-	int Integer;
-	double Double;
-	std::wstring String;
-	bool Bool;
+	Type Type;
 
-	PrimativeValue(int value) { Integer = value; }
-	PrimativeValue(double value) { Double = value; }
-	PrimativeValue(std::wstring value) { new (&String) std::wstring(value); }
-	PrimativeValue(bool value) { Bool = value; }
-	~PrimativeValue() {}
+	union {
+		int Integer;
+		double Double;
+		std::wstring String;
+		bool Bool;
+	};
+
+	PrimativeValue(int value) { Integer = value; Type = Type::PRI_INTEGER; }
+	PrimativeValue(double value) { Double = value; Type = Type::PRI_DOUBLE;}
+	PrimativeValue(std::wstring value) { new (&String) std::wstring(value); Type = Type::PRI_STRING;}
+	PrimativeValue(bool value) { Bool = value; Type = Type::PRI_BOOL;}
 };
 
 class PrimativeAst : public Ast {
 public:
 	PrimativeValue* Value;
-	PrimativeValueType ValueType;
 
 	PrimativeAst() { Type = AstType::PRIMATIVE; }
-	PrimativeAst(int value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); ValueType = PrimativeValueType::PRI_INTEGER; }
-	PrimativeAst(double value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); ValueType = PrimativeValueType::PRI_DOUBLE; }
-	PrimativeAst(std::wstring value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); ValueType = PrimativeValueType::PRI_STRING; }
-	PrimativeAst(bool value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); ValueType = PrimativeValueType::PRI_BOOL; }
+	PrimativeAst(int value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); }
+	PrimativeAst(double value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); }
+	PrimativeAst(std::wstring value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); }
+	PrimativeAst(bool value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); }
 };
 
 class ControlAst : public Ast
@@ -88,6 +91,13 @@ public:
 	Ast* Right{nullptr};
 	EASY_OPERATOR_TYPE Op;
 	ControlAst() : Op(EASY_OPERATOR_TYPE::OPERATOR_NONE), Left(nullptr), Right(nullptr) { Type = AstType::CONTROL_OPERATION; }
+};
+
+class BlockAst : public Ast
+{
+public:
+	std::shared_ptr <std::vector<Ast*>> Blocks;
+	BlockAst() { Type = AstType::BLOCK; Blocks = std::make_shared<std::vector<Ast*>>(); }
 };
 
 class BinaryAst : public Ast

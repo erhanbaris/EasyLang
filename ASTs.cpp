@@ -6,6 +6,7 @@ public:
     std::shared_ptr<std::vector<Token*>> tokens;
 	std::shared_ptr<std::vector<Ast*>> asts;
 	std::unordered_map<std::wstring, MethodCallback> systemMethods;
+	std::unordered_map<std::wstring, MethodCallback> userMethods;
     //std::unordered_map<std::wstring, MethodCallback>::iterator systemMethodsEnd;
 
     size_t tokensCount;
@@ -43,6 +44,9 @@ public:
 
 		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::IF)
 			return AstType::IF_STATEMENT;
+
+		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BLOCK_START)
+			return AstType::BLOCK;
 
 		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && systemMethods.find(reinterpret_cast<SymbolToken*>(token)->Value) != systemMethods.end())
 			return AstType::FUNCTION_CALL;
@@ -88,7 +92,8 @@ public:
 			ast = new PrimativeAst(reinterpret_cast<TextToken*>(token)->Value);
 			break;
 		}
-
+		
+		++index;
 		return reinterpret_cast<Ast*>(ast);
 	}
 
@@ -137,15 +142,13 @@ public:
     {
         auto* ast = new IfStatementAst;
         ast->ControlOpt = parseControlOperationStatement();
-		index += 2;
+		++index;
 
         auto* token = getToken();
 		ast->True = parseAst();
-		++index;
-
 		token = getToken();
 
-		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::ELSE)
+		if (token != nullptr && token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::ELSE)
 		{
 			++index;
 			ast->False = parseAst();
@@ -174,18 +177,20 @@ public:
 		if (isPrimative(token))
 			ast->Left = parsePrimative(token);
 		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
+		{
 			ast->Left = new VariableAst(reinterpret_cast<SymbolToken*>(token)->Value);
+			++index;
+		}
 
-		++index;
 		token = getToken();
-
 		if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR &&
 			BinaryOperators.find(reinterpret_cast<OperatorToken*>(token)->Value) != BinaryOperatorsEnd)
 			ast->Op = reinterpret_cast<OperatorToken*>(token)->Value;
 		else
 			ast->Op = EASY_OPERATOR_TYPE::OPERATOR_NONE;
-
+			
 		++index;
+
 		token = getToken();
 		if (isPrimative(token))
 			ast->Right = parsePrimative(token);
@@ -194,6 +199,26 @@ public:
 
         return reinterpret_cast<Ast*>(ast);
     }
+
+	Ast* parseBlock()
+	{
+		BlockAst* block = new BlockAst();
+		
+		++index;
+		while (index < tokensCount)
+		{
+			auto* token = getToken();
+			if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BLOCK_END)
+			{
+				++index;
+				break;
+			}
+
+			block->Blocks->push_back(parseAst());
+		}
+
+		return reinterpret_cast<Ast*>(block);
+	}
 
 	Ast* parseControlOperationStatement()
 	{
@@ -233,14 +258,19 @@ public:
 
         Ast* ast = nullptr;
 
-        if (detectType() == AstType::ASSIGNMENT)
-            ast = parseAssignment();
-        else if (detectType() == AstType::IF_STATEMENT)
-            ast = parseIfStatement();
-		else if (detectType() == AstType::FUNCTION_CALL)
+		AstType astType = detectType();
+		if (astType == AstType::ASSIGNMENT)
+			ast = parseAssignment();
+		else if (astType == AstType::IF_STATEMENT)
+			ast = parseIfStatement();
+		else if (astType == AstType::FUNCTION_CALL)
 			ast = parseFunctionCall();
-		else if (detectType() == AstType::PRIMATIVE)
+		else if (astType == AstType::PRIMATIVE)
 			ast = parsePrimative();
+		else if (astType == AstType::BLOCK)
+			ast = parseBlock();
+		else
+			++index;
 
         return ast;
     }
@@ -253,7 +283,6 @@ public:
         while(index < tokensCount)
         {
             asts->push_back(parseAst());
-            ++index;
         }
     }
 
@@ -323,20 +352,20 @@ public:
 				if (printPadding)
 					levelPadding(level);
 
-				switch (primative->ValueType) {
-					case PrimativeValueType::PRI_INTEGER:
+				switch (primative->Value->Type) {
+				case PrimativeValue::Type::PRI_INTEGER:
 						std::wcout << primative->Value->Integer << " [INTEGER]" << std::endl;
 						break;
 
-					case PrimativeValueType::PRI_DOUBLE:
+					case PrimativeValue::Type::PRI_DOUBLE:
 						std::wcout << primative->Value->Double << " [DOUBLE]" << std::endl;
 						break;
 
-					case PrimativeValueType::PRI_STRING:
+					case PrimativeValue::Type::PRI_STRING:
 						std::wcout << "'" << primative->Value->String << "'" << " [STRING]" << std::endl;
 						break;
 
-					case PrimativeValueType::PRI_BOOL:
+					case PrimativeValue::Type::PRI_BOOL:
 						std::wcout << primative->Value->Bool << " [BOOL]" << std::endl;
 						break;
 				}
@@ -376,13 +405,34 @@ public:
 				}
 			}
 				break;
+
+			case AstType::BLOCK:
+			{
+				auto* block = reinterpret_cast<BlockAst*>(ast);
+				auto blockEnd = block->Blocks->cend();
+
+				for (auto it = block->Blocks->cbegin(); it != blockEnd; ++it)
+				{
+					dumpLevel(*it, level + 1);
+				}
+			}
+			break;
 		}
 	}
 };
 
+namespace {
+	void print(std::wstring const & message)
+	{
+		std::wcout << message << std::endl;
+	}
+}
+
 AstParser::AstParser()
 {
     impl = new AstParserImpl;
+	this->AddMethod(L"yaz", &print);
+
 }
 void AstParser::AddMethod(std::wstring const & method, MethodCallback callback)
 {
