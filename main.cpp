@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
                       "bitir "
                       "değilse "
                           "yaz \"küçük\"", tokens);*/
-	tokinizer->Dump(tokens);
+	//tokinizer->Dump(tokens);
 
     auto* astParser = new AstParser;
 
@@ -44,6 +44,17 @@ int main(int argc, char* argv[]) {
 
 	BackendExecuter<InterpreterBackend> executer;
 	executer.Prepare(asts);
+
+	std::wstring line;
+	std::wcout << "lang > ";
+	while (std::getline(std::wcin, line))
+	{
+		tokinizer->Parse(line, tokens);
+		astParser->Parse(tokens, asts);
+		executer.Prepare(asts);
+
+		std::wcout << "lang >  ";
+	}
 
     getchar();
 
