@@ -17,14 +17,16 @@
 
 using namespace std;
 
-int main( int argc, char* argv[] ) {
-    // Unit tests
-	Catch::Session().run( argc, argv );
+int main(int argc, char* argv[]) {
+	// Unit tests
+	Catch::Session().run(argc, argv);
 
 	auto* tokinizer = new StandartTokinizer();
 	auto tokens = make_shared<std::vector<Token*>>();
-    auto asts = make_shared<std::vector<Ast*>>();
-	tokinizer->Parse(L"atama veri evet "
+	auto asts = make_shared<std::vector<Ast*>>();
+
+	tokinizer->Parse(L"\"erhan\" çarpı \"aysel\"", tokens);
+	/*tokinizer->Parse(L"atama veri evet "
                       "atama erhan'a 15 artı 8 "
                       "eğer erhan büyükise 13 sonra "
                       "başla "
@@ -32,13 +34,16 @@ int main( int argc, char* argv[] ) {
                           "yaz \"block ikinci eleman\" "
                       "bitir "
                       "değilse "
-                          "yaz \"küçük\"", tokens);
+                          "yaz \"küçük\"", tokens);*/
 	tokinizer->Dump(tokens);
 
     auto* astParser = new AstParser;
 
     astParser->Parse(tokens, asts);
     astParser->Dump(asts);
+
+	BackendExecuter<InterpreterBackend> executer;
+	executer.Prepare(asts);
 
     getchar();
 

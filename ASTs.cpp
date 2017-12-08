@@ -3,42 +3,43 @@
 class AstParserImpl
 {
 public:
-    std::shared_ptr<std::vector<Token*>> tokens;
+	std::shared_ptr<std::vector<Token*>> tokens;
 	std::shared_ptr<std::vector<Ast*>> asts;
-	std::unordered_map<std::wstring, MethodCallback> systemMethods;
 	std::unordered_map<std::wstring, MethodCallback> userMethods;
-    //std::unordered_map<std::wstring, MethodCallback>::iterator systemMethodsEnd;
+	//std::unordered_map<std::wstring, MethodCallback>::iterator systemMethodsEnd;
 
-    size_t tokensCount;
-    size_t index;
+	size_t tokensCount;
+	size_t index;
 
-    Token* getToken()
-    {
-        if (index < tokensCount)
-            return tokens->at(index);
+	Token* getToken()
+	{
+		if (index < tokensCount)
+			return tokens->at(index);
 
-        return nullptr;
-    }
+		return nullptr;
+	}
 
-    Token* getSeekToken(size_t seek)
-    {
-        if (index + seek < tokensCount)
-            return tokens->at(index + seek);
+	Token* getSeekToken(size_t seek)
+	{
+		if (index + seek < tokensCount)
+			return tokens->at(index + seek);
 
-        return nullptr;
-    }
+		return nullptr;
+	}
 
 
-    Token* getNextToken()
-    {
-        return getSeekToken(1);
-    }
+	Token* getNextToken()
+	{
+		return getSeekToken(1);
+	}
 
-    AstType detectType()
-    {
-        auto* token = getToken();
-        if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::ASSIGNMENT)
-            return AstType::ASSIGNMENT;
+	AstType detectType()
+	{
+		auto* token = getToken();
+		auto* tokenNext = getNextToken();
+
+		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::ASSIGNMENT)
+			return AstType::ASSIGNMENT;
 
 		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::IF)
 			return AstType::IF_STATEMENT;
@@ -46,14 +47,20 @@ public:
 		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BLOCK_START)
 			return AstType::BLOCK;
 
-		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && systemMethods.find(reinterpret_cast<SymbolToken*>(token)->Value) != systemMethods.end())
+		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && System::SystemMethods.find(reinterpret_cast<SymbolToken*>(token)->Value) != System::SystemMethods.end())
 			return AstType::FUNCTION_CALL;
+
+		if (tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR && BinaryOperators.find(reinterpret_cast<OperatorToken*>(tokenNext)->Value) != BinaryOperators.end())
+			return AstType::BINARY_OPERATION;
+
+		if (tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR && ControlOperators.find(reinterpret_cast<OperatorToken*>(tokenNext)->Value) != ControlOperators.end())
+			return AstType::CONTROL_OPERATION;
 
 		if (isPrimative(token))
 			return AstType::PRIMATIVE;
 
-		return AstType ::NONE;
-    }
+		return AstType::NONE;
+	}
 
 	inline bool isPrimative()
 	{
@@ -65,8 +72,8 @@ public:
 		return (token->GetType() == EASY_TOKEN_TYPE::INTEGER ||
 			token->GetType() == EASY_TOKEN_TYPE::TEXT ||
 			token->GetType() == EASY_TOKEN_TYPE::DOUBLE ||
-            (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BOOL_TRUE) ||
-            (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BOOL_FALSE));
+			(token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BOOL_TRUE) ||
+			(token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BOOL_FALSE));
 	}
 
 	inline Ast* parsePrimative()
@@ -91,27 +98,27 @@ public:
 		case EASY_TOKEN_TYPE::TEXT:
 			ast = new PrimativeAst(reinterpret_cast<TextToken*>(token)->Value);
 			break;
-                
-            case EASY_TOKEN_TYPE::KEYWORD:
-                if (reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BOOL_TRUE)
-                    ast = new PrimativeAst(true);
-                else if (reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BOOL_FALSE)
-                    ast = new PrimativeAst(false);
-            break;
+
+		case EASY_TOKEN_TYPE::KEYWORD:
+			if (reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BOOL_TRUE)
+				ast = new PrimativeAst(true);
+			else if (reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BOOL_FALSE)
+				ast = new PrimativeAst(false);
+			break;
 		}
-		
+
 		++index;
 		return reinterpret_cast<Ast*>(ast);
 	}
 
-    Ast* parseAssignment()
-    {
-        ++index;
-        auto* token = getToken();
-        auto* tokenNext = getNextToken();
+	Ast* parseAssignment()
+	{
+		++index;
+		auto* token = getToken();
+		auto* tokenNext = getNextToken();
 
-        auto* ast = new AssignmentAst;
-        ast->Name = reinterpret_cast<SymbolToken*>(token)->Value;
+		auto* ast = new AssignmentAst;
+		ast->Name = reinterpret_cast<SymbolToken*>(token)->Value;
 
 		if (tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR)
 		{
@@ -123,8 +130,8 @@ public:
 		else if (isPrimative(tokenNext))
 			++index;
 
-        token = getToken();
-        tokenNext = getNextToken();
+		token = getToken();
+		tokenNext = getNextToken();
 
 		if (tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR)
 		{
@@ -141,17 +148,17 @@ public:
 		}
 		else if (isPrimative())
 			ast->Data = parsePrimative(token);
-              
-        return reinterpret_cast<Ast*>(ast);
-    }
 
-    Ast* parseIfStatement()
-    {
-        auto* ast = new IfStatementAst;
-        ast->ControlOpt = parseControlOperationStatement();
+		return reinterpret_cast<Ast*>(ast);
+	}
+
+	Ast* parseIfStatement()
+	{
+		auto* ast = new IfStatementAst;
+		ast->ControlOpt = parseControlOperationStatement();
 		++index;
 
-        auto* token = getToken();
+		auto* token = getToken();
 		ast->True = parseAst();
 		token = getToken();
 
@@ -161,8 +168,8 @@ public:
 			ast->False = parseAst();
 		}
 
-        return reinterpret_cast<Ast*>(ast);
-    }
+		return reinterpret_cast<Ast*>(ast);
+	}
 
 	Ast* parseFunctionCall()
 	{
@@ -175,10 +182,10 @@ public:
 		return reinterpret_cast<Ast*>(ast);
 	}
 
-    Ast* parseBinaryOperationStatement()
-    {
+	Ast* parseBinaryOperationStatement()
+	{
 		++index;
-        auto* ast = new BinaryAst;
+		auto* ast = new BinaryAst;
 		auto* token = getToken();
 
 		if (isPrimative(token))
@@ -195,7 +202,7 @@ public:
 			ast->Op = reinterpret_cast<OperatorToken*>(token)->Value;
 		else
 			ast->Op = EASY_OPERATOR_TYPE::OPERATOR_NONE;
-			
+
 		++index;
 
 		token = getToken();
@@ -204,13 +211,13 @@ public:
 		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
 			ast->Right = new VariableAst(reinterpret_cast<SymbolToken*>(token)->Value);
 
-        return reinterpret_cast<Ast*>(ast);
-    }
+		return reinterpret_cast<Ast*>(ast);
+	}
 
 	Ast* parseBlock()
 	{
 		BlockAst* block = new BlockAst();
-		
+
 		++index;
 		while (index < tokensCount)
 		{
@@ -246,7 +253,7 @@ public:
 			ast->Op = reinterpret_cast<OperatorToken*>(token)->Value;
 		else
 			ast->Op = EASY_OPERATOR_TYPE::OPERATOR_NONE;
-	
+
 		++index;
 		token = getToken();
 		if (isPrimative(token))
@@ -259,49 +266,58 @@ public:
 
 
 	Ast* parseAst()
-    {
-        Ast* ast = nullptr;
+	{
+		Ast* ast = nullptr;
 
 		AstType astType = detectType();
-        switch (astType) {
-            case AstType::ASSIGNMENT:
-                ast = parseAssignment();
-                break;
-                
-            case AstType::IF_STATEMENT:
-                ast = parseIfStatement();
-                break;
-                
-            case AstType::FUNCTION_CALL:
-                ast = parseFunctionCall();
-                break;
-                
-            case AstType::PRIMATIVE:
-                ast = parsePrimative();
-                break;
-                
-            case AstType::BLOCK:
-                ast = parseBlock();
-                break;
-                
-            default:
-                ++index;
-                break;
-        }
+		switch (astType) {
+		case AstType::ASSIGNMENT:
+			ast = parseAssignment();
+			break;
 
-        return ast;
-    }
+		case AstType::IF_STATEMENT:
+			ast = parseIfStatement();
+			break;
 
-    void parse()
-    {
-        tokensCount = tokens->size();
-        index = 0;
+		case AstType::FUNCTION_CALL:
+			ast = parseFunctionCall();
+			break;
 
-        while(index < tokensCount)
-        {
-            asts->push_back(parseAst());
-        }
-    }
+		case AstType::PRIMATIVE:
+			ast = parsePrimative();
+			break;
+
+		case AstType::BLOCK:
+			ast = parseBlock();
+			break;
+
+		case AstType::BINARY_OPERATION:
+			--index;
+			ast = parseBinaryOperationStatement();
+			break;
+
+		case AstType::CONTROL_OPERATION:
+			ast = parseControlOperationStatement();
+			break;
+
+		default:
+			++index;
+			break;
+		}
+
+		return ast;
+	}
+
+	void parse()
+	{
+		tokensCount = tokens->size();
+		index = 0;
+
+		while (index < tokensCount)
+		{
+			asts->push_back(parseAst());
+		}
+	}
 
 	void dump(std::shared_ptr<std::vector<Ast*>> asts)
 	{
@@ -330,131 +346,138 @@ public:
 		if (printPadding)
 			levelPadding(level);
 
-		switch(ast->GetType())
+		switch (ast->GetType())
 		{
-			case AstType::IF_STATEMENT:
-			{
-				auto* ifStatement = reinterpret_cast<IfStatementAst*>(ast);
+		case AstType::IF_STATEMENT:
+		{
+			auto* ifStatement = reinterpret_cast<IfStatementAst*>(ast);
 
-				std::wcout << "#IF STATEMENT : " << std::endl;
-				std::wcout << "  Control Operation : ";
-				dumpLevel(ifStatement->ControlOpt, level+1, false);
-				std::wcout << "  True : " << std::endl;
-				dumpLevel(ifStatement->True, level+1, printPadding);
-				std::wcout << " False : " << std::endl;
-				dumpLevel(ifStatement->False, level+1, printPadding);
-			}
-				break;
+			std::wcout << "#IF STATEMENT : " << std::endl;
+			std::wcout << "  Control Operation : ";
+			dumpLevel(ifStatement->ControlOpt, level + 1, false);
+			std::wcout << "  True : " << std::endl;
+			dumpLevel(ifStatement->True, level + 1, printPadding);
+			std::wcout << " False : " << std::endl;
+			dumpLevel(ifStatement->False, level + 1, printPadding);
+		}
+		break;
 
-			case AstType::ASSIGNMENT: {
-				auto *assignment = reinterpret_cast<AssignmentAst *>(ast);
+		case AstType::ASSIGNMENT: {
+			auto *assignment = reinterpret_cast<AssignmentAst *>(ast);
+			levelPadding(level);
+
+			std::wcout << "#ASSIGNMENT : " << assignment->Name << " ";
+			dumpLevel(assignment->Data, level + 1, false);
+		}
+								  break;
+
+		case AstType::VARIABLE: {
+			auto *variable = reinterpret_cast<VariableAst *>(ast);
+			if (printPadding)
 				levelPadding(level);
 
-				std::wcout << "#ASSIGNMENT : " << assignment->Name << " ";
-				dumpLevel(assignment->Data, level+1, false);
-			}
+			std::wcout << "$" << variable->Value;
+		}
+								break;
+
+		case AstType::PRIMATIVE: {
+			auto *primative = reinterpret_cast<PrimativeAst *>(ast);
+			if (printPadding)
+				levelPadding(level);
+
+			switch (primative->Value->Type) {
+			case PrimativeValue::Type::PRI_INTEGER:
+				std::wcout << primative->Value->Integer << " [INTEGER]" << std::endl;
 				break;
 
-			case AstType::VARIABLE: {
-				auto *variable = reinterpret_cast<VariableAst *>(ast);
-				if (printPadding)
-					levelPadding(level);
-
-				std::wcout << "$" << variable->Value;
-			}
+			case PrimativeValue::Type::PRI_DOUBLE:
+				std::wcout << primative->Value->Double << " [DOUBLE]" << std::endl;
 				break;
 
-			case AstType::PRIMATIVE: {
-				auto *primative = reinterpret_cast<PrimativeAst *>(ast);
-				if (printPadding)
-					levelPadding(level);
-
-				switch (primative->Value->Type) {
-				case PrimativeValue::Type::PRI_INTEGER:
-						std::wcout << primative->Value->Integer << " [INTEGER]" << std::endl;
-						break;
-
-					case PrimativeValue::Type::PRI_DOUBLE:
-						std::wcout << primative->Value->Double << " [DOUBLE]" << std::endl;
-						break;
-
-					case PrimativeValue::Type::PRI_STRING:
-						std::wcout << "'" << primative->Value->String << "'" << " [STRING]" << std::endl;
-						break;
-
-					case PrimativeValue::Type::PRI_BOOL:
-						std::wcout << primative->Value->Bool << " [BOOL]" << std::endl;
-						break;
-				}
-			}
+			case PrimativeValue::Type::PRI_STRING:
+				std::wcout << "'" << primative->Value->String << "'" << " [STRING]" << std::endl;
 				break;
 
-			case AstType::BINARY_OPERATION: {
-				auto *binary = reinterpret_cast<BinaryAst *>(ast);
-				dumpLevel(binary->Left, level+1, false);
-
-				std::wcout << " " << EASY_OPERATOR_TYPEToString(binary->Op) << " ";
-				dumpLevel(binary->Right, level+1, false);
-			}
+			case PrimativeValue::Type::PRI_BOOL:
+				std::wcout << primative->Value->Bool << " [BOOL]" << std::endl;
 				break;
-
-			case AstType::CONTROL_OPERATION: {
-				auto *binary = reinterpret_cast<ControlAst *>(ast);
-				dumpLevel(binary->Left, level+1, false);
-
-				std::wcout << " " << EASY_OPERATOR_TYPEToString(binary->Op) << " ";
-				dumpLevel(binary->Right, level+1, false);
 			}
-				break;
+		}
+								 break;
 
-			case AstType::FUNCTION_CALL:
+		case AstType::BINARY_OPERATION: {
+			auto *binary = reinterpret_cast<BinaryAst *>(ast);
+			dumpLevel(binary->Left, level + 1, false);
+
+			std::wcout << " " << EASY_OPERATOR_TYPEToString(binary->Op) << " ";
+			dumpLevel(binary->Right, level + 1, false);
+		}
+										break;
+
+		case AstType::CONTROL_OPERATION: {
+			auto *binary = reinterpret_cast<ControlAst *>(ast);
+			dumpLevel(binary->Left, level + 1, false);
+
+			std::wcout << " " << EASY_OPERATOR_TYPEToString(binary->Op) << " ";
+			dumpLevel(binary->Right, level + 1, false);
+		}
+										 break;
+
+		case AstType::FUNCTION_CALL:
+		{
+			auto* functionCall = reinterpret_cast<FunctionCallAst*>(ast);
+			if (printPadding)
+				levelPadding(level);
+
+			std::wcout << "#METHOD CALL : " << functionCall->Function << " ";
+			auto astsEnd = functionCall->Args.end();
+			for (auto it = functionCall->Args.begin(); it != astsEnd; ++it)
 			{
-				auto* functionCall = reinterpret_cast<FunctionCallAst*>(ast);
-				if (printPadding)
-					levelPadding(level);
-
-				std::wcout << "#METHOD CALL : " << functionCall->Function << " ";
-				auto astsEnd = functionCall->Args.end();
-				for (auto it = functionCall->Args.begin(); it != astsEnd; ++it)
-				{
-					dumpLevel(*it, level + 1, false);
-					std::wcout << " ";
-				}
+				dumpLevel(*it, level + 1, false);
+				std::wcout << " ";
 			}
-				break;
+		}
+		break;
 
-			case AstType::BLOCK:
+		case AstType::BLOCK:
+		{
+			auto* block = reinterpret_cast<BlockAst*>(ast);
+			auto blockEnd = block->Blocks->cend();
+
+			for (auto it = block->Blocks->cbegin(); it != blockEnd; ++it)
 			{
-				auto* block = reinterpret_cast<BlockAst*>(ast);
-				auto blockEnd = block->Blocks->cend();
-
-				for (auto it = block->Blocks->cbegin(); it != blockEnd; ++it)
-				{
-					dumpLevel(*it, level + 1);
-				}
+				dumpLevel(*it, level + 1);
 			}
-			break;
+		}
+		break;
 		}
 	}
 };
 
 namespace {
-	void print(std::wstring const & message)
+	void print(std::shared_ptr<std::vector<PrimativeValue> > const & args, PrimativeValue & returnValue)
 	{
-		std::wcout << message << std::endl;
+
+	}
+
+	void readKey(std::shared_ptr<std::vector<PrimativeValue> > const & args, PrimativeValue & returnValue)
+	{
+		std::wstring text;
+		std::getline(std::wcin, text);
+		returnValue.SetString(text);
 	}
 }
 
 AstParser::AstParser()
 {
-    impl = new AstParserImpl;
+	impl = new AstParserImpl;
 	this->AddMethod(L"yaz", &print);
-
+	this->AddMethod(L"yazýoku", &readKey);
 }
 void AstParser::AddMethod(std::wstring const & method, MethodCallback callback)
 {
-	impl->systemMethods[method] = callback;
-    //impl->systemMethodsEnd = impl->systemMethods.end();
+	System::SystemMethods[method] = callback;
+	//impl->systemMethodsEnd = impl->systemMethods.end();
 }
 
 void AstParser::Parse(std::shared_ptr<std::vector<Token*>> tokens, std::shared_ptr<std::vector<Ast*>> asts)
@@ -469,4 +492,214 @@ void AstParser::Parse(std::shared_ptr<std::vector<Token*>> tokens, std::shared_p
 void AstParser::Dump(std::shared_ptr<std::vector<Ast*>> asts)
 {
 	impl->dump(asts);
+}
+
+
+std::unordered_map<std::wstring, MethodCallback> System::SystemMethods;
+
+PrimativeValue* operator + (PrimativeValue const & lhs, PrimativeValue const & rhs)
+{
+	PrimativeValue* returnValue = new PrimativeValue;
+
+	switch (lhs.Type)
+	{
+	case PrimativeValue::Type::PRI_BOOL:
+	{
+		switch (rhs.Type)
+		{
+		case PrimativeValue::Type::PRI_BOOL:
+			returnValue->SetBool(lhs.Bool || rhs.Bool);
+			break;
+
+		case PrimativeValue::Type::PRI_DOUBLE:
+			returnValue->SetBool(true);
+			break;
+
+		case PrimativeValue::Type::PRI_INTEGER:
+			returnValue->SetBool(true);
+			break;
+
+		case PrimativeValue::Type::PRI_STRING:
+			returnValue->SetBool(true);
+			break;
+		}
+	}
+	break;
+
+	case PrimativeValue::Type::PRI_DOUBLE:
+	{
+		switch (rhs.Type)
+		{
+		case PrimativeValue::Type::PRI_DOUBLE:
+			returnValue->SetDouble(lhs.Double + rhs.Double);
+			break;
+
+		case PrimativeValue::Type::PRI_INTEGER:
+			returnValue->SetDouble(lhs.Double + rhs.Integer);
+			break;
+
+		case PrimativeValue::Type::PRI_STRING:
+			returnValue->SetString(std::to_wstring(lhs.Double) + rhs.String);
+			break;
+		}
+	}
+		break;
+
+	case PrimativeValue::Type::PRI_INTEGER:
+	{
+		switch (rhs.Type)
+		{
+		case PrimativeValue::Type::PRI_INTEGER:
+			returnValue->SetInteger(lhs.Integer + rhs.Integer);
+			break;
+
+		case PrimativeValue::Type::PRI_STRING:
+			returnValue->SetString(std::to_wstring(lhs.Integer) + rhs.String);
+			break;
+		}
+	}
+		break;
+
+	case PrimativeValue::Type::PRI_STRING:
+	{
+		switch (rhs.Type)
+		{
+		case PrimativeValue::Type::PRI_STRING:
+			returnValue->SetString(lhs.String + rhs.String);
+			break;
+		}
+	}
+		break;
+	}
+
+	return returnValue;
+}
+
+
+
+PrimativeValue* operator*(PrimativeValue const & lhs, PrimativeValue const & rhs)
+{
+	PrimativeValue* returnValue = new PrimativeValue;
+
+	switch (lhs.Type)
+	{
+	case PrimativeValue::Type::PRI_BOOL:
+	{
+		switch (rhs.Type)
+		{
+		case PrimativeValue::Type::PRI_BOOL:
+			returnValue->SetBool(lhs.Bool == true && lhs.Bool && rhs.Bool);
+			break;
+
+		case PrimativeValue::Type::PRI_DOUBLE:
+			returnValue->SetBool(true);
+			break;
+
+		case PrimativeValue::Type::PRI_INTEGER:
+			returnValue->SetBool(true);
+			break;
+
+		case PrimativeValue::Type::PRI_STRING:
+			returnValue->SetBool(true);
+			break;
+		}
+	}
+	break;
+
+	case PrimativeValue::Type::PRI_DOUBLE:
+	{
+		switch (rhs.Type)
+		{
+		case PrimativeValue::Type::PRI_BOOL:
+			returnValue->SetBool(true);
+			break;
+
+		case PrimativeValue::Type::PRI_DOUBLE:
+			returnValue->SetDouble(lhs.Double * rhs.Double);
+			break;
+
+		case PrimativeValue::Type::PRI_INTEGER:
+			returnValue->SetDouble(lhs.Double * rhs.Integer);
+			break;
+
+		case PrimativeValue::Type::PRI_STRING:
+			std::wstringstream stream;
+
+			for (double i = 0.0; i < lhs.Double; ++i)
+				stream << rhs.String;
+
+			returnValue->SetString(stream.str());
+			break;
+		}
+	}
+	break;
+
+	case PrimativeValue::Type::PRI_INTEGER:
+	{
+		switch (rhs.Type)
+		{
+		case PrimativeValue::Type::PRI_BOOL:
+			returnValue->SetBool(true);
+			break;
+
+		case PrimativeValue::Type::PRI_DOUBLE:
+			returnValue->SetDouble(rhs.Double * lhs.Integer);
+			break;
+
+		case PrimativeValue::Type::PRI_INTEGER:
+			returnValue->SetInteger(lhs.Integer * rhs.Integer);
+			break;
+
+		case PrimativeValue::Type::PRI_STRING:
+		{std::wstringstream stream;
+
+		for (size_t i = 0; i < lhs.Integer; ++i)
+			stream << rhs.String;
+
+		returnValue->SetString(stream.str());
+		}
+			break;
+		}
+	}
+	break;
+
+	case PrimativeValue::Type::PRI_STRING:
+	{
+		switch (rhs.Type)
+		{
+		case PrimativeValue::Type::PRI_BOOL:
+			returnValue->SetBool(true);
+			break;
+
+		case PrimativeValue::Type::PRI_INTEGER:
+		{
+			std::wstringstream stream;
+
+			for (size_t i = 0; i < rhs.Integer; ++i)
+				stream << lhs.String;
+
+			returnValue->SetString(stream.str());
+		}
+		break;
+
+		case PrimativeValue::Type::PRI_DOUBLE:
+		{
+			std::wstringstream stream;
+
+			for (double i = 0.0; i < rhs.Double; ++i)
+				stream << lhs.String;
+
+			returnValue->SetString(stream.str());
+		}
+			break;
+
+		case PrimativeValue::Type::PRI_STRING:
+			returnValue->SetString(lhs.String + rhs.String);
+			break;
+		}
+	}
+	break;
+	}
+
+	return returnValue;
 }

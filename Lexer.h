@@ -78,6 +78,7 @@ static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE> Operators {
 
 		// '*'
 		{ L"çarp", EASY_OPERATOR_TYPE::MULTIPLICATION },
+		{ L"çarpı", EASY_OPERATOR_TYPE::MULTIPLICATION },
 		{ L"çarpım", EASY_OPERATOR_TYPE::MULTIPLICATION },
 		{ L"çarpma", EASY_OPERATOR_TYPE::MULTIPLICATION },
 

@@ -14,6 +14,46 @@
 
 using namespace std;
 
+TEST_CASE("Base test") {
+	Tokinizer* tokinizer = new StandartTokinizer();
+	AstParser* astParser = new AstParser();
+	std::shared_ptr<std::vector<Token* > > tokens = make_shared<std::vector<Token* > >();
+	std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
+
+
+	SECTION("50 artı 100") {
+		tokinizer->Parse(L"50 artı 100", tokens);
+		astParser->Parse(tokens, asts);
+
+		REQUIRE(asts.get()->size() == 1);
+
+		BinaryAst* binary = reinterpret_cast<BinaryAst*>(asts.get()->at(0));
+		REQUIRE(binary->Left != nullptr);
+		REQUIRE(binary->Right != nullptr);
+		REQUIRE(binary->Op == EASY_OPERATOR_TYPE::PLUS);
+		REQUIRE(reinterpret_cast<PrimativeAst*>(binary->Left)->Value->Type == PrimativeValue::Type::PRI_INTEGER);
+		REQUIRE(reinterpret_cast<PrimativeAst*>(binary->Left)->Value->Integer == 50);
+		REQUIRE(reinterpret_cast<PrimativeAst*>(binary->Right)->Value->Type == PrimativeValue::Type::PRI_INTEGER);
+		REQUIRE(reinterpret_cast<PrimativeAst*>(binary->Right)->Value->Integer == 100);
+	}
+
+	SECTION("50 eksi 100") {
+		tokinizer->Parse(L"50 eksi 100", tokens);
+		astParser->Parse(tokens, asts);
+
+		REQUIRE(asts.get()->size() == 1);
+
+		BinaryAst* binary = reinterpret_cast<BinaryAst*>(asts.get()->at(0));
+		REQUIRE(binary->Left != nullptr);
+		REQUIRE(binary->Right != nullptr);
+		REQUIRE(binary->Op == EASY_OPERATOR_TYPE::MINUS);
+		REQUIRE(reinterpret_cast<PrimativeAst*>(binary->Left)->Value->Type == PrimativeValue::Type::PRI_INTEGER);
+		REQUIRE(reinterpret_cast<PrimativeAst*>(binary->Left)->Value->Integer == 50);
+		REQUIRE(reinterpret_cast<PrimativeAst*>(binary->Right)->Value->Type == PrimativeValue::Type::PRI_INTEGER);
+		REQUIRE(reinterpret_cast<PrimativeAst*>(binary->Right)->Value->Integer == 100);
+	}
+}
+
 TEST_CASE( "Assignment test" ) {
 	Tokinizer* tokinizer = new StandartTokinizer();
 	AstParser* astParser = new AstParser();
@@ -264,6 +304,18 @@ TEST_CASE("Function call test") {
 		REQUIRE(functionCall->Args.at(0)->GetType() == AstType::PRIMATIVE);
 		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_INTEGER);
 		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Integer == 123);
+	}
+
+	SECTION("yaz 10 artı 20") {
+		tokinizer->Parse(L"yaz 10 artı 20", tokens);
+		astParser->Parse(tokens, asts);
+		REQUIRE(asts.get()->size() == 1);
+
+		auto* functionCall = reinterpret_cast<FunctionCallAst*>(asts.get()->at(0));
+
+		REQUIRE(functionCall->Function == L"yaz");
+		REQUIRE(functionCall->Args.size() == 1);
+		REQUIRE(functionCall->Args.at(0)->GetType() == AstType::BINARY_OPERATION);
 	}
 }
 
