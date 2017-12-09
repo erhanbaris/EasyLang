@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 	auto tokens = make_shared<std::vector<Token*>>();
 	auto asts = make_shared<std::vector<Ast*>>();
 
-	tokinizer->Parse(L"\"erhan\" çarpı \"aysel\"", tokens);
+	//tokinizer->Parse(L"\"erhan\" çarpı \"aysel\"", tokens);
 	/*tokinizer->Parse(L"atama veri evet "
                       "atama erhan'a 15 artı 8 "
                       "eğer erhan büyükise 13 sonra "
@@ -39,8 +39,8 @@ int main(int argc, char* argv[]) {
 
     auto* astParser = new AstParser;
 
-    astParser->Parse(tokens, asts);
-    astParser->Dump(asts);
+    //astParser->Parse(tokens, asts);
+    //astParser->Dump(asts);
 
 	BackendExecuter<InterpreterBackend> executer;
 	executer.Prepare(asts);

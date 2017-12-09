@@ -118,7 +118,9 @@ struct PrimativeValue {
 };
 
 PrimativeValue* operator + (PrimativeValue const & lhs, PrimativeValue const & rhs);
+PrimativeValue* operator - (PrimativeValue const & lhs, PrimativeValue const & rhs);
 PrimativeValue* operator * (PrimativeValue const & lhs, PrimativeValue const & rhs);
+PrimativeValue* operator / (PrimativeValue const & lhs, PrimativeValue const & rhs);
 
 class PrimativeAst : public Ast {
 public:

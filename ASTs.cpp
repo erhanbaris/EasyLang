@@ -472,7 +472,7 @@ AstParser::AstParser()
 {
 	impl = new AstParserImpl;
 	this->AddMethod(L"yaz", &print);
-	this->AddMethod(L"yazýoku", &readKey);
+	this->AddMethod(L"yazioku", &readKey);
 }
 void AstParser::AddMethod(std::wstring const & method, MethodCallback callback)
 {
@@ -530,6 +530,10 @@ PrimativeValue* operator + (PrimativeValue const & lhs, PrimativeValue const & r
 	{
 		switch (rhs.Type)
 		{
+        case PrimativeValue::Type::PRI_BOOL:
+            returnValue->SetBool(true);
+            break;
+                
 		case PrimativeValue::Type::PRI_DOUBLE:
 			returnValue->SetDouble(lhs.Double + rhs.Double);
 			break;
@@ -549,7 +553,15 @@ PrimativeValue* operator + (PrimativeValue const & lhs, PrimativeValue const & r
 	{
 		switch (rhs.Type)
 		{
-		case PrimativeValue::Type::PRI_INTEGER:
+        case PrimativeValue::Type::PRI_BOOL:
+            returnValue->SetBool(true);
+            break;
+ 
+        case PrimativeValue::Type::PRI_DOUBLE:
+            returnValue->SetDouble(lhs.Integer + rhs.Double);
+            break;
+
+        case PrimativeValue::Type::PRI_INTEGER:
 			returnValue->SetInteger(lhs.Integer + rhs.Integer);
 			break;
 
@@ -564,9 +576,21 @@ PrimativeValue* operator + (PrimativeValue const & lhs, PrimativeValue const & r
 	{
 		switch (rhs.Type)
 		{
-		case PrimativeValue::Type::PRI_STRING:
-			returnValue->SetString(lhs.String + rhs.String);
-			break;
+            case PrimativeValue::Type::PRI_BOOL:
+                returnValue->SetBool(true);
+                break;
+                
+            case PrimativeValue::Type::PRI_INTEGER:
+                returnValue->SetString(lhs.String + std::to_wstring(rhs.Integer));
+                break;
+                
+            case PrimativeValue::Type::PRI_DOUBLE:
+                returnValue->SetString(lhs.String + std::to_wstring(rhs.Double));
+                break;
+
+            case PrimativeValue::Type::PRI_STRING:
+                returnValue->SetString(lhs.String + rhs.String);
+                break;
 		}
 	}
 		break;
@@ -588,7 +612,7 @@ PrimativeValue* operator*(PrimativeValue const & lhs, PrimativeValue const & rhs
 		switch (rhs.Type)
 		{
 		case PrimativeValue::Type::PRI_BOOL:
-			returnValue->SetBool(lhs.Bool == true && lhs.Bool && rhs.Bool);
+			returnValue->SetBool(lhs.Bool && rhs.Bool);
 			break;
 
 		case PrimativeValue::Type::PRI_DOUBLE:
@@ -702,4 +726,208 @@ PrimativeValue* operator*(PrimativeValue const & lhs, PrimativeValue const & rhs
 	}
 
 	return returnValue;
+}
+
+PrimativeValue* operator-(PrimativeValue const & lhs, PrimativeValue const & rhs)
+{
+    PrimativeValue* returnValue = new PrimativeValue;
+    
+    switch (lhs.Type)
+    {
+        case PrimativeValue::Type::PRI_BOOL:
+        {
+            switch (rhs.Type)
+            {
+                case PrimativeValue::Type::PRI_BOOL:
+                    returnValue->SetBool(false);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_DOUBLE:
+                    returnValue->SetBool(false);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_INTEGER:
+                    returnValue->SetBool(false);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_STRING:
+                    returnValue->SetBool(false);
+                    break;
+            }
+        }
+            break;
+            
+        case PrimativeValue::Type::PRI_DOUBLE:
+        {
+            switch (rhs.Type)
+            {
+                case PrimativeValue::Type::PRI_BOOL:
+                    returnValue->SetDouble(lhs.Double);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_DOUBLE:
+                    returnValue->SetDouble(lhs.Double - rhs.Double);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_INTEGER:
+                    returnValue->SetDouble(lhs.Double - rhs.Integer);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_STRING:
+                    returnValue->SetDouble(lhs.Double);
+                    break;
+            }
+        }
+            break;
+            
+        case PrimativeValue::Type::PRI_INTEGER:
+        {
+            switch (rhs.Type)
+            {
+                case PrimativeValue::Type::PRI_BOOL:
+                    returnValue->SetInteger(lhs.Integer);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_DOUBLE:
+                    returnValue->SetDouble(lhs.Integer - rhs.Double);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_INTEGER:
+                    returnValue->SetInteger(lhs.Integer - rhs.Integer);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_STRING:
+                    returnValue->SetInteger(lhs.Integer);
+                    break;
+            }
+        }
+            break;
+            
+        case PrimativeValue::Type::PRI_STRING:
+        {
+            switch (rhs.Type)
+            {
+                case PrimativeValue::Type::PRI_BOOL:
+                    returnValue->SetString(lhs.String);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_INTEGER:
+                    returnValue->SetString(lhs.String);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_DOUBLE:
+                    returnValue->SetString(lhs.String);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_STRING:
+                    returnValue->SetString(lhs.String);
+                    break;
+            }
+        }
+            break;
+    }
+    
+    return returnValue;
+}
+
+PrimativeValue* operator/(PrimativeValue const & lhs, PrimativeValue const & rhs)
+{
+    PrimativeValue* returnValue = new PrimativeValue;
+    
+    switch (lhs.Type)
+    {
+        case PrimativeValue::Type::PRI_BOOL:
+        {
+            switch (rhs.Type)
+            {
+                case PrimativeValue::Type::PRI_BOOL:
+                    returnValue->SetBool(false);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_DOUBLE:
+                    returnValue->SetBool(false);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_INTEGER:
+                    returnValue->SetBool(false);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_STRING:
+                    returnValue->SetBool(false);
+                    break;
+            }
+        }
+            break;
+            
+        case PrimativeValue::Type::PRI_DOUBLE:
+        {
+            switch (rhs.Type)
+            {
+                case PrimativeValue::Type::PRI_BOOL:
+                    returnValue->SetDouble(lhs.Double);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_DOUBLE:
+                    returnValue->SetDouble(lhs.Double / rhs.Double);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_INTEGER:
+                    returnValue->SetDouble(lhs.Double / rhs.Integer);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_STRING:
+                    returnValue->SetDouble(lhs.Double);
+                    break;
+            }
+        }
+            break;
+            
+        case PrimativeValue::Type::PRI_INTEGER:
+        {
+            switch (rhs.Type)
+            {
+                case PrimativeValue::Type::PRI_BOOL:
+                    returnValue->SetInteger(lhs.Integer);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_DOUBLE:
+                    returnValue->SetDouble(lhs.Integer / rhs.Double);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_INTEGER:
+                    returnValue->SetInteger(lhs.Integer / rhs.Integer);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_STRING:
+                    returnValue->SetInteger(lhs.Integer);
+                    break;
+            }
+        }
+            break;
+            
+        case PrimativeValue::Type::PRI_STRING:
+        {
+            switch (rhs.Type)
+            {
+                case PrimativeValue::Type::PRI_BOOL:
+                    returnValue->SetString(lhs.String);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_INTEGER:
+                    returnValue->SetString(lhs.String);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_DOUBLE:
+                    returnValue->SetString(lhs.String);
+                    break;
+                    
+                case PrimativeValue::Type::PRI_STRING:
+                    returnValue->SetString(lhs.String);
+                    break;
+            }
+        }
+            break;
+    }
+    
+    return returnValue;
 }

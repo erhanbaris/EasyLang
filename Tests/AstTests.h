@@ -321,7 +321,7 @@ TEST_CASE("Function call test") {
 
 
 
-TEST_CASE("Bool test") {
+TEST_CASE("Bool ast test") {
     Tokinizer* tokinizer = new StandartTokinizer();
     AstParser* astParser = new AstParser();
 
