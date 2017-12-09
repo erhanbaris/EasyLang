@@ -12,8 +12,8 @@
 #include "Lexer.h"
 #include "ASTs.h"
 #include "Backend.h"
-#include "Tests/LexerTests.h"
-#include "Tests/AstTests.h"
+//#include "Tests/LexerTests.h"
+//#include "Tests/AstTests.h"
 
 using namespace std;
 
@@ -25,21 +25,20 @@ int main(int argc, char* argv[]) {
 	auto tokens = make_shared<std::vector<Token*>>();
 	auto asts = make_shared<std::vector<Ast*>>();
 
-	//tokinizer->Parse(L"\"erhan\" çarpı \"aysel\"", tokens);
-	/*tokinizer->Parse(L"atama veri evet "
-                      "atama erhan'a 15 artı 8 "
+	//tokinizer->Parse(L"4 eşit 4", tokens);
+	tokinizer->Parse(L"atama erhan'a 0 artı 8 "
                       "eğer erhan büyükise 13 sonra "
                       "başla "
-                          "yaz \"büyük\" "
+                          "yaz \"buyuk\" "
                           "yaz \"block ikinci eleman\" "
                       "bitir "
                       "değilse "
-                          "yaz \"küçük\"", tokens);*/
+                          "yaz \"kucuk\"", tokens);
 	//tokinizer->Dump(tokens);
 
     auto* astParser = new AstParser;
 
-    //astParser->Parse(tokens, asts);
+    astParser->Parse(tokens, asts);
     //astParser->Dump(asts);
 
 	BackendExecuter<InterpreterBackend> executer;

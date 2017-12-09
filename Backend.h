@@ -46,7 +46,11 @@ public:
             case AstType::VARIABLE:
             {
                 VariableAst* variable = reinterpret_cast<VariableAst*>(ast);
-                return variables[variable->Value];
+                
+                if (variables.find(variable->Value) != variables.end())
+                    return variables[variable->Value];
+                
+                return nullptr;
             }
                 break;
                 
@@ -58,10 +62,55 @@ public:
                 std::wcout << L"Assign -> [" << assignment->Name << L"]" << std::endl;
             }
                 break;
+       
+            case AstType::BLOCK:
+            {
+                BlockAst* block = reinterpret_cast<BlockAst*>(ast);
+                std::vector<Ast*>::const_iterator blocksEnd = block->Blocks->cend();
+                for (std::vector<Ast*>::const_iterator it = block->Blocks->cbegin(); it != blocksEnd; ++it)
+                {
+                    Ast* blockAst = *it;
+                    getData(blockAst);
+                }
+                
+            }
+                break;
                 
             case AstType::FUNCTION_CALL:
             {
+                FunctionCallAst* call = reinterpret_cast<FunctionCallAst*>(ast);
+                if (System::SystemMethods.find(call->Function) != System::SystemMethods.end())
+                {
+                    MethodCallback function = System::SystemMethods[call->Function];
+                    PrimativeValue* returnValue = new PrimativeValue;;
+                    std::shared_ptr<std::vector<PrimativeValue*> > args = std::make_shared<std::vector<PrimativeValue*>>();
+                    
+                    std::vector<Ast*>::const_iterator argsEnd = call->Args.cend();
+                    for (std::vector<Ast*>::const_iterator it = call->Args.cbegin(); it != argsEnd; ++it)
+                    {
+                        Ast* argAst = *it;
+                        PrimativeValue* argItem = getData(argAst);
+                        args->push_back(argItem);
+                    }
                 
+                    function(args, *returnValue);
+                    //function(
+                    //call->Function
+                }
+            }
+                break;
+                
+            case AstType::IF_STATEMENT:
+            {
+                IfStatementAst* ifStatement = reinterpret_cast<IfStatementAst*>(ast);
+                auto* control = getData(ifStatement->ControlOpt);
+                if (control != nullptr)
+                {
+                    if (control->Bool)
+                        getData(ifStatement->True);
+                    else
+                        getData(ifStatement->False);
+                }
             }
                 break;
                 
@@ -92,6 +141,64 @@ public:
                         value = (*lhs) / (*rhs);
                         break;
                 }
+                return value;
+                
+                switch (value->Type)
+                {
+                    case PrimativeValue::Type::PRI_BOOL:
+                        std::wcout << L"(bool) " << (value->Bool ? L"evet" : L"hayır") << std::endl;
+                        break;
+                        
+                    case PrimativeValue::Type::PRI_DOUBLE:
+                        std::wcout << L"(double) " << value->Double << std::endl;
+                        break;
+                        
+                    case PrimativeValue::Type::PRI_INTEGER:
+                        std::wcout << L"(integer) " << value->Integer << std::endl;
+                        break;
+                        
+                    case PrimativeValue::Type::PRI_STRING:
+                        std::wcout << L"(string) " << value->String << std::endl;
+                        break;
+                }
+            }
+                break;
+                
+            case AstType::CONTROL_OPERATION:
+            {
+                ControlAst* callAst = reinterpret_cast<ControlAst*>(ast);
+                
+                PrimativeValue* lhs = getData(callAst->Left);
+                PrimativeValue* rhs = getData(callAst->Right);
+                PrimativeValue* value = nullptr;
+                
+                switch (callAst->Op)
+                {
+                    case EASY_OPERATOR_TYPE::GREATOR:
+                        value = (*lhs) > (*rhs);
+                        break;
+                        
+                    case EASY_OPERATOR_TYPE::GREATOR_EQUAL:
+                        value = (*lhs) >= (*rhs);
+                        break;
+                        
+                    case EASY_OPERATOR_TYPE::LOWER:
+                        value = (*lhs) < (*rhs);
+                        break;
+                        
+                    case EASY_OPERATOR_TYPE::LOWER_EQUAL:
+                        value = (*lhs) <= (*rhs);
+                        break;
+                        
+                    case EASY_OPERATOR_TYPE::EQUAL:
+                        value = (*lhs) == (*rhs);
+                        break;
+                        
+                    case EASY_OPERATOR_TYPE::NOT_EQUAL:
+                        value = (*lhs) != (*rhs);
+                        break;
+                }
+                return value;
                 
                 switch (value->Type)
                 {

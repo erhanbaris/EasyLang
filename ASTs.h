@@ -11,9 +11,10 @@
 #include <unordered_map>
 
 #include "Lexer.h"
+#include "PrimativeValue.h"
 
 struct PrimativeValue;
-typedef void (*MethodCallback)(std::shared_ptr<std::vector<PrimativeValue> > const & args, PrimativeValue & returnValue);
+typedef void (*MethodCallback)(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue);
 
 enum class AstType {
 	NONE,
@@ -49,78 +50,6 @@ public:
 	VariableAst() { Type = AstType::VARIABLE; }
 	VariableAst(std::wstring value) { Type = AstType::VARIABLE; Value = value; }
 };
-
-struct PrimativeValue {
-	enum class Type {
-		PRI_INTEGER,
-		PRI_DOUBLE,
-		PRI_STRING,
-		PRI_BOOL,
-		PRI_NULL
-	};
-
-	Type Type;
-
-	union {
-		int Integer;
-		double Double;
-		std::wstring String;
-		bool Bool;
-	};
-
-	PrimativeValue() { Integer = 0; Type = Type::PRI_NULL; }
-	PrimativeValue(int value) { Integer = value; Type = Type::PRI_INTEGER; }
-	PrimativeValue(double value) { Double = value; Type = Type::PRI_DOUBLE;}
-	PrimativeValue(std::wstring value) { new (&String) std::wstring(value); Type = Type::PRI_STRING;}
-	PrimativeValue(bool value) { Bool = value; Type = Type::PRI_BOOL;}
-
-	~PrimativeValue() { }
-
-	void SetInteger(int value) { Integer = value; Type = Type::PRI_INTEGER; }
-	void SetDouble(double value) { Double = value; Type = Type::PRI_DOUBLE; }
-	void SetString(std::wstring value) 
-	{ 
-		new (&String) std::wstring(value); 
-		Type = Type::PRI_STRING; 
-	}
-
-	void SetBool(bool value) { Bool = value; Type = Type::PRI_BOOL; }
-
-	bool IsInteger() { return Type == Type::PRI_INTEGER; }
-	bool IsDouble() { return Type == Type::PRI_DOUBLE; }
-	bool IsString() { return Type == Type::PRI_STRING; }
-	bool IsBool() { return Type == Type::PRI_BOOL; }
-	bool IsNull() { return Type == Type::PRI_NULL; }
-	
-	PrimativeValue & operator=(const PrimativeValue &rhs)
-	{
-		switch (rhs.Type)
-		{
-		case PrimativeValue::Type::PRI_BOOL:
-			SetBool(rhs.Bool);
-			break;
-
-		case PrimativeValue::Type::PRI_DOUBLE:
-			SetDouble(rhs.Double);
-			break;
-
-		case PrimativeValue::Type::PRI_INTEGER:
-			SetInteger(rhs.Integer);
-			break;
-
-		case PrimativeValue::Type::PRI_STRING:
-			SetString(rhs.String);
-			break;
-		}
-
-		return *this;
-	}
-};
-
-PrimativeValue* operator + (PrimativeValue const & lhs, PrimativeValue const & rhs);
-PrimativeValue* operator - (PrimativeValue const & lhs, PrimativeValue const & rhs);
-PrimativeValue* operator * (PrimativeValue const & lhs, PrimativeValue const & rhs);
-PrimativeValue* operator / (PrimativeValue const & lhs, PrimativeValue const & rhs);
 
 class PrimativeAst : public Ast {
 public:
