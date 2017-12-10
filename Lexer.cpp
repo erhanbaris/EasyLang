@@ -50,7 +50,7 @@ public:
                 auto* opt = new KeywordToken;
                 opt->Value = EASY_KEYWORD_TYPE::FOR_SHORT;
                 TokenList->push_back(reinterpret_cast<Token*>(opt));
-                ++index;
+                index += 2;
             }
             else if ((ch >= '0' && ch <= '9') || ch == '.')
             {
@@ -80,10 +80,11 @@ public:
         {
             ch = getChar();
 
-            if (isWhitespace(ch) || ch == '\'' || ch == '"')
-            {
+            if (!isSymbol(ch) && !isInteger(ch) && ch != '_')
                 break;
-            }
+            
+            if (isWhitespace(ch) || ch == '\'' || ch == '"')
+                break;
 
             stream << ch;
             ++index;
@@ -189,7 +190,9 @@ public:
                 ch == L'Ö' ||
                 ch == L'ö' ||
                 ch == L'Ç' ||
-                ch == L'ç');
+                ch == L'ç' ||
+                ch == L'Ş' ||
+                ch == L'ş');
     }
 
     void getOperator()
@@ -287,6 +290,7 @@ public:
 
         bool isDouble = false;
         wchar_t ch = getChar();
+        wchar_t chNext = getNextChar();
         while (contentLength > index)
         {
             if (ch == '-')
@@ -298,6 +302,9 @@ public:
             }
             else if (ch == '.')
             {
+                if (chNext == '.')
+                    break;
+                
                 if (isDouble)
                 {
                     error(L"Number problem");
@@ -325,6 +332,7 @@ public:
 
             ++index;
             ch = getChar();
+            chNext = getNextChar();
         }
 
         if (isDouble)

@@ -24,11 +24,11 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
     
     switch (ast->GetType())
     {
-        case AstType::PRIMATIVE:
+        case EASY_AST_TYPE::PRIMATIVE:
             return reinterpret_cast<PrimativeAst*>(ast)->Value;
             break;
             
-        case AstType::VARIABLE:
+        case EASY_AST_TYPE::VARIABLE:
         {
             VariableAst* variable = reinterpret_cast<VariableAst*>(ast);
             
@@ -39,7 +39,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
         }
             break;
             
-        case AstType::ASSIGNMENT:
+        case EASY_AST_TYPE::ASSIGNMENT:
         {
             AssignmentAst* assignment = reinterpret_cast<AssignmentAst*>(ast);
             auto* value = getData(assignment->Data);
@@ -48,7 +48,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
         }
             break;
             
-        case AstType::BLOCK:
+        case EASY_AST_TYPE::BLOCK:
         {
             BlockAst* block = reinterpret_cast<BlockAst*>(ast);
             std::vector<Ast*>::const_iterator blocksEnd = block->Blocks->cend();
@@ -61,7 +61,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
         }
             break;
             
-        case AstType::FUNCTION_CALL:
+        case EASY_AST_TYPE::FUNCTION_CALL:
         {
             FunctionCallAst* call = reinterpret_cast<FunctionCallAst*>(ast);
             if (System::SystemMethods.find(call->Function) != System::SystemMethods.end())
@@ -85,7 +85,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
         }
             break;
             
-        case AstType::IF_STATEMENT:
+        case EASY_AST_TYPE::IF_STATEMENT:
         {
             IfStatementAst* ifStatement = reinterpret_cast<IfStatementAst*>(ast);
             auto* control = getData(ifStatement->ControlOpt);
@@ -99,7 +99,25 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
         }
             break;
             
-        case AstType::BINARY_OPERATION:
+            
+        case EASY_AST_TYPE::FOR:
+        {
+            ForStatementAst* forStatement = reinterpret_cast<ForStatementAst*>(ast);
+            
+            auto* startValue = getData(forStatement->Start);
+            auto* endValue = getData(forStatement->End);
+            
+            variables[forStatement->Variable] = startValue;
+            
+            for (size_t i = startValue->Integer; i < endValue->Integer; ++i)
+            {
+                variables[forStatement->Variable]->SetInteger(i);
+                getData(forStatement->Repeat);
+            }
+        }
+            break;
+            
+        case EASY_AST_TYPE::BINARY_OPERATION:
         {
             BinaryAst* callAst = reinterpret_cast<BinaryAst*>(ast);
             
@@ -126,30 +144,12 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
                     value = (*lhs) / (*rhs);
                     break;
             }
-            return value;
             
-            switch (value->Type)
-            {
-                case PrimativeValue::Type::PRI_BOOL:
-                    std::wcout << L"(bool) " << (value->Bool ? L"evet" : L"hayır") << std::endl;
-                    break;
-                    
-                case PrimativeValue::Type::PRI_DOUBLE:
-                    std::wcout << L"(double) " << value->Double << std::endl;
-                    break;
-                    
-                case PrimativeValue::Type::PRI_INTEGER:
-                    std::wcout << L"(integer) " << value->Integer << std::endl;
-                    break;
-                    
-                case PrimativeValue::Type::PRI_STRING:
-                    std::wcout << L"(string) " << value->String << std::endl;
-                    break;
-            }
+            return value;
         }
             break;
             
-        case AstType::CONTROL_OPERATION:
+        case EASY_AST_TYPE::CONTROL_OPERATION:
         {
             ControlAst* callAst = reinterpret_cast<ControlAst*>(ast);
             

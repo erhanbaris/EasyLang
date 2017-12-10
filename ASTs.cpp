@@ -42,36 +42,39 @@ public:
         return nullptr;
 	}
     
-	AstType detectType()
+	EASY_AST_TYPE detectType()
 	{
 		auto* token = getToken();
 		auto* tokenNext = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
 
+        if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(tokenNext)->Value == EASY_OPERATOR_TYPE::OPERATION)
+            return EASY_AST_TYPE::FOR;
+        
 		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::ASSIGNMENT)
-			return AstType::ASSIGNMENT;
+			return EASY_AST_TYPE::ASSIGNMENT;
 
 		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::IF)
-			return AstType::IF_STATEMENT;
+			return EASY_AST_TYPE::IF_STATEMENT;
 
 		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BLOCK_START)
-			return AstType::BLOCK;
+			return EASY_AST_TYPE::BLOCK;
 
 		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && System::SystemMethods.find(reinterpret_cast<SymbolToken*>(token)->Value) != System::SystemMethods.end())
-			return AstType::FUNCTION_CALL;
+			return EASY_AST_TYPE::FUNCTION_CALL;
 
 		if (tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR && BinaryOperators.find(reinterpret_cast<OperatorToken*>(tokenNext)->Value) != BinaryOperators.end())
-			return AstType::BINARY_OPERATION;
+			return EASY_AST_TYPE::BINARY_OPERATION;
 
 		if (tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR && ControlOperators.find(reinterpret_cast<OperatorToken*>(tokenNext)->Value) != ControlOperators.end())
-			return AstType::CONTROL_OPERATION;
+			return EASY_AST_TYPE::CONTROL_OPERATION;
 
 		if (isPrimative(token))
-			return AstType::PRIMATIVE;
+			return EASY_AST_TYPE::PRIMATIVE;
         
         if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
-            return AstType::VARIABLE;
+            return EASY_AST_TYPE::VARIABLE;
 
-		return AstType::NONE;
+		return EASY_AST_TYPE::NONE;
 	}
 
 	inline bool isPrimative()
@@ -352,43 +355,95 @@ public:
         
 		return reinterpret_cast<Ast*>(ast);
 	}
+    
+    Ast* parseForStatement()
+    {
+        auto* ast = new ForStatementAst;
+        skipWhiteSpace();
+        auto* token = getToken();
+        
+        ast->Variable = reinterpret_cast<SymbolToken*>(token)->Value;
+        skipWhiteSpace();
+        ++index;
+        skipWhiteSpace();
+        ++index;
+        skipWhiteSpace();
+        token = getToken();
+        
+        if (token->GetType() == EASY_TOKEN_TYPE::DOUBLE)
+            ast->Start = new PrimativeAst(reinterpret_cast<DoubleToken*>(token)->Value);
+        else if (token->GetType() == EASY_TOKEN_TYPE::INTEGER)
+            ast->Start = new PrimativeAst(reinterpret_cast<IntegerToken*>(token)->Value);
+        else if (token->GetType() == EASY_TOKEN_TYPE::VARIABLE)
+            ast->Start = new VariableAst(reinterpret_cast<VariableToken*>(token)->Value);
+        else
+            throw ParseError("Döngüde sadece sayı ve değişken kullanılabilir.");
+        skipWhiteSpace();
+        ++index;
+        skipWhiteSpace();
+        ++index;
+        skipWhiteSpace();
+        token = getToken();
+        
+        if (token->GetType() == EASY_TOKEN_TYPE::DOUBLE)
+            ast->End = new PrimativeAst(reinterpret_cast<DoubleToken*>(token)->Value);
+        else if (token->GetType() == EASY_TOKEN_TYPE::INTEGER)
+            ast->End = new PrimativeAst(reinterpret_cast<IntegerToken*>(token)->Value);
+        else if (token->GetType() == EASY_TOKEN_TYPE::VARIABLE)
+            ast->End = new VariableAst(reinterpret_cast<VariableToken*>(token)->Value);
+        else
+            throw ParseError("Döngüde sadece sayı ve değişken kullanılabilir.");
+        
+        if (getNextToken() == nullptr)
+            throw ParseError("Döngünün işlem kısmı eksik");
+        
+        ++index;
+        skipWhiteSpace();
+        ast->Repeat = parseAst();
 
+        
+        return reinterpret_cast<Ast*>(ast);
+    }
 
 	Ast* parseAst()
 	{
 		Ast* ast = nullptr;
 
-		AstType astType = detectType();
-		switch (astType) {
-		case AstType::ASSIGNMENT:
+		EASY_AST_TYPE EASY_AST_TYPE = detectType();
+		switch (EASY_AST_TYPE) {
+		case EASY_AST_TYPE::ASSIGNMENT:
 			ast = parseAssignment();
 			break;
 
-		case AstType::IF_STATEMENT:
+		case EASY_AST_TYPE::IF_STATEMENT:
 			ast = parseIfStatement();
 			break;
 
-		case AstType::FUNCTION_CALL:
+		case EASY_AST_TYPE::FUNCTION_CALL:
 			ast = parseFunctionCall();
 			break;
 
-		case AstType::PRIMATIVE:
+		case EASY_AST_TYPE::PRIMATIVE:
 			ast = parsePrimative();
 			break;
 
-		case AstType::BLOCK:
+		case EASY_AST_TYPE::BLOCK:
 			ast = parseBlock();
 			break;
 
-		case AstType::BINARY_OPERATION:
+		case EASY_AST_TYPE::BINARY_OPERATION:
 			ast = parseBinaryOperationStatement();
 			break;
-
-		case AstType::CONTROL_OPERATION:
-			ast = parseControlOperationStatement();
-			break;
                 
-        case AstType::VARIABLE:
+        case EASY_AST_TYPE::CONTROL_OPERATION:
+            ast = parseControlOperationStatement();
+            break;
+                
+        case EASY_AST_TYPE::FOR:
+            ast = parseForStatement();
+            break;
+                
+        case EASY_AST_TYPE::VARIABLE:
             {
                 auto* variableAst = new VariableAst;
                 variableAst->Value = reinterpret_cast<VariableToken*>(getToken())->Value;
@@ -445,7 +500,7 @@ public:
 
 		switch (ast->GetType())
 		{
-		case AstType::IF_STATEMENT:
+		case EASY_AST_TYPE::IF_STATEMENT:
 		{
 			auto* ifStatement = reinterpret_cast<IfStatementAst*>(ast);
 
@@ -459,7 +514,7 @@ public:
 		}
 		break;
 
-		case AstType::ASSIGNMENT: {
+		case EASY_AST_TYPE::ASSIGNMENT: {
 			auto *assignment = reinterpret_cast<AssignmentAst *>(ast);
 			levelPadding(level);
 
@@ -468,7 +523,7 @@ public:
 		}
 								  break;
 
-		case AstType::VARIABLE: {
+		case EASY_AST_TYPE::VARIABLE: {
 			auto *variable = reinterpret_cast<VariableAst *>(ast);
 			if (printPadding)
 				levelPadding(level);
@@ -477,7 +532,7 @@ public:
 		}
 								break;
 
-		case AstType::PRIMATIVE: {
+		case EASY_AST_TYPE::PRIMATIVE: {
 			auto *primative = reinterpret_cast<PrimativeAst *>(ast);
 			if (printPadding)
 				levelPadding(level);
@@ -502,7 +557,7 @@ public:
 		}
 								 break;
 
-		case AstType::BINARY_OPERATION: {
+		case EASY_AST_TYPE::BINARY_OPERATION: {
 			auto *binary = reinterpret_cast<BinaryAst *>(ast);
 			dumpLevel(binary->Left, level + 1, false);
 
@@ -511,7 +566,7 @@ public:
 		}
 										break;
 
-		case AstType::CONTROL_OPERATION: {
+		case EASY_AST_TYPE::CONTROL_OPERATION: {
 			auto *binary = reinterpret_cast<ControlAst *>(ast);
 			dumpLevel(binary->Left, level + 1, false);
 
@@ -520,7 +575,7 @@ public:
 		}
 										 break;
 
-		case AstType::FUNCTION_CALL:
+		case EASY_AST_TYPE::FUNCTION_CALL:
 		{
 			auto* functionCall = reinterpret_cast<FunctionCallAst*>(ast);
 			if (printPadding)
@@ -536,7 +591,7 @@ public:
 		}
 		break;
 
-		case AstType::BLOCK:
+		case EASY_AST_TYPE::BLOCK:
 		{
 			auto* block = reinterpret_cast<BlockAst*>(ast);
 			auto blockEnd = block->Blocks->cend();

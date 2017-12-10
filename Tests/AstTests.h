@@ -67,7 +67,7 @@ TEST_CASE( "Assignment test" ) {
 	AssignmentAst* assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
 	REQUIRE(assignment->Name == L"erhan");
 	REQUIRE(assignment->Data != nullptr);
-	REQUIRE(assignment->Data->GetType() == AstType::PRIMATIVE);
+	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Type == PrimativeValue::Type::PRI_INTEGER);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Integer == 50);
 
@@ -80,7 +80,7 @@ TEST_CASE( "Assignment test" ) {
 	assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
 	REQUIRE(assignment->Name == L"erhan");
 	REQUIRE(assignment->Data != nullptr);
-	REQUIRE(assignment->Data->GetType() == AstType::PRIMATIVE);
+	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Type == PrimativeValue::Type::PRI_INTEGER);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Integer == 50);
 
@@ -91,7 +91,7 @@ TEST_CASE( "Assignment test" ) {
 	assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
 	REQUIRE(assignment->Name == L"erhan");
 	REQUIRE(assignment->Data != nullptr);
-	REQUIRE(assignment->Data->GetType() == AstType::PRIMATIVE);
+	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Type == PrimativeValue::Type::PRI_STRING);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->String == L"deneme");
 
@@ -102,7 +102,7 @@ TEST_CASE( "Assignment test" ) {
 	assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
 	REQUIRE(assignment->Name == L"erhan");
 	REQUIRE(assignment->Data != nullptr);
-	REQUIRE(assignment->Data->GetType() == AstType::PRIMATIVE);
+	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Type == PrimativeValue::Type::PRI_STRING);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->String == L"deneme");
 
@@ -114,7 +114,7 @@ TEST_CASE( "Assignment test" ) {
 	assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
 	REQUIRE(assignment->Name == L"erhan");
 	REQUIRE(assignment->Data != nullptr);
-	REQUIRE(assignment->Data->GetType() == AstType::PRIMATIVE);
+	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Type == PrimativeValue::Type::PRI_DOUBLE);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Double == 0.15);
 
@@ -125,7 +125,7 @@ TEST_CASE( "Assignment test" ) {
 	assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
 	REQUIRE(assignment->Name == L"erhan");
 	REQUIRE(assignment->Data != nullptr);
-	REQUIRE(assignment->Data->GetType() == AstType::PRIMATIVE);
+	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Type == PrimativeValue::Type::PRI_DOUBLE);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Double == 0.15);
 
@@ -138,9 +138,9 @@ TEST_CASE( "Assignment test" ) {
 	assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
 	REQUIRE(assignment->Name == L"erhan");
 	REQUIRE(assignment->Data != nullptr);
-	REQUIRE(assignment->Data->GetType() == AstType::BINARY_OPERATION);
-	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Left->GetType() == AstType::PRIMATIVE);
-	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Right->GetType() == AstType::PRIMATIVE);
+	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::BINARY_OPERATION);
+	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Left->GetType() == EASY_AST_TYPE::PRIMATIVE);
+	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Right->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Op == EASY_OPERATOR_TYPE::PLUS);
 
 
@@ -152,9 +152,9 @@ TEST_CASE( "Assignment test" ) {
 	assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
 	REQUIRE(assignment->Name == L"erhan");
 	REQUIRE(assignment->Data != nullptr);
-	REQUIRE(assignment->Data->GetType() == AstType::BINARY_OPERATION);
-	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Left->GetType() == AstType::PRIMATIVE);
-	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Right->GetType() == AstType::PRIMATIVE);
+	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::BINARY_OPERATION);
+	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Left->GetType() == EASY_AST_TYPE::PRIMATIVE);
+	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Right->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Op == EASY_OPERATOR_TYPE::DIVISION);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(reinterpret_cast<BinaryAst*>(assignment->Data)->Left)->Value->Type == PrimativeValue::Type::PRI_INTEGER);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(reinterpret_cast<BinaryAst*>(assignment->Data)->Left)->Value->Integer == 50);
@@ -170,9 +170,9 @@ TEST_CASE( "Assignment test" ) {
 	assignment = reinterpret_cast<AssignmentAst*>(asts.get()->at(0));
 	REQUIRE(assignment->Name == L"erhan");
 	REQUIRE(assignment->Data != nullptr);
-	REQUIRE(assignment->Data->GetType() == AstType::BINARY_OPERATION);
-	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Left->GetType() == AstType::PRIMATIVE);
-	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Right->GetType() == AstType::PRIMATIVE);
+	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::BINARY_OPERATION);
+	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Left->GetType() == EASY_AST_TYPE::PRIMATIVE);
+	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Right->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Op == EASY_OPERATOR_TYPE::MINUS);
 
 	REQUIRE(assignment->Data != nullptr);
@@ -195,9 +195,9 @@ TEST_CASE("Block test") {
 	AssignmentAst* assignment = reinterpret_cast<AssignmentAst*>(block->Blocks->at(0));
 	REQUIRE(assignment->Name == L"erhan");
 	REQUIRE(assignment->Data != nullptr);
-	REQUIRE(assignment->Data->GetType() == AstType::BINARY_OPERATION);
-	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Left->GetType() == AstType::PRIMATIVE);
-	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Right->GetType() == AstType::PRIMATIVE);
+	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::BINARY_OPERATION);
+	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Left->GetType() == EASY_AST_TYPE::PRIMATIVE);
+	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Right->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	REQUIRE(reinterpret_cast<BinaryAst*>(assignment->Data)->Op == EASY_OPERATOR_TYPE::MINUS);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(reinterpret_cast<BinaryAst*>(assignment->Data)->Left)->Value->Type == PrimativeValue::Type::PRI_INTEGER);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(reinterpret_cast<BinaryAst*>(assignment->Data)->Left)->Value->Integer == 50);
@@ -230,7 +230,7 @@ TEST_CASE("If test") {
 		REQUIRE(ifStatement->True != nullptr);
 		REQUIRE(ifStatement->False == nullptr);
 		REQUIRE(ifStatement->ControlOpt != nullptr);
-		REQUIRE(ifStatement->ControlOpt->GetType() == AstType::CONTROL_OPERATION);
+		REQUIRE(ifStatement->ControlOpt->GetType() == EASY_AST_TYPE::CONTROL_OPERATION);
 		auto * controlOpt = reinterpret_cast<ControlAst*>(ifStatement->ControlOpt);
 		REQUIRE(controlOpt->Left != nullptr);
 		REQUIRE(controlOpt->Right != nullptr);
@@ -247,7 +247,7 @@ TEST_CASE("If test") {
 		REQUIRE(ifStatement->True != nullptr);
 		REQUIRE(ifStatement->False != nullptr);
 		REQUIRE(ifStatement->ControlOpt != nullptr);
-		REQUIRE(ifStatement->ControlOpt->GetType() == AstType::CONTROL_OPERATION);
+		REQUIRE(ifStatement->ControlOpt->GetType() == EASY_AST_TYPE::CONTROL_OPERATION);
 		auto * controlOpt = reinterpret_cast<ControlAst*>(ifStatement->ControlOpt);
 		REQUIRE(controlOpt->Left != nullptr);
 		REQUIRE(controlOpt->Right != nullptr);
@@ -273,7 +273,7 @@ TEST_CASE("Function call test") {
 
 		REQUIRE(functionCall->Function == L"yaz");
 		REQUIRE(functionCall->Args.size() == 1);
-		REQUIRE(functionCall->Args.at(0)->GetType() == AstType::PRIMATIVE);
+		REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::PRIMATIVE);
 		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_STRING);
 		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->String == L"test");
 	}
@@ -287,7 +287,7 @@ TEST_CASE("Function call test") {
 
 		REQUIRE(functionCall->Function == L"yaz");
 		REQUIRE(functionCall->Args.size() == 1);
-		REQUIRE(functionCall->Args.at(0)->GetType() == AstType::PRIMATIVE);
+		REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::PRIMATIVE);
 		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_DOUBLE);
 		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Double == 5.5);
 	}
@@ -301,7 +301,7 @@ TEST_CASE("Function call test") {
 
 		REQUIRE(functionCall->Function == L"yaz");
 		REQUIRE(functionCall->Args.size() == 1);
-		REQUIRE(functionCall->Args.at(0)->GetType() == AstType::PRIMATIVE);
+		REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::PRIMATIVE);
 		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_INTEGER);
 		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Integer == 123);
 	}
@@ -315,7 +315,7 @@ TEST_CASE("Function call test") {
 
 		REQUIRE(functionCall->Function == L"yaz");
 		REQUIRE(functionCall->Args.size() == 1);
-		REQUIRE(functionCall->Args.at(0)->GetType() == AstType::BINARY_OPERATION);
+		REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::BINARY_OPERATION);
 	}
 }
 
@@ -338,7 +338,7 @@ TEST_CASE("Bool ast test") {
 
         REQUIRE(functionCall->Function == L"yaz");
         REQUIRE(functionCall->Args.size() == 1);
-        REQUIRE(functionCall->Args.at(0)->GetType() == AstType::PRIMATIVE);
+        REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::PRIMATIVE);
         REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_BOOL);
         REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Bool == true);
     }
@@ -352,7 +352,7 @@ TEST_CASE("Bool ast test") {
         
         REQUIRE(functionCall->Function == L"yaz");
         REQUIRE(functionCall->Args.size() == 1);
-        REQUIRE(functionCall->Args.at(0)->GetType() == AstType::PRIMATIVE);
+        REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::PRIMATIVE);
         REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_BOOL);
         REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Bool == false);
     }
@@ -367,7 +367,7 @@ TEST_CASE("Bool ast test") {
         
         REQUIRE(functionCall->Function == L"yaz");
         REQUIRE(functionCall->Args.size() == 1);
-        REQUIRE(functionCall->Args.at(0)->GetType() == AstType::PRIMATIVE);
+        REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::PRIMATIVE);
         REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_BOOL);
         REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Bool == true);
     }
@@ -381,7 +381,7 @@ TEST_CASE("Bool ast test") {
         
         REQUIRE(functionCall->Function == L"yaz");
         REQUIRE(functionCall->Args.size() == 1);
-        REQUIRE(functionCall->Args.at(0)->GetType() == AstType::PRIMATIVE);
+        REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::PRIMATIVE);
         REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_BOOL);
         REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Bool == false);
     }

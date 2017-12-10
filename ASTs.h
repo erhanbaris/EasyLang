@@ -17,7 +17,7 @@
 struct PrimativeValue;
 typedef void (*MethodCallback)(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue);
 
-enum class AstType {
+enum class EASY_AST_TYPE {
 	NONE,
 	IF_STATEMENT,
 	ASSIGNMENT,
@@ -33,35 +33,35 @@ enum class AstType {
 class Ast
 {
 public:
-	AstType GetType() { return Type; }
+	EASY_AST_TYPE GetType() { return Type; }
 
 protected:
-	AstType Type;
+	EASY_AST_TYPE Type;
 };
 
 class AssignmentAst : public Ast {
 public:
 	std::wstring Name;
 	Ast* Data{ nullptr };
-	AssignmentAst() { Type = AstType::ASSIGNMENT; }
+	AssignmentAst() { Type = EASY_AST_TYPE::ASSIGNMENT; }
 };
 
 class VariableAst : public Ast {
 public:
 	std::wstring Value;
-	VariableAst() { Type = AstType::VARIABLE; }
-	VariableAst(std::wstring value) { Type = AstType::VARIABLE; Value = value; }
+	VariableAst() { Type = EASY_AST_TYPE::VARIABLE; }
+	VariableAst(std::wstring value) { Type = EASY_AST_TYPE::VARIABLE; Value = value; }
 };
 
 class PrimativeAst : public Ast {
 public:
 	PrimativeValue* Value;
 
-	PrimativeAst() { Type = AstType::PRIMATIVE; }
-	PrimativeAst(int value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); }
-	PrimativeAst(double value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); }
-	PrimativeAst(std::wstring value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); }
-	PrimativeAst(bool value) : Ast() { Type = AstType::PRIMATIVE; Value = new PrimativeValue(value); }
+	PrimativeAst() { Type = EASY_AST_TYPE::PRIMATIVE; }
+	PrimativeAst(int value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
+	PrimativeAst(double value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
+	PrimativeAst(std::wstring value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
+	PrimativeAst(bool value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
 };
 
 class ControlAst : public Ast
@@ -70,14 +70,14 @@ public:
 	Ast* Left{nullptr};
 	Ast* Right{nullptr};
 	EASY_OPERATOR_TYPE Op;
-    ControlAst() : Left(nullptr), Right(nullptr) { Type = AstType::CONTROL_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
+    ControlAst() : Left(nullptr), Right(nullptr) { Type = EASY_AST_TYPE::CONTROL_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
 };
 
 class BlockAst : public Ast
 {
 public:
 	std::shared_ptr <std::vector<Ast*>> Blocks;
-	BlockAst() { Type = AstType::BLOCK; Blocks = std::make_shared<std::vector<Ast*>>(); }
+	BlockAst() { Type = EASY_AST_TYPE::BLOCK; Blocks = std::make_shared<std::vector<Ast*>>(); }
 };
 
 class BinaryAst : public Ast
@@ -86,7 +86,7 @@ public:
     Ast* Left{nullptr};
     Ast* Right{nullptr};
     EASY_OPERATOR_TYPE Op;
-    BinaryAst() : Left(nullptr), Right(nullptr) { Type = AstType::BINARY_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
+    BinaryAst() : Left(nullptr), Right(nullptr) { Type = EASY_AST_TYPE::BINARY_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
 };
 
 class IfStatementAst : public Ast
@@ -95,16 +95,17 @@ public:
     Ast* ControlOpt{nullptr};
     Ast* True{nullptr};
     Ast* False{nullptr};
-    IfStatementAst() { Type = AstType::IF_STATEMENT; }
+    IfStatementAst() { Type = EASY_AST_TYPE::IF_STATEMENT; }
 };
 
 class ForStatementAst : public Ast
 {
 public:
+    std::wstring Variable;
     Ast* Start{nullptr};
     Ast* End{nullptr};
     Ast* Repeat{nullptr};
-    ForStatementAst() { Type = AstType::FOR; }
+    ForStatementAst() { Type = EASY_AST_TYPE::FOR; }
 };
 
 class FunctionCallAst : public Ast
@@ -112,7 +113,7 @@ class FunctionCallAst : public Ast
 public:
     std::wstring Function;
     std::vector<Ast*> Args;
-    FunctionCallAst() { Type = AstType::FUNCTION_CALL; }
+    FunctionCallAst() { Type = EASY_AST_TYPE::FUNCTION_CALL; }
 };
 
 class System {
