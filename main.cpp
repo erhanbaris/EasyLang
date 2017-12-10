@@ -14,9 +14,9 @@
 #include "Backend.h"
 #include "InterpreterBackend.h"
 
-#include "Tests/LexerTests.h"
-#include "Tests/AstTests.h"
-#include "Tests/InterpreterTests.h"
+//#include "Tests/LexerTests.h"
+//#include "Tests/AstTests.h"
+//#include "Tests/InterpreterTests.h"
 
 using namespace std;
 

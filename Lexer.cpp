@@ -40,9 +40,20 @@ public:
                 getText();
                 continue;
             }
-            else if (ch == '$')
+            else if (ch == '{')
             {
-                getVariable();
+                auto* opt = new KeywordToken;
+                opt->Value = EASY_KEYWORD_TYPE::BLOCK_START;
+                TokenList->push_back(reinterpret_cast<Token*>(opt));
+                ++index;
+                continue;
+            }
+            else if (ch == '}')
+            {
+                auto* opt = new KeywordToken;
+                opt->Value = EASY_KEYWORD_TYPE::BLOCK_END;
+                TokenList->push_back(reinterpret_cast<Token*>(opt));
+                ++index;
                 continue;
             }
             else if (ch == '.' && chNext == '.')
