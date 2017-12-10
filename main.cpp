@@ -12,8 +12,11 @@
 #include "Lexer.h"
 #include "ASTs.h"
 #include "Backend.h"
-//#include "Tests/LexerTests.h"
-//#include "Tests/AstTests.h"
+#include "InterpreterBackend.h"
+
+#include "Tests/LexerTests.h"
+#include "Tests/AstTests.h"
+#include "Tests/InterpreterTests.h"
 
 using namespace std;
 
@@ -48,9 +51,13 @@ int main(int argc, char* argv[]) {
 	std::wcout << "lang > ";
 	while (std::getline(std::wcin, line))
 	{
-		tokinizer->Parse(line, tokens);
-		astParser->Parse(tokens, asts);
-		executer.Prepare(asts);
+        try {
+            tokinizer->Parse(line, tokens);
+            astParser->Parse(tokens, asts);
+            executer.Prepare(asts);
+        } catch (exception& e) {
+            std::wcout << "#ERROR " << e.what() << '\n';
+        }
 
 		std::wcout << "lang >  ";
 	}

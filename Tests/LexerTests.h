@@ -57,7 +57,7 @@ TEST_CASE( "Bool test" ) {
     Tokinizer* parser = new StandartTokinizer();
     auto tokens = make_shared<std::vector<Token*>>();
     parser->Parse(L"olumsuz + olumsuz", tokens);
-    REQUIRE(tokens->size() == 3);
+    REQUIRE(tokens->size() == 5);
 }
 
 TEST_CASE( "String test" ) {
@@ -77,7 +77,7 @@ TEST_CASE( "String test" ) {
     
     SECTION( "Atama" ) {
         parser->Parse(L"erhan'a 15", tokens);
-        REQUIRE(tokens->size() == 4);
+        REQUIRE(tokens->size() == 5);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::SYMBOL);
         REQUIRE(reinterpret_cast<TextToken*>(tokens->at(0))->Value == L"erhan");
         
@@ -87,34 +87,34 @@ TEST_CASE( "String test" ) {
         REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::KEYWORD);
         REQUIRE(reinterpret_cast<KeywordToken*>(tokens->at(2))->Value == EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX);
         
-        REQUIRE(tokens->at(3)->GetType() == EASY_TOKEN_TYPE::INTEGER);
-        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(3))->Value == 15);
+        REQUIRE(tokens->at(4)->GetType() == EASY_TOKEN_TYPE::INTEGER);
+        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(4))->Value == 15);
     }
     
     SECTION( "Sembol" ) {
         parser->Parse(L"17 <= 40", tokens);
-        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->size() == 5);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 17);
         
-        REQUIRE(tokens->at(1)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
-        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(1))->Value == EASY_OPERATOR_TYPE::LOWER_EQUAL);
+        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
+        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(2))->Value == EASY_OPERATOR_TYPE::LOWER_EQUAL);
         
-        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::INTEGER);
-        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(2))->Value == 40);
+        REQUIRE(tokens->at(4)->GetType() == EASY_TOKEN_TYPE::INTEGER);
+        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(4))->Value == 40);
     }
     
     SECTION( "17 büyüktür 40" ) {
         parser->Parse(L"17 büyüktür 40", tokens);
-        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->size() == 5);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 17);
         
-        REQUIRE(tokens->at(1)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
-        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(1))->Value == EASY_OPERATOR_TYPE::GREATOR);
+        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
+        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(2))->Value == EASY_OPERATOR_TYPE::GREATOR);
         
-        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::INTEGER);
-        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(2))->Value == 40);
+        REQUIRE(tokens->at(4)->GetType() == EASY_TOKEN_TYPE::INTEGER);
+        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(4))->Value == 40);
     }
 }
 
@@ -124,54 +124,54 @@ TEST_CASE( "Operator lexer test" ) {
 
     SECTION( "10 / 10" ) {
         parser->Parse(L"10 / 10", tokens);
-        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->size() == 5);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 10);
         
-        REQUIRE(tokens->at(1)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
-        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(1))->Value == EASY_OPERATOR_TYPE::DIVISION);
+        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
+        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(2))->Value == EASY_OPERATOR_TYPE::DIVISION);
         
-        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::INTEGER);
-        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(2))->Value == 10);
+        REQUIRE(tokens->at(4)->GetType() == EASY_TOKEN_TYPE::INTEGER);
+        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(4))->Value == 10);
     }
     
     SECTION( "10 - 10" ) {
         parser->Parse(L"10 - 10", tokens);
-        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->size() == 5);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 10);
         
-        REQUIRE(tokens->at(1)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
-        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(1))->Value == EASY_OPERATOR_TYPE::MINUS);
+        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
+        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(2))->Value == EASY_OPERATOR_TYPE::MINUS);
         
-        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::INTEGER);
-        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(2))->Value == 10);
+        REQUIRE(tokens->at(4)->GetType() == EASY_TOKEN_TYPE::INTEGER);
+        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(4))->Value == 10);
     }
     
     SECTION( "10 + 10" ) {
         parser->Parse(L"10 + 10", tokens);
-        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->size() == 5);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 10);
         
-        REQUIRE(tokens->at(1)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
-        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(1))->Value == EASY_OPERATOR_TYPE::PLUS);
+        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
+        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(2))->Value == EASY_OPERATOR_TYPE::PLUS);
         
-        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::INTEGER);
-        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(2))->Value == 10);
+        REQUIRE(tokens->at(4)->GetType() == EASY_TOKEN_TYPE::INTEGER);
+        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(4))->Value == 10);
     }
     
     SECTION( "10 * 10" ) {
         parser->Parse(L"10 * 10", tokens);
-        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->size() == 5);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 10);
         
-        REQUIRE(tokens->at(1)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
-        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(1))->Value == EASY_OPERATOR_TYPE::MULTIPLICATION);
+        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
+        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(2))->Value == EASY_OPERATOR_TYPE::MULTIPLICATION);
         
-        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::INTEGER);
-        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(2))->Value == 10);
+        REQUIRE(tokens->at(4)->GetType() == EASY_TOKEN_TYPE::INTEGER);
+        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(4))->Value == 10);
     }
 }
 

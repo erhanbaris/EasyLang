@@ -21,10 +21,12 @@ DECLARE_ENUM(EASY_TOKEN_TYPE, TOKEN_NONE,
 			 OPERATOR,
 			 TEXT,
 			 VARIABLE,
-			 KEYWORD)
+			 KEYWORD,
+             WHITESPACE)
 
 DECLARE_ENUM(EASY_OPERATOR_TYPE,
 	OPERATOR_NONE,
+    OPERATION,
 	PLUS,
 	MINUS,
 	MULTIPLICATION,
@@ -43,6 +45,7 @@ DECLARE_ENUM(EASY_OPERATOR_TYPE,
 DECLARE_ENUM(EASY_KEYWORD_TYPE,
 	KEYWORD_NONE,
 	IF,
+    FOR_SHORT,
 	ASSIGNMENT,
 	ELSE,
 	THEN,
@@ -137,18 +140,31 @@ static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash> ControlOperators{
 static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash>::const_iterator ControlOperatorsEnd = ControlOperators.cend();
 
 static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE> Keywords {
-	{ L"eğer", EASY_KEYWORD_TYPE::IF },
-	{ L"atama", EASY_KEYWORD_TYPE::ASSIGNMENT },
-	{ L"değilse", EASY_KEYWORD_TYPE::ELSE },
-	{ L"sonra", EASY_KEYWORD_TYPE::THEN },
+    { L"if", EASY_KEYWORD_TYPE::IF },
+    { L"var", EASY_KEYWORD_TYPE::ASSIGNMENT },
+    { L"else", EASY_KEYWORD_TYPE::ELSE },
+    { L"then", EASY_KEYWORD_TYPE::THEN },
+    { L"and", EASY_KEYWORD_TYPE::AND},
+    { L"or", EASY_KEYWORD_TYPE::OR},
+    { L"begin", EASY_KEYWORD_TYPE::BLOCK_START },
+    { L"end", EASY_KEYWORD_TYPE::BLOCK_END },
+    { L"yes", EASY_KEYWORD_TYPE::BOOL_TRUE },
+    { L"no", EASY_KEYWORD_TYPE::BOOL_FALSE },
+    { L"true", EASY_KEYWORD_TYPE::BOOL_TRUE },
+    { L"false", EASY_KEYWORD_TYPE::BOOL_FALSE },
+    
+    { L"eğer", EASY_KEYWORD_TYPE::IF },
+    { L"atama", EASY_KEYWORD_TYPE::ASSIGNMENT },
+    { L"değilse", EASY_KEYWORD_TYPE::ELSE },
+    { L"sonra", EASY_KEYWORD_TYPE::THEN },
 	{ L"a", EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX },
 	{ L"e", EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX },
-	{ L"ve", EASY_KEYWORD_TYPE::AND},
-	{ L"veya", EASY_KEYWORD_TYPE::OR},
-	{ L"başla", EASY_KEYWORD_TYPE::BLOCK_START },
+    { L"ve", EASY_KEYWORD_TYPE::AND},
+    { L"veya", EASY_KEYWORD_TYPE::OR},
+    { L"başla", EASY_KEYWORD_TYPE::BLOCK_START },
 	{ L"başlangıç", EASY_KEYWORD_TYPE::BLOCK_START },
 	{ L"bitir", EASY_KEYWORD_TYPE::BLOCK_END },
-	{ L"bitiş", EASY_KEYWORD_TYPE::BLOCK_END },
+    { L"bitiş", EASY_KEYWORD_TYPE::BLOCK_END },
     { L"evet", EASY_KEYWORD_TYPE::BOOL_TRUE },
     { L"hayır", EASY_KEYWORD_TYPE::BOOL_FALSE },
     { L"doğru", EASY_KEYWORD_TYPE::BOOL_TRUE },
@@ -163,6 +179,11 @@ public:
 
 protected:
 	EASY_TOKEN_TYPE Type;
+};
+
+class WhitespaceToken : Token {
+public:
+    WhitespaceToken() : Token() { Type = EASY_TOKEN_TYPE::WHITESPACE; }
 };
 
 class IntegerToken : Token {

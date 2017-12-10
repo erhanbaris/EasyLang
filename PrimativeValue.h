@@ -36,8 +36,8 @@ struct PrimativeValue {
         new (&String) std::wstring(value);
         Type = Type::PRI_STRING;
     }
-
     void SetBool(bool value) { Bool = value; Type = Type::PRI_BOOL; }
+    void SetNull() { Integer = 0; Type = Type::PRI_NULL; }
 
     bool IsInteger() { return Type == Type::PRI_INTEGER; }
     bool IsDouble() { return Type == Type::PRI_DOUBLE; }

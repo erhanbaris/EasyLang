@@ -17,10 +17,17 @@ public:
         while (contentLength > index)
         {
             wchar_t ch = getChar();
+            wchar_t chNext = getNextChar();
 
             if (isWhitespace(ch))
             {
-                ++index;
+                while (contentLength > index && isWhitespace(ch))
+                {
+                    ++index;
+                    ch = getChar();
+                }
+                
+                TokenList->push_back(reinterpret_cast<Token*>(new WhitespaceToken));
                 continue;
             }
             else if (isSymbol(ch))
@@ -37,6 +44,13 @@ public:
             {
                 getVariable();
                 continue;
+            }
+            else if (ch == '.' && chNext == '.')
+            {
+                auto* opt = new KeywordToken;
+                opt->Value = EASY_KEYWORD_TYPE::FOR_SHORT;
+                TokenList->push_back(reinterpret_cast<Token*>(opt));
+                ++index;
             }
             else if ((ch >= '0' && ch <= '9') || ch == '.')
             {
@@ -181,8 +195,17 @@ public:
     void getOperator()
     {
         wchar_t ch = getChar();
+        wchar_t chNext = getNextChar();
 
-        if (ch == '-' && (isInteger(getNextChar()) || getNextChar() == '.'))
+        if (ch == '-' && chNext == '>')
+        {
+            index += 2;
+            
+            auto* opt = new OperatorToken;
+            opt->Value = EASY_OPERATOR_TYPE::OPERATION;
+            TokenList->push_back(reinterpret_cast<Token*>(opt));
+        }
+        else if (ch == '-' && (isInteger(getNextChar()) || getNextChar() == '.'))
             getNumber();
         else
         {

@@ -10,6 +10,7 @@
 #include <cmath>
 #include <unordered_map>
 
+
 #include "Lexer.h"
 #include "PrimativeValue.h"
 
@@ -25,7 +26,8 @@ enum class AstType {
 	BINARY_OPERATION,
 	CONTROL_OPERATION,
 	FUNCTION_CALL,
-	BLOCK
+	BLOCK,
+    FOR
 };
 
 class Ast
@@ -94,6 +96,15 @@ public:
     Ast* True{nullptr};
     Ast* False{nullptr};
     IfStatementAst() { Type = AstType::IF_STATEMENT; }
+};
+
+class ForStatementAst : public Ast
+{
+public:
+    Ast* Start{nullptr};
+    Ast* End{nullptr};
+    Ast* Repeat{nullptr};
+    ForStatementAst() { Type = AstType::FOR; }
 };
 
 class FunctionCallAst : public Ast
