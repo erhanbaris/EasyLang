@@ -37,11 +37,11 @@ int main(int argc, char* argv[]) {
 
     auto* astParser = new AstParser;
 
-    astParser->Parse(tokens, asts);
+    //astParser->Parse(tokens, asts);
     //astParser->Dump(asts);
 
 	BackendExecuter<InterpreterBackend> executer;
-	executer.Prepare(asts);
+	//executer.Prepare(asts);
 
 	std::wstring line;
 	std::wcout << "lang > ";

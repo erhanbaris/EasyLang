@@ -184,9 +184,13 @@ public:
 			else
 				index += 1;
 		}
-		else if (isPrimative(tokenNext))
-			++index;
-
+		else
+        {
+            ++index;
+            skipWhiteSpace();
+            ast->Data = parseAst();
+        }
+        
         skipWhiteSpace();
 		token = getToken();
         tokenNext = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
@@ -430,6 +434,12 @@ public:
 	Ast* parseAst()
 	{
 		Ast* ast = nullptr;
+        
+        skipWhiteSpace();
+        auto* token = getToken();
+        
+        if (token == nullptr)
+            return nullptr;
 
 		EASY_AST_TYPE EASY_AST_TYPE = detectType();
 		switch (EASY_AST_TYPE) {
@@ -475,7 +485,7 @@ public:
             break;
 
 		default:
-			++index;
+                throw ParseError("#ERROR");
 			break;
 		}
 

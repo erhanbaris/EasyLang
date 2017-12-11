@@ -80,8 +80,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
                 }
                 
                 function(args, *returnValue);
-                //function(
-                //call->Function
+                return returnValue;
             }
         }
             break;

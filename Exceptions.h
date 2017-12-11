@@ -9,9 +9,22 @@ public:
     ParseError(char const * message): std::runtime_error(message)
     {
     }
-    friend std::ostream& operator<< (std::ostream &out, const ParseError &e);
-private:
-    // Character position where error occurred. size_t m_position;
+};
+
+class ConvertError : public std::runtime_error
+{
+public:
+    ConvertError(char const * message): std::runtime_error(message)
+    {
+    }
+};
+
+class ParameterError : public std::runtime_error
+{
+public:
+    ParameterError(char const * message): std::runtime_error(message)
+    {
+    }
 };
 
 #endif //EASYLANG_EXCEPTIONS_H

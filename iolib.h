@@ -11,6 +11,12 @@
 void print(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue);
 void readline(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue);
 
+void toInt(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue);
+void toDouble(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue);
+void toString(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue);
+void toBool(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue);
+void isEmpty(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue);
+
 class IOLibInit {
 public:
 	IOLibInit();
