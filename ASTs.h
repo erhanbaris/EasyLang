@@ -14,9 +14,6 @@
 #include "Lexer.h"
 #include "PrimativeValue.h"
 
-struct PrimativeValue;
-typedef void (*MethodCallback)(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue);
-
 enum class EASY_AST_TYPE {
 	NONE,
 	IF_STATEMENT,
@@ -116,17 +113,11 @@ public:
     FunctionCallAst() { Type = EASY_AST_TYPE::FUNCTION_CALL; }
 };
 
-class System {
-public:
-	static std::unordered_map<std::wstring, MethodCallback> SystemMethods;
-};
-
 class AstParserImpl;
 class AstParser
 {
 public:
-    AstParser();
-	void AddMethod(std::wstring const & method, MethodCallback callback);
+	AstParser();
     void Parse(std::shared_ptr<std::vector<Token*>> tokens, std::shared_ptr<std::vector<Ast*>> asts);
 	void Dump(std::shared_ptr<std::vector<Ast*>> asts);
 

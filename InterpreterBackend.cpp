@@ -1,4 +1,5 @@
 #include "InterpreterBackend.h"
+#include "System.h"
 
 class NullBuffer : public std::streambuf
 {

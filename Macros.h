@@ -35,4 +35,17 @@ static void SplitEnumArgs(const char* szArgs, std::string Array[], int nMax)
         return MAX_NUMBER_OF_##ename; \
     }
 
+
+#define INIT_BEGIN namespace\
+{\
+	class __init\
+	{\
+	public:\
+		__init()\
+		{
+#define INIT_END }\
+	};\
+	__init init;\
+}
+
 #endif //EASYLANG_MACROS_H

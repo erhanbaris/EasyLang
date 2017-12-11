@@ -283,6 +283,10 @@ public:
                     opt->Value = EASY_OPERATOR_TYPE::RIGHT_PARENTHESES;
                     break;
 
+				case ',':
+					opt->Value = EASY_OPERATOR_TYPE::COMMA;
+					break;
+
                 default:
                     break;
             }

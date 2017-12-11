@@ -1,5 +1,6 @@
 #include "ASTs.h"
 #include "Exceptions.h"
+#include "System.h"
 
 class AstParserImpl
 {
@@ -7,7 +8,6 @@ public:
 	std::shared_ptr<std::vector<Token*>> tokens;
 	std::shared_ptr<std::vector<Ast*>> asts;
 	std::unordered_map<std::wstring, MethodCallback> userMethods;
-	//std::unordered_map<std::wstring, MethodCallback>::iterator systemMethodsEnd;
 
 	size_t tokensCount;
 	size_t index;
@@ -244,7 +244,29 @@ public:
 		ast->Function = reinterpret_cast<SymbolToken*>(token)->Value;
         ++index;
         skipWhiteSpace();
-		ast->Args.push_back(parseAst());
+		token = getToken();
+		if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::LEFT_PARENTHESES)
+		{
+			while (index < tokensCount)
+			{
+				++index;
+				skipWhiteSpace();
+				ast->Args.push_back(parseAst());
+				skipWhiteSpace();
+				token = getToken();
+				if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::RIGHT_PARENTHESES)
+					break;
+				else if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::COMMA)
+					continue;
+
+				throw ParseError("',' required");
+			}
+
+			skipWhiteSpace();
+			consumeOperator(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
+		}
+		else 
+			ast->Args.push_back(parseAst());
 
 		return reinterpret_cast<Ast*>(ast);
 	}
@@ -606,60 +628,9 @@ public:
 	}
 };
 
-namespace {
-	void print(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue)
-	{
-        if (args->size() > 0)
-        {
-            if (args.get()->at(0) == nullptr)
-            {
-                std::wcout << L"#ERROR Argument not found" << '\n';
-                return;
-            }
-            
-            switch (args.get()->at(0)->Type)
-            {
-                case PrimativeValue::Type::PRI_BOOL:
-                    std::wcout << args.get()->at(0)->Bool << std::endl;
-                    break;
-                    
-                case PrimativeValue::Type::PRI_DOUBLE:
-                    std::wcout << args.get()->at(0)->Double << std::endl;
-                    break;
-                    
-                case PrimativeValue::Type::PRI_INTEGER:
-                    std::wcout << args.get()->at(0)->Integer << std::endl;
-                    break;
-                    
-                case PrimativeValue::Type::PRI_STRING:
-                    std::wcout << args.get()->at(0)->String << std::endl;
-                    break;
-                    
-                case PrimativeValue::Type::PRI_NULL:
-                    std::wcout << L"(NULL)" << std::endl;
-                    break;
-            }
-        }
-	}
-
-	void readKey(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue)
-	{
-		std::wstring text;
-		std::getline(std::wcin, text);
-		returnValue.SetString(text);
-	}
-}
-
 AstParser::AstParser()
 {
 	impl = new AstParserImpl;
-	this->AddMethod(L"yaz", &print);
-	this->AddMethod(L"yazioku", &readKey);
-}
-void AstParser::AddMethod(std::wstring const & method, MethodCallback callback)
-{
-	System::SystemMethods[method] = callback;
-	//impl->systemMethodsEnd = impl->systemMethods.end();
 }
 
 void AstParser::Parse(std::shared_ptr<std::vector<Token*>> tokens, std::shared_ptr<std::vector<Ast*>> asts)
@@ -675,6 +646,3 @@ void AstParser::Dump(std::shared_ptr<std::vector<Ast*>> asts)
 {
 	impl->dump(asts);
 }
-
-
-std::unordered_map<std::wstring, MethodCallback> System::SystemMethods;

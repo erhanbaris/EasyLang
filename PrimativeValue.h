@@ -29,6 +29,23 @@ struct PrimativeValue {
 
     ~PrimativeValue() { }
 
+	std::wstring Describe()
+	{
+		switch (Type)
+		{
+		case PrimativeValue::Type::PRI_BOOL:
+			return Bool ? L"(BOOL) true" : L"(BOOL) false";
+		case PrimativeValue::Type::PRI_DOUBLE:
+			return L"(DOUBLE) " + std::to_wstring(Double);
+		case PrimativeValue::Type::PRI_INTEGER:
+			return L"(INTEGER) " + std::to_wstring(Integer);
+		case PrimativeValue::Type::PRI_STRING:
+			return L"(STRING) " + String;			
+		}
+
+		return L"(NULL)";
+	}
+
     void SetInteger(int value) { Integer = value; Type = Type::PRI_INTEGER; }
     void SetDouble(double value) { Double = value; Type = Type::PRI_DOUBLE; }
     void SetString(std::wstring value)

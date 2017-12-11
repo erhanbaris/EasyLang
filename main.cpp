@@ -9,6 +9,8 @@
 #define CATCH_CONFIG_RUNNER
 
 #include "Catch.h"
+#include "System.h"
+#include "iolib.h"
 #include "Lexer.h"
 #include "ASTs.h"
 #include "Backend.h"
@@ -21,6 +23,7 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
+	System::WarmUp();
 	// Unit tests
 	Catch::Session().run(argc, argv);
 
@@ -29,14 +32,7 @@ int main(int argc, char* argv[]) {
 	auto asts = make_shared<std::vector<Ast*>>();
 
 	//tokinizer->Parse(L"4 eşit 4", tokens);
-	tokinizer->Parse(L"atama erhan'a 0 artı 8 "
-                      "eğer erhan büyükise 13 sonra "
-                      "başla "
-                          "yaz \"buyuk\" "
-                          "yaz \"block ikinci eleman\" "
-                      "bitir "
-                      "değilse "
-                          "yaz \"kucuk\"", tokens);
+	tokinizer->Parse(L"yaz(1,2,3,4) ", tokens);
 	//tokinizer->Dump(tokens);
 
     auto* astParser = new AstParser;
