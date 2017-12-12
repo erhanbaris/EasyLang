@@ -50,7 +50,7 @@ public:
         if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(tokenNext)->Value == EASY_OPERATOR_TYPE::OPERATION)
             return EASY_AST_TYPE::FOR;
         
-		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::ASSIGNMENT)
+		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(tokenNext)->Value == EASY_OPERATOR_TYPE::ASSIGN)
 			return EASY_AST_TYPE::ASSIGNMENT;
 
 		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::IF)
@@ -169,31 +169,20 @@ public:
 
 	Ast* parseAssignment()
 	{
-		++index;
         skipWhiteSpace();
 		auto* token = getToken();
-        auto* tokenNext = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
-
+       
 		auto* ast = new AssignmentAst;
 		ast->Name = reinterpret_cast<SymbolToken*>(token)->Value;
 
-		if (tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR)
-		{
-			if (reinterpret_cast<OperatorToken*>(tokenNext)->Value == EASY_OPERATOR_TYPE::SINGLE_QUOTES)
-				index += 3;
-			else
-				index += 1;
-		}
-		else
-        {
-            ++index;
-            skipWhiteSpace();
-            ast->Data = parseAst();
-        }
-        
+		++index;
+		skipWhiteSpace();
+
+		consumeOperator(EASY_OPERATOR_TYPE::ASSIGN);
+
         skipWhiteSpace();
 		token = getToken();
-        tokenNext = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
+		auto* tokenNext = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
 
 		if (tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR)
 		{
@@ -403,7 +392,7 @@ public:
         else if (token->GetType() == EASY_TOKEN_TYPE::VARIABLE)
             ast->Start = new VariableAst(reinterpret_cast<VariableToken*>(token)->Value);
         else
-            throw ParseError("Döngüde sadece sayı ve değişken kullanılabilir.");
+            throw ParseError("For repeat works with variable, double and integer");
         skipWhiteSpace();
         ++index;
         skipWhiteSpace();
@@ -418,10 +407,10 @@ public:
         else if (token->GetType() == EASY_TOKEN_TYPE::VARIABLE)
             ast->End = new VariableAst(reinterpret_cast<VariableToken*>(token)->Value);
         else
-            throw ParseError("Döngüde sadece sayı ve değişken kullanılabilir.");
+            throw ParseError("For repeat works with variable, double and integer");
         
         if (getNextToken() == nullptr)
-            throw ParseError("Döngünün işlem kısmı eksik");
+            throw ParseError("Repeat block missing");
         
         ++index;
         skipWhiteSpace();

@@ -1,3 +1,4 @@
+#include "Exceptions.h"
 #include "InterpreterBackend.h"
 #include "System.h"
 
@@ -44,6 +45,9 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
         {
             AssignmentAst* assignment = reinterpret_cast<AssignmentAst*>(ast);
             auto* value = getData(assignment->Data);
+			if (value == nullptr)
+				throw NullException("Value not found");
+
             variables[assignment->Name] = value;
             std::wcout << L"Assign -> [" << assignment->Name << L"]" << std::endl;
         }
@@ -194,9 +198,17 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
 
 void InterpreterBackend::Execute()
 {
+	PrimativeValue* result = nullptr;
     auto astsEnd = asts->cend();
-    for (auto it = asts->cbegin(); astsEnd != it; ++it)
-        getData(*it);
+	for (auto it = asts->cbegin(); astsEnd != it; ++it)
+	{
+		result = getData(*it);
+
+		if (result != nullptr)
+		{
+			std::wcout << result->Describe() << '\n';
+		}
+	}
 }
 
 InterpreterBackend::InterpreterBackend() : stream(std::cout)

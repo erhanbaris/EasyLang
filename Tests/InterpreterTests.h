@@ -29,8 +29,8 @@ TEST_CASE("Interpreter tests") {
     std::shared_ptr<std::vector<Token* > > tokens = make_shared<std::vector<Token* > >();
     std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
     
-    SECTION("eğer 100 büyükise 15 sonra yaz 123") {
-        PREPARE("eğer 100 büyükise 15 sonra yaz 123");
+    SECTION("if 100 > 15 then print 123") {
+        PREPARE("if 100 > 15 then print 123");
         
         //value = backend->getData(asts->at(0));
         //REQUIRE(value != nullptr);

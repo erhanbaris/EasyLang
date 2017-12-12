@@ -27,4 +27,12 @@ public:
     }
 };
 
+class NullException : public std::runtime_error
+{
+public:
+	NullException(char const * message) : std::runtime_error(message)
+	{
+	}
+};
+
 #endif //EASYLANG_EXCEPTIONS_H

@@ -3,7 +3,7 @@
 #include "System.h"
 #include "Exceptions.h"
 
-void print(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue)
+void print(FunctionArgs const & args, PrimativeValue & returnValue)
 {
 	if (args->size() > 0)
 	{
@@ -21,21 +21,16 @@ void print(std::shared_ptr<std::vector<PrimativeValue*> > const & args, Primativ
 	}
 }
 
-void readline(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue)
+void readline(FunctionArgs const & args, PrimativeValue & returnValue)
 {
 	std::wstring text;
 	std::getline(std::wcin, text);
 	returnValue.SetString(text);
 }
 
-void toInt(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue)
+void toInt(FunctionArgs const & args, PrimativeValue & returnValue)
 {
-    if (args->size() == 0)
-        throw ParameterError("toInt method require a parameter");
-    
-    if (args->size() > 1)
-        throw ParameterError("toInt method handle only 1 parameter");
-    
+	REQUIRED_ARGUMENT_COUNT(1);
     auto* item = args->at(0);
     switch (args->at(0)->Type)
     {
@@ -57,14 +52,9 @@ void toInt(std::shared_ptr<std::vector<PrimativeValue*> > const & args, Primativ
     }
 }
 
-void toDouble(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue)
+void toDouble(FunctionArgs const & args, PrimativeValue & returnValue)
 {
-    if (args->size() == 0)
-        throw ParameterError("toInt method require a parameter");
-    
-    if (args->size() > 1)
-        throw ParameterError("toInt method handle only 1 parameter");
-    
+	REQUIRED_ARGUMENT_COUNT(1);
     auto* item = args->at(0);
     switch (args->at(0)->Type)
     {
@@ -86,14 +76,9 @@ void toDouble(std::shared_ptr<std::vector<PrimativeValue*> > const & args, Prima
     }
 }
 
-void toString(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue)
+void toString(FunctionArgs const & args, PrimativeValue & returnValue)
 {
-    if (args->size() == 0)
-        throw ParameterError("toInt method require a parameter");
-    
-    if (args->size() > 1)
-        throw ParameterError("toInt method handle only 1 parameter");
-    
+	REQUIRED_ARGUMENT_COUNT(1);
     auto* item = args->at(0);
     switch (args->at(0)->Type)
     {
@@ -115,14 +100,9 @@ void toString(std::shared_ptr<std::vector<PrimativeValue*> > const & args, Prima
     }
 }
 
-void toBool(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue)
+void toBool(FunctionArgs const & args, PrimativeValue & returnValue)
 {
-    if (args->size() == 0)
-        throw ParameterError("toInt method require a parameter");
-    
-    if (args->size() > 1)
-        throw ParameterError("toInt method handle only 1 parameter");
-    
+	REQUIRED_ARGUMENT_COUNT(1);
     auto* item = args->at(0);
     switch (args->at(0)->Type)
     {
@@ -144,14 +124,9 @@ void toBool(std::shared_ptr<std::vector<PrimativeValue*> > const & args, Primati
     }
 }
 
-void isEmpty(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue)
+void isEmpty(FunctionArgs const & args, PrimativeValue & returnValue)
 {
-    if (args->size() == 0)
-        throw ParameterError("toInt method require a parameter");
-    
-    if (args->size() > 1)
-        throw ParameterError("toInt method handle only 1 parameter");
-    
+	REQUIRED_ARGUMENT_COUNT(1);
     auto* item = args->at(0);
     switch (args->at(0)->Type)
     {
@@ -178,9 +153,33 @@ void isEmpty(std::shared_ptr<std::vector<PrimativeValue*> > const & args, Primat
 }
 
 
+void isInt(FunctionArgs const & args, PrimativeValue & returnValue)
+{
+	REQUIRED_ARGUMENT_COUNT(1);
+	returnValue.SetBool(args->at(0)->IsInteger());
+}
+
+void isDouble(FunctionArgs const & args, PrimativeValue & returnValue)
+{
+	REQUIRED_ARGUMENT_COUNT(1);
+	returnValue.SetBool(args->at(0)->IsDouble());
+}
+
+void isString(FunctionArgs const & args, PrimativeValue & returnValue)
+{
+	REQUIRED_ARGUMENT_COUNT(1);
+	returnValue.SetBool(args->at(0)->IsString());
+}
+
+void isBool(FunctionArgs const & args, PrimativeValue & returnValue)
+{
+
+	REQUIRED_ARGUMENT_COUNT(1);
+	returnValue.SetBool(args->at(0)->IsBool());
+}
+
 IOLibInit::IOLibInit()
 {
-	System::SystemMethods[L"yaz"] = &print;
     System::SystemMethods[L"print"] = &print;
     System::SystemMethods[L"readline"] = &readline;
     
@@ -189,4 +188,9 @@ IOLibInit::IOLibInit()
     System::SystemMethods[L"toString"] = &toString;
     System::SystemMethods[L"toBool"] = &toBool;
     System::SystemMethods[L"isEmpty"] = &isEmpty;
+
+	System::SystemMethods[L"isInt"] = &isInt;
+	System::SystemMethods[L"isDouble"] = &isDouble;
+	System::SystemMethods[L"isString"] = &isString;
+	System::SystemMethods[L"isBool"] = &isBool;
 }

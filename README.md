@@ -1,27 +1,61 @@
 # EasyLang
-EasyLang ilk olarak Türkçe yazılım geliştirmek için başlatılan bir programlama dilidir. Kurallar ve kontroller Türkçe kelimeler kullanılarak yazılmakta ve çalıştırılmaktadır. Şu anda Lexer ve AST kısımları üzerinde çalışmaktayım. Dil yapısı oturduktan sonra interpreator olarak çalışacak sonrasında LLVM entegrasyonu yapılması planlanmaktadır. Bu tamamen deneyse ve programlama dillerinin iç dinamiklerini öğrenmek için başlattığım bir proje.
+It is a programming language that has begun to be developed for testing purposes.
 
-Örnak Kullanım şekilleri aşağıdadır.
-Basit atama işlemlemi.
+Assignment operations
 ```
-atama degisken1'a 15
-atama degisken2'a 'test data'
-atama degisken3'a 5 artı 80
-```
-
-Fonksiyon çağrımı.
-```
-yaz degisken1
-yaz 90
-yaz 'yazma işlemi'
+data1 = 1
+data2 = true
+data3 = .555
+data4 = "hello world"
+data5 = 1024
 ```
 
-Koşul durumu.
+Function call
 ```
-eğer degisken1 büyükise degisken3 sonra
-    yaz "büyük"
-değilse
-    yaz "küçük"
+print data1
+print (data1, data2, data3, data4, data5)
 ```
 
-Şu an için emekle aşamasında bile olmasada Lexer ve AST kısımları çalışmakta fakat ayrıntılandırılması gerekmektedir.
+If statement
+```
+if data1 > 1 then
+    print "bigger"
+else
+    print "opssss"
+
+if data1 == 1 then
+    print "equal"
+else
+    print "not equal"
+```
+
+Loop
+```
+i -> 0..100 
+    print i + data5
+
+i -> data1..data5 
+{
+    print i
+    print (i, data1)
+}
+```
+
+Internal functions
+```
+isEmpty
+isBool
+isInteger
+isDouble
+isBool
+isString
+
+toBool
+toInteger
+toDouble
+toBool
+toString
+
+print
+readline
+```

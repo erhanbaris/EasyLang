@@ -75,22 +75,6 @@ TEST_CASE( "String test" ) {
     REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::TEXT);
     REQUIRE(reinterpret_cast<TextToken*>(tokens->at(0))->Value == L"\"erhan\"");
     
-    SECTION( "Atama" ) {
-        parser->Parse(L"erhan'a 15", tokens);
-        REQUIRE(tokens->size() == 5);
-        REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::SYMBOL);
-        REQUIRE(reinterpret_cast<TextToken*>(tokens->at(0))->Value == L"erhan");
-        
-        REQUIRE(tokens->at(1)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
-        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(1))->Value == EASY_OPERATOR_TYPE::SINGLE_QUOTES);
-        
-        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::KEYWORD);
-        REQUIRE(reinterpret_cast<KeywordToken*>(tokens->at(2))->Value == EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX);
-        
-        REQUIRE(tokens->at(4)->GetType() == EASY_TOKEN_TYPE::INTEGER);
-        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(4))->Value == 15);
-    }
-    
     SECTION( "Sembol" ) {
         parser->Parse(L"17 <= 40", tokens);
         REQUIRE(tokens->size() == 5);
@@ -104,8 +88,8 @@ TEST_CASE( "String test" ) {
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(4))->Value == 40);
     }
     
-    SECTION( "17 büyüktür 40" ) {
-        parser->Parse(L"17 büyüktür 40", tokens);
+    SECTION( "17 > 40" ) {
+        parser->Parse(L"17 > 40", tokens);
         REQUIRE(tokens->size() == 5);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 17);

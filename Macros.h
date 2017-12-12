@@ -48,4 +48,10 @@ static void SplitEnumArgs(const char* szArgs, std::string Array[], int nMax)
 	__init init;\
 }
 
+
+#define REQUIRED_ARGUMENT_COUNT(count) if (args->size() < count )\
+throw ParameterError("Method require a parameter");\
+if (args->size() > count)\
+throw ParameterError("Method handle only ##count parameter");\
+
 #endif //EASYLANG_MACROS_H

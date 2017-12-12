@@ -16,9 +16,9 @@
 #include "Backend.h"
 #include "InterpreterBackend.h"
 
-//#include "Tests/LexerTests.h"
-//#include "Tests/AstTests.h"
-//#include "Tests/InterpreterTests.h"
+#include "Tests/LexerTests.h"
+#include "Tests/AstTests.h"
+#include "Tests/InterpreterTests.h"
 
 using namespace std;
 
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 	//executer.Prepare(asts);
 
 	std::wstring line;
-	std::wcout << "lang > ";
+	std::wcout << "easy > ";
 	while (std::getline(std::wcin, line))
 	{
         try {
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
             std::wcout << "#ERROR " << e.what() << '\n';
         }
 
-		std::wcout << "lang >  ";
+		std::wcout << "easy >  ";
 	}
 
     getchar();

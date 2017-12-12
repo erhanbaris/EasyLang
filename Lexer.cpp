@@ -1,4 +1,5 @@
 #include "Lexer.h"
+#include "Exceptions.h"
 
 class StandartTokinizerImpl {
 public:
@@ -178,6 +179,9 @@ public:
             ++index;
         }
 
+		if (ch != '"')
+			throw ParseError("Text has ends with '\"'");
+
         auto *token = new TextToken;
         token->Value = stream.str();
         TokenList->push_back(reinterpret_cast<Token*>(token));
@@ -191,19 +195,7 @@ public:
     inline bool isSymbol(wchar_t ch)
     {
         return ((ch >= 'a' && ch <= 'z') ||
-                (ch >= 'A' && ch <= 'Z') ||
-                ch == L'Ğ' ||
-                ch == L'ğ' ||
-                ch == L'Ü' ||
-                ch == L'ü' ||
-                ch == L'ı' ||
-                ch == L'İ' ||
-                ch == L'Ö' ||
-                ch == L'ö' ||
-                ch == L'Ç' ||
-                ch == L'ç' ||
-                ch == L'Ş' ||
-                ch == L'ş');
+                (ch >= 'A' && ch <= 'Z'));
     }
 
     void getOperator()
@@ -244,7 +236,13 @@ public:
                     break;
 
                 case '=':
-                    opt->Value = EASY_OPERATOR_TYPE::EQUAL;
+					if (chNext == '=')
+					{
+						opt->Value = EASY_OPERATOR_TYPE::EQUAL;
+						++index;
+					}
+					else 
+						opt->Value = EASY_OPERATOR_TYPE::ASSIGN;
                     break;
 
                 case '>':
