@@ -182,23 +182,11 @@ public:
 
         skipWhiteSpace();
 		token = getToken();
-		auto* tokenNext = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
 
-		if (tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR)
-		{
-			auto* operatorToken = reinterpret_cast<OperatorToken*>(tokenNext);
-			if (BinaryOperators.find(operatorToken->Value) != BinaryOperatorsEnd)
-			{
-				// 1 + 1
-				--index;
-				ast->Data = parseBinaryOperationStatement();
-			}
-			else if (ControlOperators.find(operatorToken->Value) != ControlOperatorsEnd) {
-				// TODO: FIXIT 1 < 2
-			}
-		}
-		else if (isPrimative())
-			ast->Data = parsePrimative(token);
+        if (token == nullptr)
+            throw ParseError("Value required");
+
+		ast->Data = parseAst();
 
 		return reinterpret_cast<Ast*>(ast);
 	}

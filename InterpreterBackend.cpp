@@ -49,7 +49,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
 				throw NullException("Value not found");
 
             variables[assignment->Name] = value;
-            std::wcout << L"Assign -> [" << assignment->Name << L"]" << std::endl;
+            std::wcout << L"[" << assignment->Name << L"]" << std::endl;
         }
             break;
             
