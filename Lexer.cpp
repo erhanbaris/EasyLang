@@ -31,6 +31,14 @@ public:
                 TokenList->push_back(reinterpret_cast<Token*>(new WhitespaceToken));
                 continue;
             }
+			else if (ch == '_' && (chNext == '\0' || (isSymbol(ch) == false && ch >= '0' && ch <= '9')))
+			{
+				auto* opt = new KeywordToken;
+				opt->Value = EASY_KEYWORD_TYPE::EMPTY_PARAMETER;
+				TokenList->push_back(reinterpret_cast<Token*>(opt));
+				++index;
+				continue;
+			}
             else if (isSymbol(ch))
             {
                 getSymbol();

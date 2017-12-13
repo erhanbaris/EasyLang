@@ -24,7 +24,8 @@ enum class EASY_AST_TYPE {
 	CONTROL_OPERATION,
 	FUNCTION_CALL,
 	BLOCK,
-    FOR
+    FOR,
+	FUNCTION_DECLERATION
 };
 
 class Ast
@@ -54,7 +55,7 @@ class PrimativeAst : public Ast {
 public:
 	PrimativeValue* Value;
 
-	PrimativeAst() { Type = EASY_AST_TYPE::PRIMATIVE; }
+	PrimativeAst() { Type = EASY_AST_TYPE::PRIMATIVE;  Value = new PrimativeValue(); }
 	PrimativeAst(int value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
 	PrimativeAst(double value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
 	PrimativeAst(std::wstring value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
@@ -93,6 +94,15 @@ public:
     Ast* True{nullptr};
     Ast* False{nullptr};
     IfStatementAst() { Type = EASY_AST_TYPE::IF_STATEMENT; }
+};
+
+class FunctionDefinetionAst : public Ast
+{
+public:
+	std::wstring Name;
+	std::vector<std::wstring> Args;
+	Ast* Body {nullptr};
+	FunctionDefinetionAst() { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; }
 };
 
 class ForStatementAst : public Ast

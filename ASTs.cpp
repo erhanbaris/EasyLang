@@ -56,6 +56,9 @@ public:
 		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::IF)
 			return EASY_AST_TYPE::IF_STATEMENT;
 
+		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::FUNC)
+			return EASY_AST_TYPE::FUNCTION_DECLERATION;
+
 		if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BLOCK_START)
 			return EASY_AST_TYPE::BLOCK;
 
@@ -246,6 +249,11 @@ public:
 			skipWhiteSpace();
 			consumeOperator(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
 		}
+		else if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::EMPTY_PARAMETER)
+		{
+			ast->Args.push_back(reinterpret_cast<Ast*>(new PrimativeAst()));
+			++index;
+		}
 		else 
 			ast->Args.push_back(parseAst());
 
@@ -358,7 +366,57 @@ public:
         
 		return reinterpret_cast<Ast*>(ast);
 	}
-    
+	
+	Ast* parseFunctionDecleration()
+	{
+		auto* ast = new FunctionDefinetionAst;
+		skipWhiteSpace();
+		auto* token = getToken();
+
+		ast->Name = reinterpret_cast<SymbolToken*>(token)->Value;
+		++index; 
+		skipWhiteSpace();
+
+		skipWhiteSpace();
+		++index;
+		skipWhiteSpace();
+		token = getToken();
+
+		if (token->GetType() == EASY_TOKEN_TYPE::DOUBLE)
+			ast->Start = new PrimativeAst(reinterpret_cast<DoubleToken*>(token)->Value);
+		else if (token->GetType() == EASY_TOKEN_TYPE::INTEGER)
+			ast->Start = new PrimativeAst(reinterpret_cast<IntegerToken*>(token)->Value);
+		else if (token->GetType() == EASY_TOKEN_TYPE::VARIABLE)
+			ast->Start = new VariableAst(reinterpret_cast<VariableToken*>(token)->Value);
+		else
+			throw ParseError("For repeat works with variable, double and integer");
+		skipWhiteSpace();
+		++index;
+		skipWhiteSpace();
+		++index;
+		skipWhiteSpace();
+		token = getToken();
+
+		if (token->GetType() == EASY_TOKEN_TYPE::DOUBLE)
+			ast->End = new PrimativeAst(reinterpret_cast<DoubleToken*>(token)->Value);
+		else if (token->GetType() == EASY_TOKEN_TYPE::INTEGER)
+			ast->End = new PrimativeAst(reinterpret_cast<IntegerToken*>(token)->Value);
+		else if (token->GetType() == EASY_TOKEN_TYPE::VARIABLE)
+			ast->End = new VariableAst(reinterpret_cast<VariableToken*>(token)->Value);
+		else
+			throw ParseError("For repeat works with variable, double and integer");
+
+		if (getNextToken() == nullptr)
+			throw ParseError("Repeat block missing");
+
+		++index;
+		skipWhiteSpace();
+		ast->Repeat = parseAst();
+
+
+		return reinterpret_cast<Ast*>(ast);
+	}
+
     Ast* parseForStatement()
     {
         auto* ast = new ForStatementAst;
@@ -418,14 +476,18 @@ public:
         if (token == nullptr)
             return nullptr;
 
-		EASY_AST_TYPE EASY_AST_TYPE = detectType();
-		switch (EASY_AST_TYPE) {
+		EASY_AST_TYPE type = detectType();
+		switch (type) {
 		case EASY_AST_TYPE::ASSIGNMENT:
 			ast = parseAssignment();
 			break;
 
 		case EASY_AST_TYPE::IF_STATEMENT:
 			ast = parseIfStatement();
+			break;
+
+		case EASY_AST_TYPE::FUNCTION_DECLERATION:
+			ast = parseFunctionDecleration();
 			break;
 
 		case EASY_AST_TYPE::FUNCTION_CALL:

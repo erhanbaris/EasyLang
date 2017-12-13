@@ -57,7 +57,10 @@ DECLARE_ENUM(EASY_KEYWORD_TYPE,
 	BLOCK_START,
 	BLOCK_END,
     BOOL_TRUE,
-    BOOL_FALSE)
+    BOOL_FALSE,
+	EMPTY_PARAMETER,
+	FUNC,
+	RETURN)
 
 struct EnumClassHash
 {
@@ -142,7 +145,9 @@ static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash> ControlOperators{
 static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash>::const_iterator ControlOperatorsEnd = ControlOperators.cend();
 
 static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE> Keywords {
-    { L"if", EASY_KEYWORD_TYPE::IF },
+	{ L"func", EASY_KEYWORD_TYPE::FUNC },
+	{ L"return", EASY_KEYWORD_TYPE::RETURN },
+	{ L"if", EASY_KEYWORD_TYPE::IF },
     { L"var", EASY_KEYWORD_TYPE::ASSIGNMENT },
     { L"else", EASY_KEYWORD_TYPE::ELSE },
     { L"then", EASY_KEYWORD_TYPE::THEN },
