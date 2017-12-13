@@ -30,6 +30,10 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
             return reinterpret_cast<PrimativeAst*>(ast)->Value;
             break;
             
+        case EASY_AST_TYPE::RETURN:
+            return getData(reinterpret_cast<ReturnAst*>(ast)->Data);
+            break;
+            
         case EASY_AST_TYPE::VARIABLE:
         {
             VariableAst* variable = reinterpret_cast<VariableAst*>(ast);
@@ -66,13 +70,25 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
         }
             break;
             
+        case EASY_AST_TYPE::FUNCTION_DECLERATION:
+        {
+            FunctionDefinetionAst* func = reinterpret_cast<FunctionDefinetionAst*>(ast);
+            System::UserMethods[func->Name] = [=](std::shared_ptr<std::vector<PrimativeValue*> > const &, PrimativeValue & returnValue)
+            {
+                std::wcout << L"call " << func->Name << '\n';
+                returnValue = *this->getData(func->Body);
+            };
+        }
+            break;
+            
         case EASY_AST_TYPE::FUNCTION_CALL:
         {
             FunctionCallAst* call = reinterpret_cast<FunctionCallAst*>(ast);
+            PrimativeValue* returnValue = new PrimativeValue;;
+
             if (System::SystemMethods.find(call->Function) != System::SystemMethods.end())
             {
                 MethodCallback function = System::SystemMethods[call->Function];
-                PrimativeValue* returnValue = new PrimativeValue;;
                 std::shared_ptr<std::vector<PrimativeValue*> > args = std::make_shared<std::vector<PrimativeValue*>>();
                 
                 std::vector<Ast*>::const_iterator argsEnd = call->Args.cend();
@@ -84,8 +100,24 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
                 }
                 
                 function(args, *returnValue);
-                return returnValue;
             }
+            else if (System::UserMethods.find(call->Function) != System::UserMethods.end())
+            {
+                std::shared_ptr<std::vector<PrimativeValue*> > args = std::make_shared<std::vector<PrimativeValue*>>();
+                
+                std::vector<Ast*>::const_iterator argsEnd = call->Args.cend();
+                for (std::vector<Ast*>::const_iterator it = call->Args.cbegin(); it != argsEnd; ++it)
+                {
+                    Ast* argAst = *it;
+                    PrimativeValue* argItem = getData(argAst);
+                    args->push_back(argItem);
+                }
+                
+                std::function<void (std::shared_ptr<std::vector<PrimativeValue*> > const &, PrimativeValue &)> function = System::UserMethods[call->Function];
+                function(args, *returnValue);
+            }
+            
+            return returnValue;
         }
             break;
             

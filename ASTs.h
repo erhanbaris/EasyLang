@@ -25,7 +25,8 @@ enum class EASY_AST_TYPE {
 	FUNCTION_CALL,
 	BLOCK,
     FOR,
-	FUNCTION_DECLERATION
+	FUNCTION_DECLERATION,
+    RETURN
 };
 
 class Ast
@@ -103,6 +104,12 @@ public:
 	std::vector<std::wstring> Args;
 	Ast* Body {nullptr};
 	FunctionDefinetionAst() { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; }
+};
+
+class ReturnAst : public Ast {
+public:
+    Ast* Data {nullptr};
+    ReturnAst() { Type = EASY_AST_TYPE::RETURN; }
 };
 
 class ForStatementAst : public Ast

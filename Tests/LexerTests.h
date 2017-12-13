@@ -105,7 +105,7 @@ TEST_CASE( "String test" ) {
 TEST_CASE( "Operator lexer test" ) {
     Tokinizer* parser = new StandartTokinizer();
     auto tokens = make_shared<std::vector<Token*>>();
-
+    
     SECTION( "10 / 10" ) {
         parser->Parse(L"10 / 10", tokens);
         REQUIRE(tokens->size() == 5);
@@ -156,6 +156,27 @@ TEST_CASE( "Operator lexer test" ) {
         
         REQUIRE(tokens->at(4)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(4))->Value == 10);
+    }
+}
+
+TEST_CASE( "Function lexer test" ) {
+    Tokinizer* parser = new StandartTokinizer();
+    auto tokens = make_shared<std::vector<Token*>>();
+    
+    SECTION( "func test return 1" ) {
+        parser->Parse(L"func test return 1", tokens);
+        REQUIRE(tokens->size() == 7);
+        REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::KEYWORD);
+        REQUIRE(reinterpret_cast<KeywordToken*>(tokens->at(0))->Value == EASY_KEYWORD_TYPE::FUNC);
+        
+        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::SYMBOL);
+        REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(2))->Value == L"test");
+        
+        REQUIRE(tokens->at(4)->GetType() == EASY_TOKEN_TYPE::KEYWORD);
+        REQUIRE(reinterpret_cast<KeywordToken*>(tokens->at(4))->Value == EASY_KEYWORD_TYPE::RETURN);
+        
+        REQUIRE(tokens->at(6)->GetType() == EASY_TOKEN_TYPE::INTEGER);
+        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(6))->Value == 1);
     }
 }
 

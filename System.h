@@ -15,6 +15,7 @@ typedef void(*MethodCallback)(std::shared_ptr<std::vector<PrimativeValue*> > con
 class System {
 public:
 	static std::unordered_map<std::wstring, MethodCallback> SystemMethods;
+    static std::unordered_map<std::wstring, std::function<void (std::shared_ptr<std::vector<PrimativeValue*> > const &, PrimativeValue &)>> UserMethods;
 	static void WarmUp();
 };
 
