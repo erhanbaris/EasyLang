@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 	auto asts = make_shared<std::vector<Ast*>>();
 
 	//tokinizer->Parse(L"4 eşit 4", tokens);
-	tokinizer->Parse(L"yaz(1,2,3,4) ", tokens);
+	//tokinizer->Parse(L"yaz(1,2,3,4) ", tokens);
 	//tokinizer->Dump(tokens);
 
     auto* astParser = new AstParser;

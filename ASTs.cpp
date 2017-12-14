@@ -410,8 +410,8 @@ public:
 	}
 	
     /* 
-     func test return 1
-     func test { return 1 }
+     func test() return 1
+     func test() { return 1 }
      func test (value) { return 1 }
      func test (value) { return value }
      */
@@ -426,33 +426,31 @@ public:
 		ast->Name = reinterpret_cast<SymbolToken*>(token)->Value;
         increaseAndClear();
         token = getToken();
-        
-        if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::LEFT_PARENTHESES)
-        {
-            while (index < tokensCount)
-            {
-                increaseAndClear();
-                token = getToken();
-                checkToken(EASY_TOKEN_TYPE::SYMBOL);
-                
-                ast->Args.push_back(reinterpret_cast<SymbolToken*>(token)->Value);
+		checkOperator(EASY_OPERATOR_TYPE::LEFT_PARENTHESES);
 
-                increaseAndClear();
-                token = getToken();
-                if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::RIGHT_PARENTHESES)
-                    break;
-                else if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::COMMA)
-                    continue;
-                
-                throw ParseError("',' required");
-            }
-            
-            skipWhiteSpace();
-            consumeOperator(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
-            
+        while (index < tokensCount)
+        {
             increaseAndClear();
             token = getToken();
+            checkToken(EASY_TOKEN_TYPE::SYMBOL);
+                
+            ast->Args.push_back(reinterpret_cast<SymbolToken*>(token)->Value);
+
+            increaseAndClear();
+            token = getToken();
+            if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::RIGHT_PARENTHESES)
+                break;
+            else if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::COMMA)
+                continue;
+                
+            throw ParseError("',' required");
         }
+            
+        skipWhiteSpace();
+        consumeOperator(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
+            
+        increaseAndClear();
+        token = getToken();
         
         if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::BLOCK_START)
         {

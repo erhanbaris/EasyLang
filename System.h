@@ -8,6 +8,7 @@
 #include <sstream>
 #include <cmath>
 #include <unordered_map>
+#include <functional>
 
 struct PrimativeValue;
 typedef void(*MethodCallback)(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue);
