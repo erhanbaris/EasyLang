@@ -366,7 +366,7 @@ TEST_CASE( "Function asd test" ) {
     std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
     
     SECTION( "func test () return 1" ) {
-        tokinizer->Parse(L"func test return 1", tokens);
+        tokinizer->Parse(L"func test () return 1", tokens);
         astParser->Parse(tokens, asts);
         
         REQUIRE(asts->size() == 1);
@@ -382,6 +382,24 @@ TEST_CASE( "Function asd test" ) {
         REQUIRE(ret->Data != nullptr);
         REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
     }
+
+	SECTION( "func test ( ) return 1" ) {
+		tokinizer->Parse(L"func test () return 1", tokens);
+		astParser->Parse(tokens, asts);
+
+		REQUIRE(asts->size() == 1);
+		REQUIRE(asts->at(0)->GetType() == EASY_AST_TYPE::FUNCTION_DECLERATION);
+
+		auto* decl = reinterpret_cast<FunctionDefinetionAst*>(asts->at(0));
+		REQUIRE(decl->Name == L"test");
+		REQUIRE(decl->Args.size() == 0);
+		REQUIRE(decl->Body != nullptr);
+		REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::RETURN);
+
+		auto* ret = reinterpret_cast<ReturnAst*>(decl->Body);
+		REQUIRE(ret->Data != nullptr);
+		REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
+	}
     
     SECTION( "func test () { return 1 }" ) {
         tokinizer->Parse(L"func test () { return 1 }", tokens);
@@ -404,29 +422,29 @@ TEST_CASE( "Function asd test" ) {
         REQUIRE(ret->Data != nullptr);
         REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
     }
-    
-    SECTION( "func test (data) { return data }" ) {
-        tokinizer->Parse(L"func test (data) { return data }", tokens);
-        astParser->Parse(tokens, asts);
-        
-        REQUIRE(asts->size() == 1);
-        REQUIRE(asts->at(0)->GetType() == EASY_AST_TYPE::FUNCTION_DECLERATION);
-        
-        auto* decl = reinterpret_cast<FunctionDefinetionAst*>(asts->at(0));
-        REQUIRE(decl->Name == L"test");
-        REQUIRE(decl->Args.size() == 1);
-        REQUIRE(decl->Args.at(0) == L"data");
-        REQUIRE(decl->Body != nullptr);
-        REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::BLOCK);
-        
-        auto* block = reinterpret_cast<BlockAst*>(decl->Body);
-        REQUIRE(block->Blocks->size() == 1);
-        REQUIRE(block->Blocks->at(0)->GetType() == EASY_AST_TYPE::RETURN);
-        
-        auto* ret = reinterpret_cast<ReturnAst*>(block->Blocks->at(0));
-        REQUIRE(ret->Data != nullptr);
-        REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::VARIABLE);
-    }
+
+	SECTION( "func test (data) { return data }" ) {
+		tokinizer->Parse(L"func test (data) { return data }", tokens);
+		astParser->Parse(tokens, asts);
+
+		REQUIRE(asts->size() == 1);
+		REQUIRE(asts->at(0)->GetType() == EASY_AST_TYPE::FUNCTION_DECLERATION);
+
+		auto* decl = reinterpret_cast<FunctionDefinetionAst*>(asts->at(0));
+		REQUIRE(decl->Name == L"test");
+		REQUIRE(decl->Args.size() == 1);
+		REQUIRE(decl->Args.at(0) == L"data");
+		REQUIRE(decl->Body != nullptr);
+		REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::BLOCK);
+
+		auto* block = reinterpret_cast<BlockAst*>(decl->Body);
+		REQUIRE(block->Blocks->size() == 1);
+		REQUIRE(block->Blocks->at(0)->GetType() == EASY_AST_TYPE::RETURN);
+
+		auto* ret = reinterpret_cast<ReturnAst*>(block->Blocks->at(0));
+		REQUIRE(ret->Data != nullptr);
+		REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::VARIABLE);
+	}
 }
 
 #endif

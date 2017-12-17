@@ -155,7 +155,7 @@ public:
     inline void checkOperator(EASY_OPERATOR_TYPE type)
     {
         Token* token = getToken();
-        if (token == nullptr || token->GetType() == EASY_TOKEN_TYPE::OPERATOR || reinterpret_cast<OperatorToken*>(token)->Value != type)
+        if (token == nullptr || token->GetType() != EASY_TOKEN_TYPE::OPERATOR || reinterpret_cast<OperatorToken*>(token)->Value != type)
             throw ParseError("Syntax error.");
         
     }
@@ -163,7 +163,7 @@ public:
     inline void checkKeyword(EASY_KEYWORD_TYPE type)
     {
         Token* token = getToken();
-        if (token == nullptr || token->GetType() == EASY_TOKEN_TYPE::KEYWORD || reinterpret_cast<KeywordToken*>(token)->Value != type)
+        if (token == nullptr || token->GetType() != EASY_TOKEN_TYPE::KEYWORD || reinterpret_cast<KeywordToken*>(token)->Value != type)
             throw ParseError("Syntax error.");
     }
     
@@ -432,7 +432,8 @@ public:
         {
             increaseAndClear();
             token = getToken();
-            checkToken(EASY_TOKEN_TYPE::SYMBOL);
+			if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::RIGHT_PARENTHESES)
+				break;
                 
             ast->Args.push_back(reinterpret_cast<SymbolToken*>(token)->Value);
 

@@ -173,10 +173,10 @@ TEST_CASE( "Function lexer test" ) {
         REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(2))->Value == L"test");
         
         REQUIRE(tokens->at(7)->GetType() == EASY_TOKEN_TYPE::KEYWORD);
-        REQUIRE(reinterpret_cast<KeywordToken*>(tokens->at(4))->Value == EASY_KEYWORD_TYPE::RETURN);
+        REQUIRE(reinterpret_cast<KeywordToken*>(tokens->at(7))->Value == EASY_KEYWORD_TYPE::RETURN);
         
         REQUIRE(tokens->at(9)->GetType() == EASY_TOKEN_TYPE::INTEGER);
-        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(6))->Value == 1);
+        REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(9))->Value == 1);
     }
 }
 
