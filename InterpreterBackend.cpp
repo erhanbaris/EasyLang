@@ -50,7 +50,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 				throw NullException("Value not found");
 
 			scope.SetVariable(assignment->Name, value);
-            std::wcout << L"[" << assignment->Name << L"]" << std::endl;
+            //std::wcout << L"[" << assignment->Name << L"]" << std::endl;
         }
             break;
             
@@ -63,7 +63,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
                 Ast* blockAst = *it;
                 PrimativeValue* result = getData(blockAst, scope);
 
-				if (blockAst->GetType() == EASY_AST_TYPE::RETURN)
+				if (blockAst->GetType() == EASY_AST_TYPE::RETURN || (result != nullptr && !result->IsNull()))
 					return result;
             }
             
@@ -83,7 +83,8 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 			System::UserMethods[func->Name] = info;
         }
             break;
-            
+
+            // func fibonacci(num) { if num <= 1 then return 1 left = fibonacci(num - 1) right = fibonacci(num - 2) return left + right }
         case EASY_AST_TYPE::FUNCTION_CALL:
         {
             FunctionCallAst* call = reinterpret_cast<FunctionCallAst*>(ast);

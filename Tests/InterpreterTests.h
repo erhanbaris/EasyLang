@@ -61,6 +61,52 @@ TEST_CASE("Interpreter tests") {
 		REQUIRE(result->IsInteger());
 		REQUIRE(result->Integer == 3);
 	}
+
+
+	SECTION("fibonacci test") {
+		tokinizer->Parse(L"func fibonacci(num) { if num <= 1 then return 1 left = fibonacci(num - 1) right = fibonacci(num - 2) return left + right }", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		backend->Execute();
+
+		tokinizer->Parse(L"fibonacci(10)", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == 89);
+	}
+
+	SECTION("sum test 1") {
+		tokinizer->Parse(L"func sum(a,b) return a + b", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		backend->Execute();
+
+		tokinizer->Parse(L"sum(10, 10)", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == 20);
+	}
+
+	SECTION("sum test 2") {
+		tokinizer->Parse(L"func sum(a,b) return a + b", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		backend->Execute();
+
+		tokinizer->Parse(L"sum(\"a\", \"b\")", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsString());
+		REQUIRE(*result->String == L"ab");
+	}
 }
 
 #endif //EASYLANG_INTERPRETERTESTS_H

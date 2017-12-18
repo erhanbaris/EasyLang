@@ -50,7 +50,7 @@ public:
         if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(tokenNext)->Value == EASY_OPERATOR_TYPE::OPERATION)
             return EASY_AST_TYPE::FOR;
         
-        if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && (System::UserMethods.find(reinterpret_cast<SymbolToken*>(token)->Value) != System::UserMethods.end() || System::SystemMethods.find(reinterpret_cast<SymbolToken*>(token)->Value) != System::SystemMethods.end()))
+        if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && ((tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(tokenNext)->Value == EASY_OPERATOR_TYPE::LEFT_PARENTHESES) || System::UserMethods.find(reinterpret_cast<SymbolToken*>(token)->Value) != System::UserMethods.end() || System::SystemMethods.find(reinterpret_cast<SymbolToken*>(token)->Value) != System::SystemMethods.end()))
 			return EASY_AST_TYPE::FUNCTION_CALL;
 
 		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(tokenNext)->Value == EASY_OPERATOR_TYPE::ASSIGN)
@@ -271,12 +271,20 @@ public:
         ++index;
         skipWhiteSpace();
 		token = getToken();
+
+        if (token == nullptr)
+            throw ParseError("Function call exception");
+
 		if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::LEFT_PARENTHESES)
 		{
 			while (index < tokensCount)
 			{
 				++index;
 				skipWhiteSpace();
+				token = getToken();
+				if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::RIGHT_PARENTHESES)
+					break;
+
 				ast->Args.push_back(parseAst());
 				skipWhiteSpace();
 				token = getToken();
@@ -293,7 +301,7 @@ public:
 		}
 		else if (token->GetType() == EASY_TOKEN_TYPE::KEYWORD && reinterpret_cast<KeywordToken*>(token)->Value == EASY_KEYWORD_TYPE::EMPTY_PARAMETER)
 		{
-			ast->Args.push_back(reinterpret_cast<Ast*>(new PrimativeAst()));
+			//ast->Args.push_back(reinterpret_cast<Ast*>(new PrimativeAst()));
 			++index;
 		}
 		else 
@@ -336,7 +344,10 @@ public:
 		if (isPrimative(token))
 			ast->Right = parsePrimative(token);
 		else if (token != nullptr && token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
+		{
 			ast->Right = new VariableAst(reinterpret_cast<SymbolToken*>(token)->Value);
+			++index;
+		}
 
         if (ast->Right == nullptr)
             throw ParseError("Binary operation right argument is empty.");

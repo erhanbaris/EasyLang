@@ -155,7 +155,7 @@ PrimativeValue* operator * (PrimativeValue const & lhs, PrimativeValue const & r
                     std::wstringstream stream;
 
                     for (double i = 0.0; i < lhs.Double; ++i)
-                        stream << rhs.String;
+                        stream << *rhs.String;
 
                     returnValue->SetString(stream.str());
                     break;
@@ -183,7 +183,7 @@ PrimativeValue* operator * (PrimativeValue const & lhs, PrimativeValue const & r
                 {std::wstringstream stream;
 
                     for (size_t i = 0; i < lhs.Integer; ++i)
-                        stream << rhs.String;
+                        stream << *rhs.String;
 
                     returnValue->SetString(stream.str());
                 }
@@ -205,7 +205,7 @@ PrimativeValue* operator * (PrimativeValue const & lhs, PrimativeValue const & r
                     std::wstringstream stream;
 
                     for (size_t i = 0; i < rhs.Integer; ++i)
-                        stream << lhs.String;
+                        stream << *lhs.String;
 
                     returnValue->SetString(stream.str());
                 }
@@ -216,7 +216,7 @@ PrimativeValue* operator * (PrimativeValue const & lhs, PrimativeValue const & r
                     std::wstringstream stream;
 
                     for (double i = 0.0; i < rhs.Double; ++i)
-                        stream << lhs.String;
+                        stream << *lhs.String;
 
                     returnValue->SetString(stream.str());
                 }
@@ -953,7 +953,7 @@ PrimativeValue* operator != (PrimativeValue const & lhs, PrimativeValue const & 
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
-                    returnValue->SetBool(lhs.String != rhs.String);
+                    returnValue->SetBool(*lhs.String != *rhs.String);
                     break;
             }
         }
@@ -1056,7 +1056,7 @@ PrimativeValue* operator == (PrimativeValue const & lhs, PrimativeValue const & 
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
-                    returnValue->SetBool(lhs.String == rhs.String);
+                    returnValue->SetBool(*lhs.String == *rhs.String);
                     break;
             }
         }
