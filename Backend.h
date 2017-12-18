@@ -16,7 +16,7 @@
 class Backend {
 public:
     virtual void Prepare(std::shared_ptr<std::vector<Ast*>> asts) = 0;
-    virtual void Execute() = 0;
+    virtual PrimativeValue* Execute() = 0;
 };
 
 template <class T>
@@ -27,10 +27,10 @@ public:
         backend = new T;
     }
     
-    void Prepare(std::shared_ptr<std::vector<Ast*>> asts)
+    PrimativeValue* Prepare(std::shared_ptr<std::vector<Ast*>> asts)
     {
         backend->Prepare(asts);
-        backend->Execute();
+        return backend->Execute();
     }
     
     

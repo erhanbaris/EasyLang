@@ -1,4 +1,5 @@
 #include "Backend.h"
+#include "Scope.h"
 
 #ifndef EASYLANG_INTERPRETERBACKEND_H
 #define EASYLANG_INTERPRETERBACKEND_H
@@ -12,11 +13,13 @@ public:
     
     void Prepare(std::shared_ptr<std::vector<Ast*>> pAsts) override;
     PrimativeValue* getPrimative(Ast* ast);
-    PrimativeValue* getData(Ast* ast);
-    void Execute() override;
+    PrimativeValue* getData(Ast* ast, Scope & scope);
+	PrimativeValue* Execute() override;
 
 private:
-    std::shared_ptr<std::vector<Ast*>> asts;
+	Scope globalScope;
+    std::vector<Ast*> asts;
+	std::vector<Ast*> temporaryAsts;
     std::unordered_map<std::wstring, PrimativeValue*> variables;
     std::ostream& stream;
 };

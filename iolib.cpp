@@ -47,7 +47,7 @@ void toInt(FunctionArgs const & args, PrimativeValue & returnValue)
             break;
             
         case PrimativeValue::Type::PRI_STRING:
-            returnValue.SetInteger(std::stoi(item->String));
+            returnValue.SetInteger(std::stoi(*item->String));
             break;
     }
 }
@@ -71,7 +71,7 @@ void toDouble(FunctionArgs const & args, PrimativeValue & returnValue)
             break;
             
         case PrimativeValue::Type::PRI_STRING:
-            returnValue.SetDouble(std::stod(item->String));
+            returnValue.SetDouble(std::stod(*item->String));
             break;
     }
 }
@@ -95,7 +95,7 @@ void toString(FunctionArgs const & args, PrimativeValue & returnValue)
             break;
             
         case PrimativeValue::Type::PRI_STRING:
-            returnValue.SetString(item->String);
+            returnValue.SetString(*item->String);
             break;
     }
 }
@@ -119,7 +119,7 @@ void toBool(FunctionArgs const & args, PrimativeValue & returnValue)
             break;
             
         case PrimativeValue::Type::PRI_STRING:
-            returnValue.SetBool(item->String.size() > 0);
+            returnValue.SetBool(item->String->size() > 0);
             break;
     }
 }
@@ -143,7 +143,7 @@ void isEmpty(FunctionArgs const & args, PrimativeValue & returnValue)
             break;
             
         case PrimativeValue::Type::PRI_STRING:
-            returnValue.SetBool(item->String.size() > 0);
+            returnValue.SetBool(item->String->size() > 0);
             break;
             
         case PrimativeValue::Type::PRI_NULL:

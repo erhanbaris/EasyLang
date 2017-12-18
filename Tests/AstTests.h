@@ -93,7 +93,7 @@ TEST_CASE( "Assignment test" ) {
 	REQUIRE(assignment->Data != nullptr);
 	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Type == PrimativeValue::Type::PRI_STRING);
-	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->String == L"deneme");
+	REQUIRE(*reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->String == L"deneme");
 
 	tokinizer->Parse(L"erhan = \"deneme\"", tokens);
 	astParser->Parse(tokens, asts);
@@ -104,7 +104,7 @@ TEST_CASE( "Assignment test" ) {
 	REQUIRE(assignment->Data != nullptr);
 	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->Type == PrimativeValue::Type::PRI_STRING);
-	REQUIRE(reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->String == L"deneme");
+	REQUIRE(*reinterpret_cast<PrimativeAst*>(assignment->Data)->Value->String == L"deneme");
 
 
 	tokinizer->Parse(L"erhan = 0.15", tokens);
@@ -275,7 +275,7 @@ TEST_CASE("Function call test") {
 		REQUIRE(functionCall->Args.size() == 1);
 		REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::PRIMATIVE);
 		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_STRING);
-		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->String == L"test");
+		REQUIRE(*reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->String == L"test");
 	}
 
 	SECTION("print 5.5") {

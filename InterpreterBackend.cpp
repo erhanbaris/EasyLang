@@ -10,7 +10,8 @@ public:
 
 void InterpreterBackend::Prepare(std::shared_ptr<std::vector<Ast*>> pAsts)
 {
-    asts = pAsts;
+	temporaryAsts.clear();
+	temporaryAsts.insert(temporaryAsts.end(), pAsts.get()->begin(), pAsts.get()->end());
 }
 
 PrimativeValue* InterpreterBackend::getPrimative(Ast* ast)
@@ -19,7 +20,7 @@ PrimativeValue* InterpreterBackend::getPrimative(Ast* ast)
     return primative;
 }
 
-PrimativeValue* InterpreterBackend::getData(Ast* ast)
+PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 {
     if (ast == nullptr)
         return nullptr;
@@ -31,28 +32,24 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
             break;
             
         case EASY_AST_TYPE::RETURN:
-            return getData(reinterpret_cast<ReturnAst*>(ast)->Data);
+            return getData(reinterpret_cast<ReturnAst*>(ast)->Data, scope);
             break;
             
         case EASY_AST_TYPE::VARIABLE:
         {
             VariableAst* variable = reinterpret_cast<VariableAst*>(ast);
-            
-            if (variables.find(variable->Value) != variables.end())
-                return variables[variable->Value];
-            
-            return nullptr;
+			return scope.GetVariable(variable->Value);
         }
             break;
             
         case EASY_AST_TYPE::ASSIGNMENT:
         {
             AssignmentAst* assignment = reinterpret_cast<AssignmentAst*>(ast);
-            auto* value = getData(assignment->Data);
+            auto* value = getData(assignment->Data, scope);
 			if (value == nullptr)
 				throw NullException("Value not found");
 
-            variables[assignment->Name] = value;
+			scope.SetVariable(assignment->Name, value);
             std::wcout << L"[" << assignment->Name << L"]" << std::endl;
         }
             break;
@@ -64,7 +61,10 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
             for (std::vector<Ast*>::const_iterator it = block->Blocks->cbegin(); it != blocksEnd; ++it)
             {
                 Ast* blockAst = *it;
-                getData(blockAst);
+                PrimativeValue* result = getData(blockAst, scope);
+
+				if (blockAst->GetType() == EASY_AST_TYPE::RETURN)
+					return result;
             }
             
         }
@@ -73,18 +73,22 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
         case EASY_AST_TYPE::FUNCTION_DECLERATION:
         {
             FunctionDefinetionAst* func = reinterpret_cast<FunctionDefinetionAst*>(ast);
-            System::UserMethods[func->Name] = [=](std::shared_ptr<std::vector<PrimativeValue*> > const &, PrimativeValue & returnValue)
-            {
-                std::wcout << L"call " << func->Name << '\n';
-                returnValue = *this->getData(func->Body);
-            };
+			FunctionInfo* info = new FunctionInfo;
+			info->FunctionAst = func;
+			info->Callback = [=](std::shared_ptr<std::vector<PrimativeValue*> > const &, PrimativeValue & returnValue, Scope & functionScope)
+			{
+				returnValue = *this->getData(func->Body, functionScope);
+			};
+
+			System::UserMethods[func->Name] = info;
         }
             break;
             
         case EASY_AST_TYPE::FUNCTION_CALL:
         {
             FunctionCallAst* call = reinterpret_cast<FunctionCallAst*>(ast);
-            PrimativeValue* returnValue = new PrimativeValue;;
+            PrimativeValue* returnValue = new PrimativeValue;
+			Scope functionScope(&scope);
 
             if (System::SystemMethods.find(call->Function) != System::SystemMethods.end())
             {
@@ -95,7 +99,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
                 for (std::vector<Ast*>::const_iterator it = call->Args.cbegin(); it != argsEnd; ++it)
                 {
                     Ast* argAst = *it;
-                    PrimativeValue* argItem = getData(argAst);
+                    PrimativeValue* argItem = getData(argAst, functionScope);
                     args->push_back(argItem);
                 }
                 
@@ -104,17 +108,27 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
             else if (System::UserMethods.find(call->Function) != System::UserMethods.end())
             {
                 std::shared_ptr<std::vector<PrimativeValue*> > args = std::make_shared<std::vector<PrimativeValue*>>();
+				auto* functionInfo = System::UserMethods[call->Function];
+
+				size_t requiredParameterCount = functionInfo->FunctionAst->Args.size();
+				size_t currentParameterCount = call->Args.size();
+
+				if (requiredParameterCount != currentParameterCount)
+				{
+					std::string errorMessage("Function require " + std::to_string(requiredParameterCount) + " but received " + std::to_string(currentParameterCount));
+					throw ParameterError(errorMessage);
+				}
                 
-                std::vector<Ast*>::const_iterator argsEnd = call->Args.cend();
-                for (std::vector<Ast*>::const_iterator it = call->Args.cbegin(); it != argsEnd; ++it)
+                for (size_t i = 0; i < currentParameterCount; ++i)
                 {
-                    Ast* argAst = *it;
-                    PrimativeValue* argItem = getData(argAst);
+                    Ast* argAst = call->Args[i];
+                    PrimativeValue* argItem = getData(argAst, functionScope);
                     args->push_back(argItem);
+
+					functionScope.SetVariable(functionInfo->FunctionAst->Args[i], argItem);
                 }
                 
-                std::function<void (std::shared_ptr<std::vector<PrimativeValue*> > const &, PrimativeValue &)> function = System::UserMethods[call->Function];
-                function(args, *returnValue);
+                functionInfo->Callback(args, *returnValue, functionScope);
             }
             
             return returnValue;
@@ -124,13 +138,13 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
         case EASY_AST_TYPE::IF_STATEMENT:
         {
             IfStatementAst* ifStatement = reinterpret_cast<IfStatementAst*>(ast);
-            auto* control = getData(ifStatement->ControlOpt);
+            auto* control = getData(ifStatement->ControlOpt, scope);
             if (control != nullptr)
             {
                 if (control->Bool)
-                    getData(ifStatement->True);
+                    return getData(ifStatement->True, scope);
                 else
-                    getData(ifStatement->False);
+                    return getData(ifStatement->False, scope);
             }
         }
             break;
@@ -140,15 +154,15 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
         {
             ForStatementAst* forStatement = reinterpret_cast<ForStatementAst*>(ast);
             
-            auto* startValue = getData(forStatement->Start);
-            auto* endValue = getData(forStatement->End);
+            auto* startValue = getData(forStatement->Start, scope);
+            auto* endValue = getData(forStatement->End, scope);
             
             variables[forStatement->Variable] = startValue;
             
             for (size_t i = startValue->Integer; i < endValue->Integer; ++i)
             {
                 variables[forStatement->Variable]->SetInteger(i);
-                getData(forStatement->Repeat);
+                getData(forStatement->Repeat, scope);
             }
         }
             break;
@@ -157,8 +171,8 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
         {
             BinaryAst* callAst = reinterpret_cast<BinaryAst*>(ast);
             
-            PrimativeValue* lhs = getData(callAst->Left);
-            PrimativeValue* rhs = getData(callAst->Right);
+            PrimativeValue* lhs = getData(callAst->Left, scope);
+            PrimativeValue* rhs = getData(callAst->Right, scope);
             PrimativeValue* value = nullptr;
             
             switch (callAst->Op)
@@ -189,8 +203,8 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
         {
             ControlAst* callAst = reinterpret_cast<ControlAst*>(ast);
             
-            PrimativeValue* lhs = getData(callAst->Left);
-            PrimativeValue* rhs = getData(callAst->Right);
+            PrimativeValue* lhs = getData(callAst->Left, scope);
+            PrimativeValue* rhs = getData(callAst->Right, scope);
             PrimativeValue* value = nullptr;
             
             switch (callAst->Op)
@@ -228,19 +242,25 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast)
     return nullptr;
 }
 
-void InterpreterBackend::Execute()
+PrimativeValue* InterpreterBackend::Execute()
 {
 	PrimativeValue* result = nullptr;
-    auto astsEnd = asts->cend();
-	for (auto it = asts->cbegin(); astsEnd != it; ++it)
+    auto astsEnd = temporaryAsts.cend();
+	for (auto it = temporaryAsts.cbegin(); astsEnd != it; ++it)
 	{
-		result = getData(*it);
+		result = getData(*it, globalScope);
 
 		if (result != nullptr)
 		{
 			std::wcout << result->Describe() << '\n';
 		}
+
+		asts.push_back(*it);
 	}
+
+	temporaryAsts.clear();
+
+	return result;
 }
 
 InterpreterBackend::InterpreterBackend() : stream(std::cout)

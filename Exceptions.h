@@ -22,7 +22,7 @@ public:
 class ParameterError : public std::runtime_error
 {
 public:
-    ParameterError(char const * message): std::runtime_error(message)
+    ParameterError(std::string const & message): std::runtime_error(message)
     {
     }
 };

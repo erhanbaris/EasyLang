@@ -9,6 +9,8 @@ struct PrimativeValue {
         PRI_DOUBLE,
         PRI_STRING,
         PRI_BOOL,
+		PRI_LIST,
+		PRI_DICT,
         PRI_NULL
     };
 
@@ -17,14 +19,14 @@ struct PrimativeValue {
     union {
         int Integer;
         double Double;
-        std::wstring String;
+        std::wstring* String;
         bool Bool;
     };
 
     PrimativeValue() { Integer = 0; Type = Type::PRI_NULL; }
     PrimativeValue(int value) { Integer = value; Type = Type::PRI_INTEGER; }
     PrimativeValue(double value) { Double = value; Type = Type::PRI_DOUBLE;}
-    PrimativeValue(std::wstring value) { new (&String) std::wstring(value); Type = Type::PRI_STRING;}
+    PrimativeValue(std::wstring value) { String = new std::wstring(value); Type = Type::PRI_STRING;}
     PrimativeValue(bool value) { Bool = value; Type = Type::PRI_BOOL;}
 
     ~PrimativeValue() { }
@@ -40,7 +42,7 @@ struct PrimativeValue {
 		case PrimativeValue::Type::PRI_INTEGER:
 			return L"(INTEGER) " + std::to_wstring(Integer);
 		case PrimativeValue::Type::PRI_STRING:
-			return L"(STRING) " + String;			
+			return L"(STRING) " + *String;			
 		}
 
 		return L"(NULL)";
@@ -50,7 +52,7 @@ struct PrimativeValue {
     void SetDouble(double value) { Double = value; Type = Type::PRI_DOUBLE; }
     void SetString(std::wstring value)
     {
-        new (&String) std::wstring(value);
+        String = new std::wstring(value);
         Type = Type::PRI_STRING;
     }
     void SetBool(bool value) { Bool = value; Type = Type::PRI_BOOL; }
@@ -79,7 +81,7 @@ struct PrimativeValue {
                 break;
 
             case PrimativeValue::Type::PRI_STRING:
-                SetString(rhs.String);
+                SetString(*rhs.String);
                 break;
         }
 

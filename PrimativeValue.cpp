@@ -49,7 +49,7 @@ PrimativeValue* operator + (PrimativeValue const & lhs, PrimativeValue const & r
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
-                    returnValue->SetString(std::to_wstring(lhs.Double) + rhs.String);
+                    returnValue->SetString(std::to_wstring(lhs.Double) + *rhs.String);
                     break;
             }
         }
@@ -72,7 +72,7 @@ PrimativeValue* operator + (PrimativeValue const & lhs, PrimativeValue const & r
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
-                    returnValue->SetString(std::to_wstring(lhs.Integer) + rhs.String);
+                    returnValue->SetString(std::to_wstring(lhs.Integer) + *rhs.String);
                     break;
             }
         }
@@ -87,15 +87,15 @@ PrimativeValue* operator + (PrimativeValue const & lhs, PrimativeValue const & r
                     break;
 
                 case PrimativeValue::Type::PRI_INTEGER:
-                    returnValue->SetString(lhs.String + std::to_wstring(rhs.Integer));
+                    returnValue->SetString(*lhs.String + std::to_wstring(rhs.Integer));
                     break;
 
                 case PrimativeValue::Type::PRI_DOUBLE:
-                    returnValue->SetString(lhs.String + std::to_wstring(rhs.Double));
+                    returnValue->SetString(*lhs.String + std::to_wstring(rhs.Double));
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
-                    returnValue->SetString(lhs.String + rhs.String);
+                    returnValue->SetString(*lhs.String + *rhs.String);
                     break;
             }
         }
@@ -223,7 +223,7 @@ PrimativeValue* operator * (PrimativeValue const & lhs, PrimativeValue const & r
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
-                    returnValue->SetString(lhs.String + rhs.String);
+                    returnValue->SetString(*lhs.String + *rhs.String);
                     break;
             }
         }
@@ -314,19 +314,19 @@ PrimativeValue* operator - (PrimativeValue const & lhs, PrimativeValue const & r
             switch (rhs.Type)
             {
                 case PrimativeValue::Type::PRI_BOOL:
-                    returnValue->SetString(lhs.String);
+                    returnValue->SetString(*lhs.String);
                     break;
 
                 case PrimativeValue::Type::PRI_INTEGER:
-                    returnValue->SetString(lhs.String);
+                    returnValue->SetString(*lhs.String);
                     break;
 
                 case PrimativeValue::Type::PRI_DOUBLE:
-                    returnValue->SetString(lhs.String);
+                    returnValue->SetString(*lhs.String);
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
-                    returnValue->SetString(lhs.String);
+                    returnValue->SetString(*lhs.String);
                     break;
             }
         }
@@ -426,19 +426,19 @@ PrimativeValue* operator / (PrimativeValue const & lhs, PrimativeValue const & r
             switch (rhs.Type)
             {
                 case PrimativeValue::Type::PRI_BOOL:
-                    returnValue->SetString(lhs.String);
+                    returnValue->SetString(*lhs.String);
                     break;
 
                 case PrimativeValue::Type::PRI_INTEGER:
-                    returnValue->SetString(lhs.String);
+                    returnValue->SetString(*lhs.String);
                     break;
 
                 case PrimativeValue::Type::PRI_DOUBLE:
-                    returnValue->SetString(lhs.String);
+                    returnValue->SetString(*lhs.String);
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
-                    returnValue->SetString(lhs.String);
+                    returnValue->SetString(*lhs.String);
                     break;
             }
         }

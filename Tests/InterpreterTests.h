@@ -29,14 +29,38 @@ TEST_CASE("Interpreter tests") {
     std::shared_ptr<std::vector<Token* > > tokens = make_shared<std::vector<Token* > >();
     std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
     
-    SECTION("if 100 > 15 then print 123") {
-        PREPARE("if 100 > 15 then print 123");
-        
-        //value = backend->getData(asts->at(0));
-        //REQUIRE(value != nullptr);
-        //REQUIRE(value->IsInteger());
-        //REQUIRE(value->Integer == 123);
-    }
+	SECTION("if 100 > 15 then return 123") {
+		tokinizer->Parse(L"if 100 > 15 then return 123", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == 123);
+	}
+
+	SECTION("if 100 < 15 then return 123") {
+		tokinizer->Parse(L"if 100 < 15 then return 123", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result == nullptr);
+	}
+
+	SECTION("func test(data) { return 1 + data }") {
+		tokinizer->Parse(L"func test(data) { return 1 + data }", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		backend->Execute();
+
+		tokinizer->Parse(L"test(2)", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == 3);
+	}
 }
 
 #endif //EASYLANG_INTERPRETERTESTS_H
