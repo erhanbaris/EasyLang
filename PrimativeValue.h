@@ -103,5 +103,8 @@ PrimativeValue* operator <= (PrimativeValue const & lhs, PrimativeValue const & 
 PrimativeValue* operator != (PrimativeValue const & lhs, PrimativeValue const & rhs);
 PrimativeValue* operator == (PrimativeValue const & lhs, PrimativeValue const & rhs);
 
+PrimativeValue* operator && (PrimativeValue const & lhs, PrimativeValue const & rhs);
+PrimativeValue* operator || (PrimativeValue const & lhs, PrimativeValue const & rhs);
+
 
 #endif //EASYLANG_PRIMATIVEVALUE_H

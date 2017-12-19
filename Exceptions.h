@@ -9,6 +9,10 @@ public:
     ParseError(char const * message): std::runtime_error(message)
     {
     }
+
+	ParseError(std::string const & message) : std::runtime_error(message)
+	{
+	}
 };
 
 class ConvertError : public std::runtime_error

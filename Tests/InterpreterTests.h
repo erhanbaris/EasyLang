@@ -107,6 +107,54 @@ TEST_CASE("Interpreter tests") {
 		REQUIRE(result->IsString());
 		REQUIRE(*result->String == L"ab");
 	}
+
+	SECTION("((10 - 10) - (10 * 10))") {
+		tokinizer->Parse(L"((10 - 10) - (10 * 10))", tokens);
+		astParser->Parse(tokens, asts);
+
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == -100);
+	}
+
+	SECTION("(40 - (10 * 10))") {
+		tokinizer->Parse(L"(40 - (10 * 10))", tokens);
+		astParser->Parse(tokens, asts);
+
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == -60);
+	}
+
+	SECTION("((10 * 10) * 40)") {
+		tokinizer->Parse(L"((10 * 10) * 40)", tokens);
+		astParser->Parse(tokens, asts);
+
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == 4000);
+	}
+
+	SECTION("((10 - 10) * 40)") {
+		tokinizer->Parse(L"((10 - 10) * 40)", tokens);
+		astParser->Parse(tokens, asts);
+
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == 0);
+	}
 }
 
 #endif //EASYLANG_INTERPRETERTESTS_H

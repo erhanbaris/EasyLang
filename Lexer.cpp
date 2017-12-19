@@ -293,7 +293,30 @@ public:
 					opt->Value = EASY_OPERATOR_TYPE::COMMA;
 					break;
 
+				case '&':
+					if (chNext == '&')
+					{
+						opt->Value = EASY_OPERATOR_TYPE::AND;
+						++index;
+					}
+					else
+						throw ParseError("Unknown char '&'");
+					break;
+
+				case '|':
+					if (chNext == '|')
+					{
+						opt->Value = EASY_OPERATOR_TYPE::OR;
+						++index;
+					}
+					else
+						throw ParseError("Unknown char '|'");
+
+					break;
+
+
                 default:
+					throw ParseError("Unknown char");
                     break;
             }
 

@@ -24,6 +24,7 @@ enum class EASY_AST_TYPE {
 	CONTROL_OPERATION,
 	FUNCTION_CALL,
 	BLOCK,
+	PARENTHESES_BLOCK,
     FOR,
 	FUNCTION_DECLERATION,
     RETURN
@@ -110,6 +111,12 @@ class ReturnAst : public Ast {
 public:
     Ast* Data {nullptr};
     ReturnAst() { Type = EASY_AST_TYPE::RETURN; }
+};
+
+class ParenthesesGroupAst : public Ast {
+public:
+	Ast* Data{ nullptr };
+	ParenthesesGroupAst() { Type = EASY_AST_TYPE::PARENTHESES_BLOCK; }
 };
 
 class ForStatementAst : public Ast

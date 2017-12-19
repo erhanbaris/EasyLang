@@ -20,7 +20,7 @@ public:
 private:
     Scope* baseScope { nullptr };
     std::unordered_map<std::wstring, PrimativeValue*> variables;
-    //std::unordered_map<std::wstring, PrimativeValue*>::iterator variablesEnd;
+	std::unordered_map<std::wstring, PrimativeValue*>::iterator variablesEnd;
 };
 
 

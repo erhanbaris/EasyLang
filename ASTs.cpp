@@ -47,6 +47,9 @@ public:
 		auto* token = getToken();
 		auto* tokenNext = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
 
+		if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::LEFT_PARENTHESES)
+			return EASY_AST_TYPE::PARENTHESES_BLOCK;
+
         if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && tokenNext->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(tokenNext)->Value == EASY_OPERATOR_TYPE::OPERATION)
             return EASY_AST_TYPE::FOR;
         
@@ -211,6 +214,26 @@ public:
         ast->Data = parseAst();
         return reinterpret_cast<Ast*>(ast);
     }
+
+	Ast* parseParenthesesGroup()
+	{
+		skipWhiteSpace();
+		auto* token = getToken();
+		Ast* ast = nullptr;
+		increaseAndClear();
+		ast = parseAst();
+		skipWhiteSpace();
+		token = getToken();
+
+		if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && BinaryOperators.find(reinterpret_cast<OperatorToken*>(token)->Value) != BinaryOperatorsEnd)
+			ast = parseBinaryOperationStatement(ast);
+		else if (token->GetType() == EASY_TOKEN_TYPE::OPERATOR && ControlOperators.find(reinterpret_cast<OperatorToken*>(token)->Value) != ControlOperatorsEnd)
+			ast = parseControlOperationStatement(ast);
+
+		consumeOperator(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
+
+		return reinterpret_cast<Ast*>(ast);
+	}
     
 	Ast* parseAssignment()
 	{
@@ -310,19 +333,24 @@ public:
 		return reinterpret_cast<Ast*>(ast);
 	}
 
-	Ast* parseBinaryOperationStatement()
+	Ast* parseBinaryOperationStatement(Ast* left = nullptr)
 	{
 		auto* ast = new BinaryAst;
         skipWhiteSpace();
         auto* token = getToken();
 
-		if (isPrimative(token))
-			ast->Left = parsePrimative(token);
-		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
-        {
-            ast->Left = new VariableAst(reinterpret_cast<SymbolToken*>(token)->Value);
-            ++index;
-        }
+		if (left == nullptr)
+		{
+			if (isPrimative(token))
+				ast->Left = parsePrimative(token);
+			else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
+			{
+				ast->Left = new VariableAst(reinterpret_cast<SymbolToken*>(token)->Value);
+				++index;
+			}
+		}
+		else
+			ast->Left = left;
         
         if (ast->Left == nullptr)
             throw ParseError("Binary operation left argument is empty.");
@@ -348,6 +376,8 @@ public:
 			ast->Right = new VariableAst(reinterpret_cast<SymbolToken*>(token)->Value);
 			++index;
 		}
+		else if (token != nullptr && token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::LEFT_PARENTHESES)
+			ast->Right = parseParenthesesGroup();
 
         if (ast->Right == nullptr)
             throw ParseError("Binary operation right argument is empty.");
@@ -377,19 +407,24 @@ public:
 		return reinterpret_cast<Ast*>(block);
 	}
 
-	Ast* parseControlOperationStatement()
+	Ast* parseControlOperationStatement(Ast* left = nullptr)
 	{
 		auto* ast = new ControlAst;
         skipWhiteSpace();
 		auto* token = getToken();
 
-		if (isPrimative(token))
-			ast->Left = parsePrimative(token);
-		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
-        {
-			ast->Left = new VariableAst(reinterpret_cast<SymbolToken*>(token)->Value);
-            ++index;
-        }
+		if (left == nullptr)
+		{
+			if (isPrimative(token))
+				ast->Left = parsePrimative(token);
+			else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
+			{
+				ast->Left = new VariableAst(reinterpret_cast<SymbolToken*>(token)->Value);
+				++index;
+			}
+		}
+		else
+			ast->Left = left;
         
         if (ast->Left == nullptr)
             throw ParseError("Binary operation left argument is empty.");
@@ -413,6 +448,8 @@ public:
 			ast->Right = parsePrimative(token);
 		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
 			ast->Right = new VariableAst(reinterpret_cast<SymbolToken*>(token)->Value);
+		else if (token != nullptr && token->GetType() == EASY_TOKEN_TYPE::OPERATOR && reinterpret_cast<OperatorToken*>(token)->Value == EASY_OPERATOR_TYPE::LEFT_PARENTHESES)
+			ast->Right = parseParenthesesGroup();
 
         if (ast->Right == nullptr)
             throw ParseError("Binary operation right argument is empty.");
@@ -541,6 +578,10 @@ public:
 		case EASY_AST_TYPE::ASSIGNMENT:
 			ast = parseAssignment();
             break;
+
+		case EASY_AST_TYPE::PARENTHESES_BLOCK:
+			ast = parseParenthesesGroup();
+			break;
                 
         case EASY_AST_TYPE::IF_STATEMENT:
             ast = parseIfStatement();

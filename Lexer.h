@@ -41,6 +41,8 @@ DECLARE_ENUM(EASY_OPERATOR_TYPE,
 	DOUBLE_QUOTES,
 	LEFT_PARENTHESES,
 	RIGHT_PARENTHESES,
+	OR,
+	AND,
 	COMMA,
 	ASSIGN)
 
@@ -52,8 +54,6 @@ DECLARE_ENUM(EASY_KEYWORD_TYPE,
 	ELSE,
 	THEN,
 	ASSIGNMENT_SUFFIX,
-	OR,
-	AND,
 	BLOCK_START,
 	BLOCK_END,
     BOOL_TRUE,
@@ -141,6 +141,8 @@ static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash> ControlOperators{
 	EASY_OPERATOR_TYPE::LOWER_EQUAL,
 	EASY_OPERATOR_TYPE::GREATOR,
 	EASY_OPERATOR_TYPE::GREATOR_EQUAL,
+	EASY_OPERATOR_TYPE::OR,
+	EASY_OPERATOR_TYPE::AND,
 };
 static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash>::const_iterator ControlOperatorsEnd = ControlOperators.cend();
 
@@ -151,8 +153,6 @@ static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE> Keywords {
     { L"var", EASY_KEYWORD_TYPE::ASSIGNMENT },
     { L"else", EASY_KEYWORD_TYPE::ELSE },
     { L"then", EASY_KEYWORD_TYPE::THEN },
-    { L"and", EASY_KEYWORD_TYPE::AND},
-    { L"or", EASY_KEYWORD_TYPE::OR},
     { L"begin", EASY_KEYWORD_TYPE::BLOCK_START },
     { L"end", EASY_KEYWORD_TYPE::BLOCK_END },
     /*{ L"yes", EASY_KEYWORD_TYPE::BOOL_TRUE },

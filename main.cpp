@@ -10,57 +10,39 @@
 
 #include "Catch.h"
 #include "System.h"
-#include "iolib.h"
-#include "Lexer.h"
-#include "ASTs.h"
-#include "Backend.h"
-#include "InterpreterBackend.h"
+#include "EasyEngine.h"
 
+#ifdef _DEBUG
 #include "Tests/LexerTests.h"
 #include "Tests/AstTests.h"
 #include "Tests/InterpreterTests.h"
+#endif
 
 using namespace std;
 
 int main(int argc, char* argv[]) {
 	System::WarmUp();
+#ifdef _DEBUG
 	// Unit tests
 	Catch::Session().run(argc, argv);
+#endif
 
-	auto* tokinizer = new StandartTokinizer();
-	auto tokens = make_shared<std::vector<Token*>>();
-	auto asts = make_shared<std::vector<Ast*>>();
-
-	//tokinizer->Parse(L"4 eşit 4", tokens);
-	//tokinizer->Parse(L"yaz(1,2,3,4) ", tokens);
-	//tokinizer->Dump(tokens);
-
-    auto* astParser = new AstParser;
-
-    //astParser->Parse(tokens, asts);
-    //astParser->Dump(asts);
-
-	BackendExecuter<InterpreterBackend> executer;
-	//executer.Prepare(asts);
+    auto* engine = EasyEngine::Interpreter();
 
 	std::wstring line;
+	std::wcout << "EasyLang Interpreter\n\n";
 	std::wcout << "easy > ";
 	while (std::getline(std::wcin, line))
 	{
         try {
-            tokinizer->Parse(line, tokens);
-            astParser->Parse(tokens, asts);
-            executer.Prepare(asts);
+			engine->Execute(line);
         } catch (exception& e) {
             std::wcout << "#ERROR " << e.what() << '\n';
         }
 
-		std::wcout << "easy >  ";
+		std::wcout << "easy > ";
 	}
 
     getchar();
-
-    delete tokinizer;
-    delete astParser;
     return 0;
 }

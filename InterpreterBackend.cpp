@@ -34,6 +34,10 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
         case EASY_AST_TYPE::RETURN:
             return getData(reinterpret_cast<ReturnAst*>(ast)->Data, scope);
             break;
+
+		case EASY_AST_TYPE::PARENTHESES_BLOCK:
+			return getData(reinterpret_cast<ParenthesesGroupAst*>(ast)->Data, scope);
+			break;
             
         case EASY_AST_TYPE::VARIABLE:
         {
@@ -229,10 +233,18 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
                 case EASY_OPERATOR_TYPE::EQUAL:
                     value = (*lhs) == (*rhs);
                     break;
-                    
-                case EASY_OPERATOR_TYPE::NOT_EQUAL:
-                    value = (*lhs) != (*rhs);
-                    break;
+
+				case EASY_OPERATOR_TYPE::NOT_EQUAL:
+					value = (*lhs) != (*rhs);
+					break;
+
+				case EASY_OPERATOR_TYPE::OR:
+					value = (*lhs) || (*rhs);
+					break;
+
+				case EASY_OPERATOR_TYPE::AND:
+					value = (*lhs) && (*rhs);
+					break;
             }
             
             return value;

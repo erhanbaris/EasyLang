@@ -3,19 +3,20 @@
 Scope::Scope()
 {
     baseScope = nullptr;
-    //variablesEnd = variables.end();
+    variablesEnd = variables.end();
 }
 
 Scope::Scope(Scope* pBaseScope)
 {
     baseScope = pBaseScope;
-    //variablesEnd = variables.end();
+    variablesEnd = variables.end();
 }
 
 PrimativeValue* Scope::GetVariable(std::wstring const & key)
 {
-    if (variables.find(key) != variables.end())
-        return variables[key];
+	auto item = variables.find(key);
+    if (item != variablesEnd)
+        return item->second;
 
     if (baseScope != nullptr)
         return baseScope->GetVariable(key);
@@ -26,7 +27,7 @@ PrimativeValue* Scope::GetVariable(std::wstring const & key)
 void Scope::SetVariable(std::wstring const & key, PrimativeValue* value)
 {
     variables[key] = value;
-    //variablesEnd = variables.end();
+    variablesEnd = variables.end();
 }
 
 /*
