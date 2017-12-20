@@ -382,7 +382,7 @@ PrimativeValue* operator / (PrimativeValue const & lhs, PrimativeValue const & r
                     break;
 
                 case PrimativeValue::Type::PRI_INTEGER:
-                    returnValue->SetDouble(lhs.Double / rhs.Integer);
+                    returnValue->SetDouble(lhs.Double / (double)rhs.Integer);
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
@@ -404,14 +404,14 @@ PrimativeValue* operator / (PrimativeValue const & lhs, PrimativeValue const & r
                     if (rhs.Double == 0)
                         returnValue->SetNull();
                     else
-                        returnValue->SetDouble(lhs.Integer / rhs.Double);
+                        returnValue->SetDouble((double)lhs.Integer / rhs.Double);
                     break;
 
                 case PrimativeValue::Type::PRI_INTEGER:
                     if (rhs.Integer == 0)
                         returnValue->SetNull();
                     else
-                        returnValue->SetInteger(lhs.Integer / rhs.Integer);
+                        returnValue->SetDouble((double)lhs.Integer / (double)rhs.Integer);
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
