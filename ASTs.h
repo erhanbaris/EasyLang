@@ -143,6 +143,7 @@ class AstParser
 public:
 	AstParser();
     void Parse(std::shared_ptr<std::vector<Token*>> tokens, std::shared_ptr<std::vector<Ast*>> asts);
+	void TempParse(std::shared_ptr<std::vector<Token*>> tokens, std::shared_ptr<std::vector<Ast*>> asts);
 	void Dump(std::shared_ptr<std::vector<Ast*>> asts);
 
 private:
