@@ -926,20 +926,15 @@ public:
 		return AS_AST(ast);
 	}
 
-	Token* factor()
-	{
-		++index;
-		return getToken();
-	}
-
 	Token* current_token{ nullptr };
 	Token* next_token{ nullptr };
 
 	Token* inc()
 	{
 		++index;
+        skipWhiteSpace();
 		current_token = getToken();
-		next_token = getNextToken();
+		next_token = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
 		return current_token;
 	}
 
@@ -956,36 +951,110 @@ public:
 		throw ParseError(std::string(EASY_OPERATOR_TYPEToString(opt)) + " Required");
 	}
 
+    Ast* factor()
+    {
+        auto* token = inc();
+
+        if (isPrimative(token))
+            return asPrimative(token);
+
+        if (isOperator(token) && getOperator() == EASY_OPERATOR_TYPE::LEFT_PARENTHESES) {
+            Ast* ast = expr();
+            eat(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
+            return ast;
+        }
+
+        throw ParseError("Problem with parse");
+    }
+
+    Ast* term()
+    {
+        Ast* ast = factor();
+
+        while (current_token != nullptr && next_token != nullptr)
+        {
+            if (isOperator(next_token))
+            {
+                if (getOperator(next_token) == EASY_OPERATOR_TYPE::MULTIPLICATION ||
+                    getOperator(next_token) == EASY_OPERATOR_TYPE::DIVISION)
+                {
+                    auto* binary = new BinaryAst();
+                    binary->Left = asPrimative(current_token);
+                    eat(getOperator(next_token));
+                    binary->Op = getOperator(current_token);
+                    binary->Right = factor();
+                    ast = AS_AST(binary);
+                }
+                else
+                    break;
+            }
+            else if (isOperator(current_token))
+            {
+                if (getOperator(current_token) == EASY_OPERATOR_TYPE::MULTIPLICATION ||
+                    getOperator(current_token) == EASY_OPERATOR_TYPE::DIVISION)
+                {
+                    auto* binary = new BinaryAst();
+                    binary->Left = ast;
+                    binary->Op = getOperator(current_token);
+                    binary->Right = factor();
+                    ast = AS_AST(binary);
+                }
+                else
+                    break;
+            }
+            else
+                break;
+        }
+
+        return ast;
+    }
+
+	Ast* expr()
+	{
+		auto* ast = term();
+
+		if (current_token != nullptr) {
+			while (current_token != nullptr && next_token != nullptr) {
+				if (isOperator(next_token)) {
+					if (getOperator(next_token) == EASY_OPERATOR_TYPE::PLUS ||
+						getOperator(next_token) == EASY_OPERATOR_TYPE::MINUS) {
+						auto *binary = new BinaryAst();
+						binary->Left = ast;
+						eat(getOperator(next_token));
+						binary->Op = getOperator(current_token);
+						binary->Right = term();
+						ast = AS_AST(binary);
+					}
+					else
+						break;
+				} else if (isOperator(current_token)) {
+					if (getOperator(current_token) == EASY_OPERATOR_TYPE::PLUS ||
+						getOperator(current_token) == EASY_OPERATOR_TYPE::MINUS) {
+						auto *binary = new BinaryAst();
+						binary->Left = ast;
+						binary->Op = getOperator(current_token);
+						binary->Right = term();
+						ast = AS_AST(binary);
+					}
+					else
+						break;
+				} else
+					break;
+			}
+		}
+
+		return ast;
+	}
+
 	void tempParse()
 	{
 		tokensCount = tokens->size();
-		index = 0;
+		index = -1;
 
-		current_token = getToken();
-		next_token = getNextToken();
+        current_token = getToken();
+        next_token = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
 
-		while (current_token != nullptr)
-		{
-			Ast* ast = nullptr;
-			if (isOperator(next_token))
-			{
-				if (getOperator(next_token) == EASY_OPERATOR_TYPE::MULTIPLICATION ||
-					getOperator(next_token) == EASY_OPERATOR_TYPE::DIVISION)
-				{
-					auto* binary = new BinaryAst();
-					binary->Left = asPrimative(current_token);
-					eat(getOperator(next_token));
-					binary->Op = getOperator(current_token);
-					binary->Right = asPrimative(inc());
-					ast = AS_AST(binary);
-					inc();
-				}
-			}
-			else
-				throw ParseError("Parse");
-
-			asts->push_back(ast);
-		}
+		asts->push_back(expr());
 	}
 };
 
