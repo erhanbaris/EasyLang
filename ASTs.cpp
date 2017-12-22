@@ -258,20 +258,7 @@ public:
 	Ast* parseParenthesesGroup()
 	{
 		skipWhiteSpace();
-		Ast* ast = nullptr;
-		increaseAndClear();
-		ast = parseAst();
-		skipWhiteSpace();
-		auto* token = getToken();
-		checkToken("Parse error");
-
-		if (isOperator(token) && BinaryOperators.find(getOperator(token)) != BinaryOperatorsEnd)
-			ast = parseBinaryOperationStatement(ast);
-		else if (isOperator(token) && ControlOperators.find(getOperator(token)) != ControlOperatorsEnd)
-			ast = parseControlOperationStatement(ast);
-
-		consumeOperator(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
-
+		Ast* ast = expr();
 		return AS_AST(ast);
 	}
 
@@ -765,6 +752,9 @@ public:
 		tokensCount = tokens->size();
 		index = 0;
 
+		current_token = getToken();
+		next_token = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
+
 		while (index < tokensCount)
 			asts->push_back(parseAst());
 	}
@@ -960,12 +950,16 @@ public:
 
     Ast* factor()
     {
-        auto* token = increaseAndClear();
+        auto* token = getToken();
 
-        if (isPrimative(token))
-            return asPrimative(token);
+		if (isPrimative(token))
+		{
+			increaseAndClear();
+			return asPrimative(token);
+		}
 
         if (isOperator(token) && getOperator() == EASY_OPERATOR_TYPE::LEFT_PARENTHESES) {
+			increaseAndClear();
             Ast* ast = expr();
             eat(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
             return ast;
@@ -1036,7 +1030,7 @@ public:
 	void tempParse()
 	{
 		tokensCount = tokens->size();
-		index = -1;
+		index = 0;
 
         current_token = getToken();
         next_token = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
