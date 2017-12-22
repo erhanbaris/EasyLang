@@ -132,6 +132,18 @@ TEST_CASE("Interpreter tests") {
 		REQUIRE(result->Integer == -60);
 	}
 
+    SECTION("(40 - (10 * 10) * 2)") {
+        tokinizer->Parse(L"(40 - (10 * 10) * 2)", tokens);
+        astParser->Parse(tokens, asts);
+
+        backend->Prepare(asts);
+        PrimativeValue* result = backend->Execute();
+
+        REQUIRE(result != nullptr);
+        REQUIRE(result->IsInteger());
+        REQUIRE(result->Integer == -160);
+    }
+
 	SECTION("((10 * 10) * 40)") {
 		tokinizer->Parse(L"((10 * 10) * 40)", tokens);
 		astParser->Parse(tokens, asts);
@@ -154,6 +166,42 @@ TEST_CASE("Interpreter tests") {
 		REQUIRE(result != nullptr);
 		REQUIRE(result->IsInteger());
 		REQUIRE(result->Integer == 0);
+	}
+
+	SECTION("2 + 7 * 4") {
+		tokinizer->Parse(L"2 + 7 * 4", tokens);
+		astParser->Parse(tokens, asts);
+
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result->Integer == 30);
+	}
+
+	SECTION("7 + 3 * (10 / (12 / (3 + 1) - 1))") {
+		tokinizer->Parse(L"7 + 3 * (10 / (12 / (3 + 1) - 1))", tokens);
+		astParser->Parse(tokens, asts);
+
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result->Double == 22);
+	}
+
+	SECTION("(7 + (3 + 2))") {
+		tokinizer->Parse(L"(7 + (3 + 2))", tokens);
+		astParser->Parse(tokens, asts);
+
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result->Integer == 12);
+	}
+
+	SECTION("testvar = 10 testvar * 10 - 10") {
+		tokinizer->Parse(L"testvar = 10 testvar * 10 - 10", tokens);
+		astParser->Parse(tokens, asts);
+
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result->Integer == 90);
 	}
 }
 

@@ -151,11 +151,11 @@ public:
 
 	inline Token* increaseAndClear()
 	{
+        current_token = getToken();
+        next_token = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
+
 		++index;
 		skip(EASY_TOKEN_TYPE::WHITESPACE);
-
-		current_token = getToken();
-		next_token = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
 		return current_token;
 	}
 
@@ -368,57 +368,7 @@ public:
 
 	Ast* parseBinaryOperationStatement(Ast* left = nullptr)
 	{
-		auto* ast = new BinaryAst;
-		skipWhiteSpace();
-		auto* token = getToken();
-
-		if (left == nullptr)
-		{
-			//parseProduct();
-			if (isPrimative(token))
-				ast->Left = parsePrimative(token);
-			else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
-			{
-				ast->Left = new VariableAst(getSymbol(token));
-				++index;
-			}
-		}
-		else
-			ast->Left = left;
-
-		if (ast->Left == nullptr)
-			throw ParseError("Binary operation left argument is empty.");
-
-		skipWhiteSpace();
-		token = getToken();
-		checkToken("Parse error");
-
-		if (isOperator(token) &&
-			BinaryOperators.find(getOperator(token)) != BinaryOperatorsEnd)
-			ast->Op = getOperator(token);
-		else
-			ast->Op = EASY_OPERATOR_TYPE::OPERATOR_NONE;
-
-		if (ast->Op == EASY_OPERATOR_TYPE::OPERATOR_NONE)
-			throw ParseError("Binary operation operator is empty.");
-
-		++index;
-		skipWhiteSpace();
-		token = getToken();
-		if (isPrimative(token))
-			ast->Right = parsePrimative(token);
-		else if (token != nullptr && token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
-		{
-			ast->Right = new VariableAst(getSymbol(token));
-			++index;
-		}
-		else if (token != nullptr && isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::LEFT_PARENTHESES)
-			ast->Right = parseParenthesesGroup();
-
-		if (ast->Right == nullptr)
-			throw ParseError("Binary operation right argument is empty.");
-
-		return AS_AST(ast);
+		return expr();
 	}
 
 	Ast* parseBlock()
@@ -957,6 +907,11 @@ public:
 			increaseAndClear();
 			return asPrimative(token);
 		}
+		else if (isSymbol(token))
+		{
+			increaseAndClear();
+			return new VariableAst(getSymbol(token));
+		}
 
         if (isOperator(token) && getOperator() == EASY_OPERATOR_TYPE::LEFT_PARENTHESES) {
 			increaseAndClear();
@@ -977,7 +932,7 @@ public:
             if (isOperator(next_token) && isTerm(next_token))
             {
                 auto* binary = new BinaryAst();
-                binary->Left = asPrimative(current_token);
+                binary->Left = ast;
                 eat(getOperator(next_token));
                 binary->Op = getOperator(current_token);
                 binary->Right = factor();
