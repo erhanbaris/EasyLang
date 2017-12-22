@@ -2,7 +2,7 @@
 #include "Exceptions.h"
 #include "System.h"
 
-#define getItem(NAME, TYPE, IN, OUT) inline OUT get##NAME (Token* token)\
+#define GET_ITEM(NAME, TYPE, IN, OUT) inline OUT get##NAME (Token* token)\
 	{\
 	return reinterpret_cast<IN*>(token)->Value;\
 	}\
@@ -12,11 +12,11 @@
 	}\
 	inline bool is##NAME (Token* token)\
 	{\
-		return token->GetType() == TYPE ;\
+		return token != nullptr && token->GetType() == TYPE ;\
 	}\
 	inline bool is##NAME ()\
 	{\
-		return getToken()->GetType() == TYPE ;\
+		return getToken() != nullptr && getToken()->GetType() == TYPE ;\
 	}
 #define AS_AST(ast) reinterpret_cast<Ast*>(ast)
 
@@ -30,13 +30,16 @@ public:
 	size_t tokensCount;
 	size_t index;
 
-	getItem(Keyword, EASY_TOKEN_TYPE::KEYWORD, KeywordToken, EASY_KEYWORD_TYPE);
-	getItem(Operator, EASY_TOKEN_TYPE::OPERATOR, OperatorToken, EASY_OPERATOR_TYPE);
-	getItem(Integer, EASY_TOKEN_TYPE::INTEGER, IntegerToken, int);
-	getItem(Double, EASY_TOKEN_TYPE::DOUBLE, DoubleToken, double);
-	getItem(Text, EASY_TOKEN_TYPE::TEXT, TextToken, std::wstring);
-	getItem(Symbol, EASY_TOKEN_TYPE::SYMBOL, SymbolToken, std::wstring);
-	getItem(Variable, EASY_TOKEN_TYPE::VARIABLE, VariableToken, std::wstring);
+	Token* current_token{ nullptr };
+	Token* next_token{ nullptr };
+
+	GET_ITEM(Keyword, EASY_TOKEN_TYPE::KEYWORD, KeywordToken, EASY_KEYWORD_TYPE);
+	GET_ITEM(Operator, EASY_TOKEN_TYPE::OPERATOR, OperatorToken, EASY_OPERATOR_TYPE);
+	GET_ITEM(Integer, EASY_TOKEN_TYPE::INTEGER, IntegerToken, int);
+	GET_ITEM(Double, EASY_TOKEN_TYPE::DOUBLE, DoubleToken, double);
+	GET_ITEM(Text, EASY_TOKEN_TYPE::TEXT, TextToken, std::wstring);
+	GET_ITEM(Symbol, EASY_TOKEN_TYPE::SYMBOL, SymbolToken, std::wstring);
+	GET_ITEM(Variable, EASY_TOKEN_TYPE::VARIABLE, VariableToken, std::wstring);
 
 	Token* getToken()
 	{
@@ -146,10 +149,14 @@ public:
 		skip(EASY_TOKEN_TYPE::WHITESPACE);
 	}
 
-	inline void increaseAndClear()
+	inline Token* increaseAndClear()
 	{
 		++index;
 		skip(EASY_TOKEN_TYPE::WHITESPACE);
+
+		current_token = getToken();
+		next_token = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
+		return current_token;
 	}
 
 	inline void consumeToken(EASY_TOKEN_TYPE type)
@@ -200,7 +207,7 @@ public:
 	inline void checkKeyword(EASY_KEYWORD_TYPE type)
 	{
 		Token* token = getToken();
-		if (token == nullptr || token->GetType() != EASY_TOKEN_TYPE::KEYWORD || getKeyword(token) != type)
+		if (!isKeyword(token) || getKeyword(token) != type)
 			throw ParseError("Syntax error.");
 	}
 
@@ -236,7 +243,7 @@ public:
 		}
 
 		++index;
-		return reinterpret_cast<Ast*>(ast);
+		return AS_AST(ast);
 	}
 
 	Ast* parseReturn()
@@ -245,7 +252,7 @@ public:
 		auto* ast = new ReturnAst;
 		increaseAndClear();
 		ast->Data = parseAst();
-		return reinterpret_cast<Ast*>(ast);
+		return AS_AST(ast);
 	}
 
 	Ast* parseParenthesesGroup()
@@ -265,7 +272,7 @@ public:
 
 		consumeOperator(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
 
-		return reinterpret_cast<Ast*>(ast);
+		return AS_AST(ast);
 	}
 
 	Ast* parseAssignment()
@@ -290,7 +297,7 @@ public:
 
 		ast->Data = parseAst();
 
-		return reinterpret_cast<Ast*>(ast);
+		return AS_AST(ast);
 	}
 
 	Ast* parseIfStatement()
@@ -316,7 +323,7 @@ public:
 			ast->False = parseAst();
 		}
 
-		return reinterpret_cast<Ast*>(ast);
+		return AS_AST(ast);
 	}
 
 	Ast* parseFunctionCall()
@@ -363,13 +370,13 @@ public:
 		}
 		else if (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::EMPTY_PARAMETER)
 		{
-			//ast->Args.push_back(reinterpret_cast<Ast*>(new PrimativeAst()));
+			//ast->Args.push_back(AS_AST(new PrimativeAst()));
 			++index;
 		}
 		else
 			ast->Args.push_back(parseAst());
 
-		return reinterpret_cast<Ast*>(ast);
+		return AS_AST(ast);
 	}
 
 	Ast* parseBinaryOperationStatement(Ast* left = nullptr)
@@ -424,7 +431,7 @@ public:
 		if (ast->Right == nullptr)
 			throw ParseError("Binary operation right argument is empty.");
 
-		return reinterpret_cast<Ast*>(ast);
+		return AS_AST(ast);
 	}
 
 	Ast* parseBlock()
@@ -448,7 +455,7 @@ public:
 			block->Blocks->push_back(parseAst());
 		}
 
-		return reinterpret_cast<Ast*>(block);
+		return AS_AST(block);
 	}
 
 	Ast* parseControlOperationStatement(Ast* left = nullptr)
@@ -499,7 +506,7 @@ public:
 		if (ast->Right == nullptr)
 			throw ParseError("Binary operation right argument is empty.");
 
-		return reinterpret_cast<Ast*>(ast);
+		return AS_AST(ast);
 	}
 
 	/*
@@ -560,7 +567,7 @@ public:
 		else
 			ast->Body = parseAst();
 
-		return reinterpret_cast<Ast*>(ast);
+		return AS_AST(ast);
 	}
 
 	Ast* parseForStatement()
@@ -612,7 +619,7 @@ public:
 		ast->Repeat = parseAst();
 
 
-		return reinterpret_cast<Ast*>(ast);
+		return AS_AST(ast);
 	}
 
 	/*
@@ -740,7 +747,7 @@ public:
 			auto* variableAst = new VariableAst;
 			checkToken("Parse error");
 			variableAst->Value = getVariable();
-			ast = reinterpret_cast<Ast*>(variableAst);
+			ast = AS_AST(variableAst);
 			++index;
 		}
 		break;
@@ -926,24 +933,12 @@ public:
 		return AS_AST(ast);
 	}
 
-	Token* current_token{ nullptr };
-	Token* next_token{ nullptr };
-
-	Token* inc()
-	{
-		++index;
-        skipWhiteSpace();
-		current_token = getToken();
-		next_token = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
-		return current_token;
-	}
-
 	Token* eat(EASY_OPERATOR_TYPE opt)
 	{
-		inc();
+		increaseAndClear();
 
-		if (getToken()->GetType() == EASY_TOKEN_TYPE::WHITESPACE)
-			inc();
+		if (getToken() != nullptr && getToken()->GetType() == EASY_TOKEN_TYPE::WHITESPACE)
+			increaseAndClear();
 		
 		if (isOperator(current_token) && getOperator(current_token) == opt)
 			return current_token;
@@ -951,9 +946,21 @@ public:
 		throw ParseError(std::string(EASY_OPERATOR_TYPEToString(opt)) + " Required");
 	}
 
+	inline bool isTerm(Token* token)
+	{
+		return getOperator(token) == EASY_OPERATOR_TYPE::MULTIPLICATION ||
+			getOperator(token) == EASY_OPERATOR_TYPE::DIVISION;
+	}
+
+	inline bool isExpr(Token* token)
+	{
+		return getOperator(token) == EASY_OPERATOR_TYPE::PLUS ||
+			getOperator(token) == EASY_OPERATOR_TYPE::MINUS;
+	}
+
     Ast* factor()
     {
-        auto* token = inc();
+        auto* token = increaseAndClear();
 
         if (isPrimative(token))
             return asPrimative(token);
@@ -973,34 +980,22 @@ public:
 
         while (current_token != nullptr && next_token != nullptr)
         {
-            if (isOperator(next_token))
+            if (isOperator(next_token) && isTerm(next_token))
             {
-                if (getOperator(next_token) == EASY_OPERATOR_TYPE::MULTIPLICATION ||
-                    getOperator(next_token) == EASY_OPERATOR_TYPE::DIVISION)
-                {
-                    auto* binary = new BinaryAst();
-                    binary->Left = asPrimative(current_token);
-                    eat(getOperator(next_token));
-                    binary->Op = getOperator(current_token);
-                    binary->Right = factor();
-                    ast = AS_AST(binary);
-                }
-                else
-                    break;
+                auto* binary = new BinaryAst();
+                binary->Left = asPrimative(current_token);
+                eat(getOperator(next_token));
+                binary->Op = getOperator(current_token);
+                binary->Right = factor();
+                ast = AS_AST(binary);
             }
-            else if (isOperator(current_token))
+            else if (isOperator(current_token) && isTerm(current_token))
             {
-                if (getOperator(current_token) == EASY_OPERATOR_TYPE::MULTIPLICATION ||
-                    getOperator(current_token) == EASY_OPERATOR_TYPE::DIVISION)
-                {
-                    auto* binary = new BinaryAst();
-                    binary->Left = ast;
-                    binary->Op = getOperator(current_token);
-                    binary->Right = factor();
-                    ast = AS_AST(binary);
-                }
-                else
-                    break;
+                auto* binary = new BinaryAst();
+                binary->Left = ast;
+                binary->Op = getOperator(current_token);
+                binary->Right = factor();
+                ast = AS_AST(binary);
             }
             else
                 break;
@@ -1013,36 +1008,28 @@ public:
 	{
 		auto* ast = term();
 
-		if (current_token != nullptr) {
-			while (current_token != nullptr && next_token != nullptr) {
-				if (isOperator(next_token)) {
-					if (getOperator(next_token) == EASY_OPERATOR_TYPE::PLUS ||
-						getOperator(next_token) == EASY_OPERATOR_TYPE::MINUS) {
-						auto *binary = new BinaryAst();
-						binary->Left = ast;
-						eat(getOperator(next_token));
-						binary->Op = getOperator(current_token);
-						binary->Right = term();
-						ast = AS_AST(binary);
-					}
-					else
-						break;
-				} else if (isOperator(current_token)) {
-					if (getOperator(current_token) == EASY_OPERATOR_TYPE::PLUS ||
-						getOperator(current_token) == EASY_OPERATOR_TYPE::MINUS) {
-						auto *binary = new BinaryAst();
-						binary->Left = ast;
-						binary->Op = getOperator(current_token);
-						binary->Right = term();
-						ast = AS_AST(binary);
-					}
-					else
-						break;
-				} else
-					break;
-			}
-		}
+		if (current_token == nullptr)
+			return ast;
 
+		while (current_token != nullptr && next_token != nullptr) {
+			if (isOperator(next_token) && isExpr(next_token)) {
+				auto *binary = new BinaryAst();
+				binary->Left = ast;
+				eat(getOperator(next_token));
+				binary->Op = getOperator(current_token);
+				binary->Right = term();
+				ast = AS_AST(binary);
+			} 
+			else if (isOperator(current_token) && isExpr(current_token)) {
+				auto *binary = new BinaryAst();
+				binary->Left = ast;
+				binary->Op = getOperator(current_token);
+				binary->Right = term();
+				ast = AS_AST(binary);
+			} else
+				break;
+		}
+	
 		return ast;
 	}
 
