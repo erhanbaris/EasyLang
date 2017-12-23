@@ -8,8 +8,8 @@
 #include <sstream>
 #include <cmath>
 
-#include "../Catch.h"
-#include "../Lexer.h"
+#include "../include/Catch.h"
+#include "../include/Lexer.h"
 
 using namespace std;
 

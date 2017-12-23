@@ -8,9 +8,9 @@
 #include <sstream>
 #include <cmath>
 
-#include "../Catch.h"
-#include "../Lexer.h"
-#include "../ASTs.h"
+#include "../include/Catch.h"
+#include "../include/Lexer.h"
+#include "../include/ASTs.h"
 
 using namespace std;
 

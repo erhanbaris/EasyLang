@@ -33,8 +33,8 @@ public:
             }
 			else if (ch == '_' && (chNext == '\0' || (isSymbol(ch) == false && ch >= '0' && ch <= '9')))
 			{
-				auto* opt = new KeywordToken;
-				opt->Value = EASY_KEYWORD_TYPE::EMPTY_PARAMETER;
+				auto* opt = new OperatorToken;
+				opt->Value = EASY_OPERATOR_TYPE ::UNDERLINE;
 				TokenList->push_back(reinterpret_cast<Token*>(opt));
 				++index;
 				continue;

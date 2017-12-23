@@ -33,7 +33,7 @@ func SumTwoNumber(a, b)
 func SumAndPrint(a, b)
 {
     sum = a + b
-    print (sum)
+    io::print (sum)
     return sum
 }
 ```

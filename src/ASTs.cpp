@@ -90,7 +90,7 @@ public:
 		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && isOperator(tokenNext) && getOperator(tokenNext) == EASY_OPERATOR_TYPE::OPERATION)
 			return EASY_AST_TYPE::FOR;
 
-        if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && isOperator(tokenNext) && (getOperator(tokenNext) == EASY_OPERATOR_TYPE::DOUBLE_COLON || getOperator(tokenNext) == EASY_OPERATOR_TYPE::LEFT_PARENTHESES))
+        if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && isOperator(tokenNext) && (getOperator(tokenNext) == EASY_OPERATOR_TYPE::UNDERLINE || getOperator(tokenNext) == EASY_OPERATOR_TYPE::DOUBLE_COLON || getOperator(tokenNext) == EASY_OPERATOR_TYPE::LEFT_PARENTHESES))
             return EASY_AST_TYPE::FUNCTION_CALL;
 
 		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && isOperator(tokenNext) && getOperator(tokenNext) == EASY_OPERATOR_TYPE::ASSIGN)
@@ -395,7 +395,7 @@ public:
 			skipWhiteSpace();
 			consumeOperator(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
 		}
-		else if (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::EMPTY_PARAMETER)
+		else if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE ::UNDERLINE)
 		{
 			//ast->Args.push_back(AS_AST(new PrimativeAst()));
 			++index;
