@@ -49,22 +49,6 @@ public:
                 getText();
                 continue;
             }
-            else if (ch == '{')
-            {
-                auto* opt = new KeywordToken;
-                opt->Value = EASY_KEYWORD_TYPE::BLOCK_START;
-                TokenList->push_back(reinterpret_cast<Token*>(opt));
-                ++index;
-                continue;
-            }
-            else if (ch == '}')
-            {
-                auto* opt = new KeywordToken;
-                opt->Value = EASY_KEYWORD_TYPE::BLOCK_END;
-                TokenList->push_back(reinterpret_cast<Token*>(opt));
-                ++index;
-                continue;
-            }
             else if (ch == '.' && chNext == '.')
             {
                 auto* opt = new KeywordToken;
@@ -111,13 +95,7 @@ public:
         }
 
 		auto data = stream.str();
-		if (Operators.find(data) != OperatorsEnd)
-		{
-			auto *token = new OperatorToken;
-			token->Value = Operators.find(data)->second;
-			TokenList->push_back(reinterpret_cast<Token*>(token));
-		}
-		else if (Keywords.find(data) != KeywordsEnd)
+		if (Keywords.find(data) != KeywordsEnd)
 		{
 			auto *token = new KeywordToken;
 			token->Value = Keywords.find(data)->second;
@@ -289,6 +267,22 @@ public:
                     opt->Value = EASY_OPERATOR_TYPE::RIGHT_PARENTHESES;
                     break;
 
+                case '{':
+                    opt->Value = EASY_OPERATOR_TYPE::BLOCK_START;
+                    break;
+
+                case '}':
+                    opt->Value = EASY_OPERATOR_TYPE::BLOCK_END;
+                    break;
+
+                case '[':
+                    opt->Value = EASY_OPERATOR_TYPE::SQUARE_BRACKET_START;
+                    break;
+
+                case ']':
+                    opt->Value = EASY_OPERATOR_TYPE::SQUARE_BRACKET_END;
+                    break;
+
 				case ',':
 					opt->Value = EASY_OPERATOR_TYPE::COMMA;
 					break;
@@ -303,16 +297,25 @@ public:
 						throw ParseError("Unknown char '&'");
 					break;
 
-				case '|':
-					if (chNext == '|')
-					{
-						opt->Value = EASY_OPERATOR_TYPE::OR;
-						++index;
-					}
-					else
-						throw ParseError("Unknown char '|'");
+                case '|':
+                    if (chNext == '|')
+                    {
+                        opt->Value = EASY_OPERATOR_TYPE::OR;
+                        ++index;
+                    }
+                    else
+                        throw ParseError("Unknown char '|'");
+                    break;
 
-					break;
+                case ':':
+                    if (chNext == ':')
+                    {
+                        opt->Value = EASY_OPERATOR_TYPE::DOUBLE_COLON;
+                        ++index;
+                    }
+                    else
+                        opt->Value = EASY_OPERATOR_TYPE::SINGLE_COLON;
+                    break;
 
 
                 default:

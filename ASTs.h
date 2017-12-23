@@ -62,6 +62,8 @@ public:
 	PrimativeAst(double value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
 	PrimativeAst(std::wstring value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
 	PrimativeAst(bool value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
+	PrimativeAst(std::vector<PrimativeValue*>* value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
+	PrimativeAst(std::unordered_map<std::wstring, PrimativeValue*>* value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
 };
 
 class ControlAst : public Ast
@@ -133,6 +135,7 @@ class FunctionCallAst : public Ast
 {
 public:
     std::wstring Function;
+	std::wstring Package;
     std::vector<Ast*> Args;
     FunctionCallAst() { Type = EASY_AST_TYPE::FUNCTION_CALL; }
 };

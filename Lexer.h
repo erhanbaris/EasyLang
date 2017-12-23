@@ -41,10 +41,16 @@ DECLARE_ENUM(EASY_OPERATOR_TYPE,
 	DOUBLE_QUOTES,
 	LEFT_PARENTHESES,
 	RIGHT_PARENTHESES,
+	SQUARE_BRACKET_START,
+	SQUARE_BRACKET_END,
+	BLOCK_START,
+	BLOCK_END,
 	OR,
 	AND,
 	COMMA,
-	ASSIGN)
+	ASSIGN,
+	SINGLE_COLON,
+	DOUBLE_COLON)
 
 DECLARE_ENUM(EASY_KEYWORD_TYPE,
 	KEYWORD_NONE,
@@ -54,13 +60,12 @@ DECLARE_ENUM(EASY_KEYWORD_TYPE,
 	ELSE,
 	THEN,
 	ASSIGNMENT_SUFFIX,
-	BLOCK_START,
-	BLOCK_END,
     BOOL_TRUE,
     BOOL_FALSE,
 	EMPTY_PARAMETER,
 	FUNC,
-	RETURN)
+	RETURN,
+    PACKAGE)
 
 struct EnumClassHash
 {
@@ -70,61 +75,6 @@ struct EnumClassHash
 		return static_cast<std::size_t>(t);
 	}
 };
-
-static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE> Operators {
-
-		// '-'
-		//{ L"çıkar", EASY_OPERATOR_TYPE::MINUS },
-		//{ L"çıkart", EASY_OPERATOR_TYPE::MINUS },
-		//{ L"eksi", EASY_OPERATOR_TYPE::MINUS },
-
-		//// '+'
-		//{ L"ekle", EASY_OPERATOR_TYPE::PLUS },
-		//{ L"artı", EASY_OPERATOR_TYPE::PLUS },
-		//{ L"topla", EASY_OPERATOR_TYPE::PLUS },
-		//{ L"toplam", EASY_OPERATOR_TYPE::PLUS },
-
-		//// '*'
-		//{ L"çarp", EASY_OPERATOR_TYPE::MULTIPLICATION },
-		//{ L"çarpı", EASY_OPERATOR_TYPE::MULTIPLICATION },
-		//{ L"çarpım", EASY_OPERATOR_TYPE::MULTIPLICATION },
-		//{ L"çarpma", EASY_OPERATOR_TYPE::MULTIPLICATION },
-
-		//// '='
-		//{ L"eşit", EASY_OPERATOR_TYPE::EQUAL },
-		//{ L"eşitise", EASY_OPERATOR_TYPE::EQUAL },
-		//{ L"eşitse", EASY_OPERATOR_TYPE::EQUAL },
-		//{ L"eşittir", EASY_OPERATOR_TYPE::EQUAL },
-
-		//// '!='
-		//{ L"eşitdeğil", EASY_OPERATOR_TYPE::NOT_EQUAL },
-		//{ L"eşitdeğildir", EASY_OPERATOR_TYPE::NOT_EQUAL },
-
-		//// '/'
-		//{ L"böl", EASY_OPERATOR_TYPE::DIVISION},
-		//{ L"bölü", EASY_OPERATOR_TYPE::DIVISION },
-		//{ L"bölüm", EASY_OPERATOR_TYPE::DIVISION },
-		//{ L"bölme", EASY_OPERATOR_TYPE::DIVISION },
-
-		//// '<'
-  //      { L"küçük", EASY_OPERATOR_TYPE::LOWER },
-		//{ L"küçükse", EASY_OPERATOR_TYPE::LOWER },
-		//{ L"küçükise", EASY_OPERATOR_TYPE::LOWER },
-		//{ L"küçüktür", EASY_OPERATOR_TYPE::LOWER },
-
-		//// '<='
-		//{ L"küçükeşit", EASY_OPERATOR_TYPE::LOWER_EQUAL },
-
-		//// '>'
-		//{ L"büyük", EASY_OPERATOR_TYPE::GREATOR },
-		//{ L"büyükse", EASY_OPERATOR_TYPE::GREATOR },
-		//{ L"büyükise", EASY_OPERATOR_TYPE::GREATOR },
-		//{ L"büyüktür", EASY_OPERATOR_TYPE::GREATOR },
-
-		//// '>='
-		//{ L"küçükeşit", EASY_OPERATOR_TYPE::GREATOR_EQUAL }
-};
-static std::unordered_map<std::wstring, EASY_OPERATOR_TYPE>::const_iterator OperatorsEnd = Operators.cend();
 
 static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash> BinaryOperators {
 	EASY_OPERATOR_TYPE::MINUS,
@@ -153,13 +103,12 @@ static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE> Keywords {
     { L"var", EASY_KEYWORD_TYPE::ASSIGNMENT },
     { L"else", EASY_KEYWORD_TYPE::ELSE },
     { L"then", EASY_KEYWORD_TYPE::THEN },
-    { L"begin", EASY_KEYWORD_TYPE::BLOCK_START },
-    { L"end", EASY_KEYWORD_TYPE::BLOCK_END },
     /*{ L"yes", EASY_KEYWORD_TYPE::BOOL_TRUE },
     { L"no", EASY_KEYWORD_TYPE::BOOL_FALSE },*/
     { L"true", EASY_KEYWORD_TYPE::BOOL_TRUE },
     { L"false", EASY_KEYWORD_TYPE::BOOL_FALSE },
-    
+	{ L"package", EASY_KEYWORD_TYPE::PACKAGE },
+
     /*{ L"eğer", EASY_KEYWORD_TYPE::IF },
     { L"atama", EASY_KEYWORD_TYPE::ASSIGNMENT },
     { L"değilse", EASY_KEYWORD_TYPE::ELSE },

@@ -90,8 +90,8 @@ public:
 		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && isOperator(tokenNext) && getOperator(tokenNext) == EASY_OPERATOR_TYPE::OPERATION)
 			return EASY_AST_TYPE::FOR;
 
-		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && ((tokenNext != nullptr && isOperator(tokenNext) && getOperator(tokenNext) == EASY_OPERATOR_TYPE::LEFT_PARENTHESES) || System::UserMethods.find(getSymbol(token)) != System::UserMethods.end() || System::SystemMethods.find(getSymbol(token)) != System::SystemMethods.end()))
-			return EASY_AST_TYPE::FUNCTION_CALL;
+        if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && isOperator(tokenNext) && (getOperator(tokenNext) == EASY_OPERATOR_TYPE::DOUBLE_COLON || getOperator(tokenNext) == EASY_OPERATOR_TYPE::LEFT_PARENTHESES))
+            return EASY_AST_TYPE::FUNCTION_CALL;
 
 		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && isOperator(tokenNext) && getOperator(tokenNext) == EASY_OPERATOR_TYPE::ASSIGN)
 			return EASY_AST_TYPE::ASSIGNMENT;
@@ -105,7 +105,7 @@ public:
 		if (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::FUNC)
 			return EASY_AST_TYPE::FUNCTION_DECLERATION;
 
-		if (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::BLOCK_START)
+		if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::BLOCK_START)
 			return EASY_AST_TYPE::BLOCK;
 
         if (tokenNext != nullptr && isOperator(tokenNext) && BinaryOperators.find(getOperator(tokenNext)) != BinaryOperators.end())
@@ -115,6 +115,9 @@ public:
 			return EASY_AST_TYPE::CONTROL_OPERATION;
 
 		if (isPrimative(token))
+			return EASY_AST_TYPE::PRIMATIVE;
+
+		if (isOperator(token) && tokenNext != nullptr && isOperator(tokenNext) && getOperator(token) == EASY_OPERATOR_TYPE::SQUARE_BRACKET_START && getOperator(tokenNext) == EASY_OPERATOR_TYPE::SQUARE_BRACKET_END)
 			return EASY_AST_TYPE::PRIMATIVE;
 
 		if (tokenNext != nullptr && isOperator(token) && isExpr(token) && isPrimative(tokenNext))
@@ -185,8 +188,7 @@ public:
 		if (token != nullptr && token->GetType() == type)
 			++index;
 		else
-			throw ParseError("Syntax error.");
-
+			throw ParseError("Syntax error. '" + std::string(EASY_TOKEN_TYPEToString(type)) + "' required");
 	}
 
 	inline void consumeOperator(EASY_OPERATOR_TYPE type)
@@ -195,8 +197,7 @@ public:
 		if (token != nullptr && isOperator(token) && getOperator(token) == type)
 			++index;
 		else
-			throw ParseError("Syntax error.");
-
+			throw ParseError("Syntax error. '" + std::string(EASY_OPERATOR_TYPEToString(type)) + "' required");
 	}
 
 	inline void consumeKeyword(EASY_KEYWORD_TYPE type)
@@ -205,30 +206,28 @@ public:
 		if (token != nullptr && isKeyword(token) && getKeyword(token) == type)
 			++index;
 		else
-			throw ParseError("Syntax error.");
+			throw ParseError("Syntax error. '" + std::string(EASY_KEYWORD_TYPEToString(type)) + "' required");
 	}
 
 	inline void checkToken(EASY_TOKEN_TYPE type)
 	{
 		Token* token = getToken();
 		if (token == nullptr || token->GetType() != type)
-			throw ParseError("Syntax error.");
-
+			throw ParseError("Syntax error. '" + std::string(EASY_TOKEN_TYPEToString(type)) + "' required");
 	}
 
 	inline void checkOperator(EASY_OPERATOR_TYPE type)
 	{
 		Token* token = getToken();
 		if (token == nullptr || token->GetType() != EASY_TOKEN_TYPE::OPERATOR || getOperator(token) != type)
-			throw ParseError("Syntax error.");
-
+			throw ParseError("Syntax error. '" + std::string(EASY_OPERATOR_TYPEToString(type)) + "' required");
 	}
 
 	inline void checkKeyword(EASY_KEYWORD_TYPE type)
 	{
 		Token* token = getToken();
 		if (!isKeyword(token) || getKeyword(token) != type)
-			throw ParseError("Syntax error.");
+			throw ParseError("Syntax error. '" + std::string(EASY_KEYWORD_TYPEToString(type)) + "' required");
 	}
 
 	inline Ast* parsePrimative()
@@ -259,6 +258,17 @@ public:
 				ast = new PrimativeAst(true);
 			else if (getKeyword(token) == EASY_KEYWORD_TYPE::BOOL_FALSE)
 				ast = new PrimativeAst(false);
+			break;
+
+			case EASY_TOKEN_TYPE::OPERATOR:
+			{
+				if (getOperator(token) == EASY_OPERATOR_TYPE ::SQUARE_BRACKET_START)
+				{
+					increaseAndClear();
+					consumeOperator(EASY_OPERATOR_TYPE::SQUARE_BRACKET_END);
+					ast = new PrimativeAst(new std::vector<PrimativeValue*>());
+				}
+			}
 			break;
 		}
 
@@ -337,9 +347,19 @@ public:
 	{
 		auto* ast = new FunctionCallAst;
 		auto* token = getToken();
+        auto* tokenNext = getNextToken(EASY_TOKEN_TYPE::WHITESPACE);
 		checkToken("Parse error");
 
+        if (isOperator(tokenNext) && getOperator(tokenNext) == EASY_OPERATOR_TYPE::DOUBLE_COLON)
+        {
+            ast->Package = getSymbol(token);
+            increaseAndClear();
+            increaseAndClear();
+			token = getToken();
+        }
+
 		ast->Function = getSymbol(token);
+
 		++index;
 		skipWhiteSpace();
 		token = getToken();
@@ -402,7 +422,7 @@ public:
 			auto* token = getToken();
 			checkToken("Parse error");
 
-			if (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::BLOCK_END)
+			if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::BLOCK_END)
 			{
 				++index;
 				skipWhiteSpace();
@@ -657,7 +677,6 @@ public:
 		case EASY_AST_TYPE::IF_STATEMENT:
 			ast = parseIfStatement();
 			break;
-
 
 		case EASY_AST_TYPE::RETURN:
 			ast = parseReturn();

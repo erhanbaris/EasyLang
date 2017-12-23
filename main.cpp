@@ -12,11 +12,6 @@
 #include "System.h"
 #include "EasyEngine.h"
 
-#include "Tests/LexerTests.h"
-#include "Tests/TempAstTests.h"
-#include "Tests/AstTests.h"
-#include "Tests/InterpreterTests.h"
-
 using namespace std;
 
 int main(int argc, char* argv[]) {

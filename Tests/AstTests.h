@@ -37,6 +37,17 @@ TEST_CASE("Base test") {
 		REQUIRE(reinterpret_cast<PrimativeAst*>(binary->Right)->Value->Integer == 100);
 	}
 
+
+	SECTION("[ ]") {
+		tokinizer->Parse(L"[ ]", tokens);
+		astParser->Parse(tokens, asts);
+
+		REQUIRE(asts.get()->size() == 1);
+
+		PrimativeAst* primative = reinterpret_cast<PrimativeAst*>(asts.get()->at(0));
+		REQUIRE(primative != nullptr);
+	}
+
 	SECTION("50 - 100") {
 		tokinizer->Parse(L"50 - 100", tokens);
 		astParser->Parse(tokens, asts);
@@ -263,7 +274,7 @@ TEST_CASE("Block test") {
 	REQUIRE(reinterpret_cast<PrimativeAst*>(reinterpret_cast<BinaryAst*>(assignment->Data)->Right)->Value->Type == PrimativeValue::Type::PRI_INTEGER);
 	REQUIRE(reinterpret_cast<PrimativeAst*>(reinterpret_cast<BinaryAst*>(assignment->Data)->Right)->Value->Integer == 5);
 
-	tokinizer->Parse(L"{ } { } { print 123 }", tokens);
+	tokinizer->Parse(L"{ } { } { io::print 123 }", tokens);
 	astParser->Parse(tokens, asts);
 	REQUIRE(asts.get()->size() == 3);
 
@@ -279,8 +290,8 @@ TEST_CASE("If test") {
 	std::shared_ptr<std::vector<Token* > > tokens = make_shared<std::vector<Token* > >();
 	std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
 
-	SECTION("if erhan > 15 then print 123") {
-		tokinizer->Parse(L"if erhan > 15 then print 123", tokens);
+	SECTION("if erhan > 15 then io::print 123") {
+		tokinizer->Parse(L"if erhan > 15 then io::print 123", tokens);
 		astParser->Parse(tokens, asts);
 		REQUIRE(asts.get()->size() == 1);
 
@@ -296,8 +307,8 @@ TEST_CASE("If test") {
 		REQUIRE(controlOpt->Op == EASY_OPERATOR_TYPE::GREATOR);
 	}
 
-	SECTION("if erhan > 15 then print 123 else print 321") {
-		tokinizer->Parse(L"if erhan > 15 then print 123 else print 321", tokens);
+	SECTION("if erhan > 15 then io::print 123 else io::print 321") {
+		tokinizer->Parse(L"if erhan > 15 then io::print 123 else io::print 321", tokens);
 		astParser->Parse(tokens, asts);
 		REQUIRE(asts.get()->size() == 1);
 
@@ -323,36 +334,38 @@ TEST_CASE("Function call test") {
 	std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
 
 
-	SECTION("print \"test\"") {
-		tokinizer->Parse(L"print \"test\"", tokens);
+	SECTION("io::print \"test\"") {
+		tokinizer->Parse(L"io::print \"test\"", tokens);
 		astParser->Parse(tokens, asts);
 		REQUIRE(asts.get()->size() == 1);
 
 		auto* functionCall = reinterpret_cast<FunctionCallAst*>(asts.get()->at(0));
 
 		REQUIRE(functionCall->Function == L"print");
+		REQUIRE(functionCall->Package == L"io");
 		REQUIRE(functionCall->Args.size() == 1);
 		REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::PRIMATIVE);
 		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_STRING);
 		REQUIRE(*reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->String == L"test");
 	}
 
-	SECTION("print 5.5") {
-		tokinizer->Parse(L"print 5.5", tokens);
+	SECTION("io::print 5.5") {
+		tokinizer->Parse(L"io::print 5.5", tokens);
 		astParser->Parse(tokens, asts);
 		REQUIRE(asts.get()->size() == 1);
 
 		auto* functionCall = reinterpret_cast<FunctionCallAst*>(asts.get()->at(0));
 
 		REQUIRE(functionCall->Function == L"print");
+		REQUIRE(functionCall->Package == L"io");
 		REQUIRE(functionCall->Args.size() == 1);
 		REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::PRIMATIVE);
 		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_DOUBLE);
 		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Double == 5.5);
 	}
 
-	SECTION("print 123") {
-		tokinizer->Parse(L"print 123", tokens);
+	SECTION("io::print 123") {
+		tokinizer->Parse(L"io::print 123", tokens);
 		astParser->Parse(tokens, asts);
 		REQUIRE(asts.get()->size() == 1);
 
@@ -365,8 +378,8 @@ TEST_CASE("Function call test") {
 		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Integer == 123);
 	}
 
-	SECTION("print 10 + 20") {
-		tokinizer->Parse(L"print 10 + 20", tokens);
+	SECTION("io::print 10 + 20") {
+		tokinizer->Parse(L"io::print 10 + 20", tokens);
 		astParser->Parse(tokens, asts);
 		REQUIRE(asts.get()->size() == 1);
 
@@ -375,6 +388,21 @@ TEST_CASE("Function call test") {
 		REQUIRE(functionCall->Function == L"print");
 		REQUIRE(functionCall->Args.size() == 1);
 		REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::BINARY_OPERATION);
+	}
+
+	SECTION("core::isDouble 5.5") {
+		tokinizer->Parse(L"core::isDouble 5.5", tokens);
+		astParser->Parse(tokens, asts);
+		REQUIRE(asts.get()->size() == 1);
+
+		auto* functionCall = reinterpret_cast<FunctionCallAst*>(asts.get()->at(0));
+
+		REQUIRE(functionCall->Function == L"isDouble");
+		REQUIRE(functionCall->Package == L"core");
+		REQUIRE(functionCall->Args.size() == 1);
+		REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::PRIMATIVE);
+		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_DOUBLE);
+		REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Double == 5.5);
 	}
 }
 
@@ -388,28 +416,30 @@ TEST_CASE("Bool ast test") {
     std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
 
 
-    SECTION("print true") {
-        tokinizer->Parse(L"print true", tokens);
+    SECTION("io::print true") {
+        tokinizer->Parse(L"io::print true", tokens);
         astParser->Parse(tokens, asts);
         REQUIRE(asts.get()->size() == 1);
 
         auto* functionCall = reinterpret_cast<FunctionCallAst*>(asts.get()->at(0));
 
         REQUIRE(functionCall->Function == L"print");
+		REQUIRE(functionCall->Package == L"io");
         REQUIRE(functionCall->Args.size() == 1);
         REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::PRIMATIVE);
         REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_BOOL);
         REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Bool == true);
     }
     
-    SECTION("print false") {
-        tokinizer->Parse(L"print false", tokens);
+    SECTION("io::print false") {
+        tokinizer->Parse(L"io::print false", tokens);
         astParser->Parse(tokens, asts);
         REQUIRE(asts.get()->size() == 1);
         
         auto* functionCall = reinterpret_cast<FunctionCallAst*>(asts.get()->at(0));
         
         REQUIRE(functionCall->Function == L"print");
+		REQUIRE(functionCall->Package == L"io");
         REQUIRE(functionCall->Args.size() == 1);
         REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::PRIMATIVE);
         REQUIRE(reinterpret_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Type == PrimativeValue::Type::PRI_BOOL);

@@ -23,8 +23,10 @@ public:
 
 class System {
 public:
-	static std::unordered_map<std::wstring, MethodCallback> SystemMethods;
-    static std::unordered_map<std::wstring, FunctionInfo*> UserMethods;
+	static std::unordered_map<std::wstring, FunctionInfo*> UserMethods;
+
+	static std::unordered_map<std::wstring, std::unordered_map<std::wstring, MethodCallback>> SystemPackages;
+	static std::unordered_map<std::wstring, std::unordered_map<std::wstring, FunctionInfo*>> UserPackages;
 	static void WarmUp();
 };
 

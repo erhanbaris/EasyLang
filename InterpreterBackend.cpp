@@ -102,9 +102,9 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             auto * call = reinterpret_cast<FunctionCallAst*>(ast);
             auto * returnValue = new PrimativeValue;
 
-            if (System::SystemMethods.find(call->Function) != System::SystemMethods.end())
+            if (System::SystemPackages.find(call->Package) != System::SystemPackages.end() && System::SystemPackages[call->Package].find(call->Function) != System::SystemPackages[call->Package].end())
             {
-                MethodCallback function = System::SystemMethods[call->Function];
+                MethodCallback function = System::SystemPackages[call->Package][call->Function];
                 std::shared_ptr<std::vector<PrimativeValue*> > args = std::make_shared<std::vector<PrimativeValue*>>();
 
                 auto argsEnd = call->Args.cend();

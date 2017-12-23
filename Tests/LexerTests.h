@@ -190,4 +190,34 @@ TEST_CASE( "Function lexer test" ) {
     }
 }
 
+
+TEST_CASE( "Package lexer test" ) {
+    Tokinizer* parser = new StandartTokinizer();
+    auto tokens = make_shared<std::vector<Token*>>();
+
+    SECTION( "package test" ) {
+        parser->Parse(L"package test", tokens);
+        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::KEYWORD);
+        REQUIRE(reinterpret_cast<KeywordToken*>(tokens->at(0))->Value == EASY_KEYWORD_TYPE::PACKAGE);
+
+        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::SYMBOL);
+        REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(2))->Value == L"test");
+    }
+
+    SECTION( "core::isBool" ) {
+        parser->Parse(L"core::isBool", tokens);
+        REQUIRE(tokens->size() == 3);
+
+        REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::SYMBOL);
+        REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(0))->Value == L"core");
+
+        REQUIRE(tokens->at(1)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
+        REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(1))->Value == EASY_OPERATOR_TYPE::DOUBLE_COLON);
+
+        REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::SYMBOL);
+        REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(2))->Value == L"isBool");
+    }
+}
+
 #endif

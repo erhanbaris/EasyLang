@@ -2,6 +2,10 @@
 #define EASYLANG_PRIMATIVEVALUE_H
 
 #include <string>
+#include <unordered_map>
+#include <vector>
+#include <sstream>
+#include <iostream>
 
 struct PrimativeValue {
     enum class Type {
@@ -9,8 +13,8 @@ struct PrimativeValue {
         PRI_DOUBLE,
         PRI_STRING,
         PRI_BOOL,
-		PRI_LIST,
-		PRI_DICT,
+        PRI_ARRAY,
+		PRI_DICTIONARY,
         PRI_NULL
     };
 
@@ -19,15 +23,19 @@ struct PrimativeValue {
     union {
         int Integer;
         double Double;
-        std::wstring* String;
         bool Bool;
+        std::wstring* String;
+        std::vector<PrimativeValue*>* Array;
+        std::unordered_map<std::wstring, PrimativeValue*>* Dictionary;
     };
 
     PrimativeValue() { Integer = 0; Type = Type::PRI_NULL; }
     PrimativeValue(int value) { Integer = value; Type = Type::PRI_INTEGER; }
     PrimativeValue(double value) { Double = value; Type = Type::PRI_DOUBLE;}
-    PrimativeValue(std::wstring value) { String = new std::wstring(value); Type = Type::PRI_STRING;}
+    PrimativeValue(std::wstring const & value) { String = new std::wstring(value); Type = Type::PRI_STRING;}
     PrimativeValue(bool value) { Bool = value; Type = Type::PRI_BOOL;}
+    PrimativeValue(std::vector<PrimativeValue*>* value) { Array = value; Type = Type::PRI_ARRAY;}
+    PrimativeValue(std::unordered_map<std::wstring, PrimativeValue*>* value) { Dictionary = value; Type = Type::PRI_DICTIONARY;}
 
     ~PrimativeValue() { }
 
@@ -42,8 +50,30 @@ struct PrimativeValue {
 		case PrimativeValue::Type::PRI_INTEGER:
 			return L"(INTEGER) " + std::to_wstring(Integer);
 		case PrimativeValue::Type::PRI_STRING:
-			return L"(STRING) " + *String;			
-		}
+			return L"(STRING) " + *String;
+        case PrimativeValue::Type::PRI_ARRAY:
+        {
+            std::wstringstream stream;
+            stream << L"(ARRAY) ";
+
+            if (Array != nullptr && !Array->empty())
+            {
+                stream << L"Size: "
+                       << Array->size()
+                       << '\n';
+
+                for (int i = 0; i < Array->size(); ++i) {
+                    stream  << i << L". "
+                            << Array->at(i)->Describe()
+                            << '\n';
+                }
+            }
+            else
+                stream << L"Size: 0";
+
+            return stream.str();
+        }
+        }
 
 		return L"(NULL)";
 	}
@@ -62,6 +92,8 @@ struct PrimativeValue {
     bool IsDouble() { return Type == Type::PRI_DOUBLE; }
     bool IsString() { return Type == Type::PRI_STRING; }
     bool IsBool() { return Type == Type::PRI_BOOL; }
+    bool IsArray() { return Type == Type::PRI_ARRAY; }
+    bool IsDictionary() { return Type == Type::PRI_DICTIONARY; }
     bool IsNull() { return Type == Type::PRI_NULL; }
 
     PrimativeValue & operator=(const PrimativeValue &rhs)
@@ -133,5 +165,6 @@ PrimativeValue* operator == (PrimativeValue const & lhs, PrimativeValue const & 
 PrimativeValue* operator && (PrimativeValue const & lhs, PrimativeValue const & rhs);
 PrimativeValue* operator || (PrimativeValue const & lhs, PrimativeValue const & rhs);
 
+typedef std::shared_ptr<std::vector<PrimativeValue*> > FunctionArgs;
 
 #endif //EASYLANG_PRIMATIVEVALUE_H
