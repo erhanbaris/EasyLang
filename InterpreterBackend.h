@@ -8,7 +8,6 @@ class InterpreterBackend : public Backend {
 public:
     
     InterpreterBackend();
-    InterpreterBackend(std::ostream & stream);
     ~InterpreterBackend();
     
     void Prepare(std::shared_ptr<std::vector<Ast*>> pAsts) override;
@@ -17,11 +16,9 @@ public:
 	PrimativeValue* Execute() override;
 
 private:
-	Scope globalScope;
     std::vector<Ast*> asts;
 	std::vector<Ast*> temporaryAsts;
     std::unordered_map<std::wstring, PrimativeValue*> variables;
-    std::ostream& stream;
 };
 
 #endif //EASYLANG_INTERPRETERBACKEND_H

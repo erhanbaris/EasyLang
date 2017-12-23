@@ -1,15 +1,30 @@
 #include "Scope.h"
 
-Scope::Scope()
+Scope* Scope::GlobalScope;
+
+Scope::Scope() : variablesEnd(variables.end())
 {
     baseScope = nullptr;
-    variablesEnd = variables.end();
 }
 
-Scope::Scope(Scope* pBaseScope)
+Scope::Scope(Scope* pBaseScope) : variablesEnd(variables.end())
 {
     baseScope = pBaseScope;
-    variablesEnd = variables.end();
+}
+
+bool Scope::setVariable(std::wstring const & key, PrimativeValue* value)
+{
+    auto item = variables.find(key);
+    if (item != variablesEnd)
+    {
+        item->second = value;
+        return true;
+    }
+
+    if (this->baseScope != nullptr)
+        return baseScope->setVariable(key, value);
+
+    return false;
 }
 
 PrimativeValue* Scope::GetVariable(std::wstring const & key)
@@ -26,8 +41,14 @@ PrimativeValue* Scope::GetVariable(std::wstring const & key)
 
 void Scope::SetVariable(std::wstring const & key, PrimativeValue* value)
 {
-    variables[key] = value;
-    variablesEnd = variables.end();
+    auto item = variables.find(key);
+    if (item != variablesEnd)
+        item->second = value;
+    else if (!setVariable(key, value))
+    {
+        variables[key] = value;
+        variablesEnd = variables.end();
+    }
 }
 
 /*

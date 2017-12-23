@@ -203,6 +203,20 @@ TEST_CASE("Interpreter tests") {
 		PrimativeValue* result = backend->Execute();
 		REQUIRE(result->Integer == 90);
 	}
+
+	SECTION("data = 10  func setData(a) { data = data + 1 + a } setData(1)") {
+		tokinizer->Parse(L"data = 10  func setData(a) { data = data + 1 + a } setData(10)", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		backend->Execute();
+
+		tokinizer->Parse(L"data", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result->Integer == 21);
+	}
 }
 
 #endif //EASYLANG_INTERPRETERTESTS_H

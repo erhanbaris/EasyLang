@@ -494,15 +494,7 @@ public:
 		token = getToken();
 		checkToken("Parse error");
 
-		if (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::BLOCK_START)
-		{
-			//increaseAndClear();
-			ast->Body = parseAst();
-
-			//consumeKeyword(EASY_KEYWORD_TYPE::BLOCK_END);
-		}
-		else
-			ast->Body = parseAst();
+		ast->Body = parseAst();
 
 		return AS_AST(ast);
 	}

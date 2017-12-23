@@ -54,23 +54,23 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 				throw NullException("Value not found");
 
 			scope.SetVariable(assignment->Name, value);
-            //std::wcout << L"[" << assignment->Name << L"]" << std::endl;
         }
             break;
             
         case EASY_AST_TYPE::BLOCK:
         {
+            Scope blockScope(&scope);
+
             BlockAst* block = reinterpret_cast<BlockAst*>(ast);
             std::vector<Ast*>::const_iterator blocksEnd = block->Blocks->cend();
             for (std::vector<Ast*>::const_iterator it = block->Blocks->cbegin(); it != blocksEnd; ++it)
             {
                 Ast* blockAst = *it;
-                PrimativeValue* result = getData(blockAst, scope);
+                PrimativeValue* result = getData(blockAst, blockScope);
 
 				if (blockAst->GetType() == EASY_AST_TYPE::RETURN || (result != nullptr && !result->IsNull()))
 					return result;
             }
-            
         }
             break;
             
@@ -79,9 +79,17 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             FunctionDefinetionAst* func = reinterpret_cast<FunctionDefinetionAst*>(ast);
 			FunctionInfo* info = new FunctionInfo;
 			info->FunctionAst = func;
-			info->Callback = [=](std::shared_ptr<std::vector<PrimativeValue*> > const &, PrimativeValue & returnValue, Scope & functionScope)
+			info->Callback = [=](std::unordered_map<std::wstring, PrimativeValue*> const & args, PrimativeValue * returnValue, Scope & functionScope)
 			{
-				returnValue = *this->getData(func->Body, functionScope);
+                Scope innerScope(&functionScope);
+
+                auto argsEnd = args.end();
+                for (auto it = args.begin(); it != argsEnd; ++it)
+                    innerScope.SetVariable(it->first, it->second);
+
+                auto* result = this->getData(func->Body, innerScope);
+                if (result != nullptr)
+                    *returnValue = *result;
 			};
 
 			System::UserMethods[func->Name] = info;
@@ -91,20 +99,19 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             // func fibonacci(num) { if num <= 1 then return 1 left = fibonacci(num - 1) right = fibonacci(num - 2) return left + right }
         case EASY_AST_TYPE::FUNCTION_CALL:
         {
-            FunctionCallAst* call = reinterpret_cast<FunctionCallAst*>(ast);
-            PrimativeValue* returnValue = new PrimativeValue;
-			Scope functionScope(&scope);
+            auto * call = reinterpret_cast<FunctionCallAst*>(ast);
+            auto * returnValue = new PrimativeValue;
 
             if (System::SystemMethods.find(call->Function) != System::SystemMethods.end())
             {
                 MethodCallback function = System::SystemMethods[call->Function];
                 std::shared_ptr<std::vector<PrimativeValue*> > args = std::make_shared<std::vector<PrimativeValue*>>();
-                
-                std::vector<Ast*>::const_iterator argsEnd = call->Args.cend();
-                for (std::vector<Ast*>::const_iterator it = call->Args.cbegin(); it != argsEnd; ++it)
+
+                auto argsEnd = call->Args.cend();
+                for (auto it = call->Args.cbegin(); it != argsEnd; ++it)
                 {
                     Ast* argAst = *it;
-                    PrimativeValue* argItem = getData(argAst, functionScope);
+                    auto argItem = getData(argAst, scope);
                     args->push_back(argItem);
                 }
                 
@@ -112,7 +119,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             }
             else if (System::UserMethods.find(call->Function) != System::UserMethods.end())
             {
-                std::shared_ptr<std::vector<PrimativeValue*> > args = std::make_shared<std::vector<PrimativeValue*>>();
+                std::unordered_map<std::wstring, PrimativeValue*> args;
 				auto* functionInfo = System::UserMethods[call->Function];
 
 				size_t requiredParameterCount = functionInfo->FunctionAst->Args.size();
@@ -127,13 +134,11 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
                 for (size_t i = 0; i < currentParameterCount; ++i)
                 {
                     Ast* argAst = call->Args[i];
-                    PrimativeValue* argItem = getData(argAst, functionScope);
-                    args->push_back(argItem);
-
-					functionScope.SetVariable(functionInfo->FunctionAst->Args[i], argItem);
+                    PrimativeValue* argItem = getData(argAst, scope);
+                    args[functionInfo->FunctionAst->Args[i]] = argItem;
                 }
                 
-                functionInfo->Callback(args, *returnValue, functionScope);
+                functionInfo->Callback(args, returnValue, *Scope::GlobalScope);
             }
             
             return returnValue;
@@ -261,7 +266,7 @@ PrimativeValue* InterpreterBackend::Execute()
     auto astsEnd = temporaryAsts.cend();
 	for (auto it = temporaryAsts.cbegin(); astsEnd != it; ++it)
 	{
-		result = getData(*it, globalScope);
+		result = getData(*it, *Scope::GlobalScope);
 
 		if (result != nullptr)
 		{
@@ -276,14 +281,9 @@ PrimativeValue* InterpreterBackend::Execute()
 	return result;
 }
 
-InterpreterBackend::InterpreterBackend() : stream(std::cout)
+InterpreterBackend::InterpreterBackend()
 {
-    
-}
-
-InterpreterBackend::InterpreterBackend(std::ostream & pStream) : stream(pStream)
-{
-    
+    Scope::GlobalScope = new Scope;
 }
 
 InterpreterBackend::~InterpreterBackend()

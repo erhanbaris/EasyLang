@@ -18,7 +18,7 @@ typedef void(*MethodCallback)(std::shared_ptr<std::vector<PrimativeValue*> > con
 class FunctionInfo {
 public:
 	FunctionDefinetionAst* FunctionAst { nullptr };
-	std::function<void(std::shared_ptr<std::vector<PrimativeValue*> > const &, PrimativeValue &, Scope & scope)> Callback;
+	std::function<void(std::unordered_map<std::wstring, PrimativeValue*> const &, PrimativeValue *, Scope & scope)> Callback;
 };
 
 class System {

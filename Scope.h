@@ -9,13 +9,17 @@
 #include <unordered_map>
 #include "PrimativeValue.h"
 
-
 class Scope {
 public:
     Scope();
     Scope(Scope* pBaseScope);
     PrimativeValue* GetVariable(std::wstring const & key);
     void SetVariable(std::wstring const & key, PrimativeValue* value);
+
+    static Scope* GlobalScope;
+
+protected:
+    bool setVariable(std::wstring const & key, PrimativeValue* value);
 
 private:
     Scope* baseScope { nullptr };

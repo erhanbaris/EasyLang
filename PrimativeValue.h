@@ -87,6 +87,33 @@ struct PrimativeValue {
 
         return *this;
     }
+
+    PrimativeValue * operator=(const PrimativeValue *rhs)
+    {
+        if (rhs == nullptr)
+            return nullptr;
+
+        switch (rhs->Type)
+        {
+            case PrimativeValue::Type::PRI_BOOL:
+                SetBool(rhs->Bool);
+                break;
+
+            case PrimativeValue::Type::PRI_DOUBLE:
+                SetDouble(rhs->Double);
+                break;
+
+            case PrimativeValue::Type::PRI_INTEGER:
+                SetInteger(rhs->Integer);
+                break;
+
+            case PrimativeValue::Type::PRI_STRING:
+                SetString(*rhs->String);
+                break;
+        }
+
+        return this;
+    }
 };
 
 PrimativeValue* operator + (PrimativeValue const & lhs, PrimativeValue const & rhs);
