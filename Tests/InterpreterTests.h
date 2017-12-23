@@ -217,6 +217,62 @@ TEST_CASE("Interpreter tests") {
 		PrimativeValue* result = backend->Execute();
 		REQUIRE(result->Integer == 21);
 	}
+
+	SECTION("20-10") {
+		tokinizer->Parse(L"20-10", tokens);
+		astParser->Parse(tokens, asts);
+
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result->Integer == 10);
+	}
+
+	SECTION("20-10-5") {
+		tokinizer->Parse(L"20-10-5", tokens);
+		astParser->Parse(tokens, asts);
+
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result->Integer == 5);
+	}
+
+	SECTION("20-10-5/2") {
+		tokinizer->Parse(L"20-10-5/2", tokens);
+		astParser->Parse(tokens, asts);
+
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result->Double == 7.5);
+	}
+
+
+
+    SECTION( "(-1*2)" ) {
+        tokinizer->Parse(L"(-1*2)", tokens);
+        astParser->Parse(tokens, asts);
+
+        backend->Prepare(asts);
+        PrimativeValue* result = backend->Execute();
+        REQUIRE(result->Integer == -2);
+    }
+
+	SECTION( "-1*-1" ) {
+		tokinizer->Parse(L"-1*-1", tokens);
+		astParser->Parse(tokens, asts);
+
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result->Integer == 1);
+	}
+
+	SECTION( "-0.1" ) {
+		tokinizer->Parse(L"-0.1", tokens);
+		astParser->Parse(tokens, asts);
+
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result->Double == -0.1);
+	}
 }
 
 #endif //EASYLANG_INTERPRETERTESTS_H

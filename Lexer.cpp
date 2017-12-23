@@ -383,13 +383,19 @@ public:
         {
             auto* token = new DoubleToken;
             token->Value = beforeTheComma + (afterTheComma * pow(10, -1 * dotPlace));
-            token->Value *= isMinus ? -1 : 1;
+
+            if (isMinus)
+                TokenList->push_back(reinterpret_cast<Token*>(new OperatorToken(EASY_OPERATOR_TYPE::MINUS)));
+
             TokenList->push_back(reinterpret_cast<Token*>(token));
         }
         else {
             auto* token = new IntegerToken;
             token->Value = beforeTheComma;
-            token->Value *= isMinus ? -1 : 1;
+
+            if (isMinus)
+                TokenList->push_back(reinterpret_cast<Token*>(new OperatorToken(EASY_OPERATOR_TYPE::MINUS)));
+
             TokenList->push_back(reinterpret_cast<Token*>(token));
         }
     }

@@ -196,19 +196,22 @@ public:
 class IntegerToken : Token {
 public:
     int Value;
-    IntegerToken() : Token() { Type = EASY_TOKEN_TYPE::INTEGER; }
+	IntegerToken() : Token() { Type = EASY_TOKEN_TYPE::INTEGER; }
+	IntegerToken(int value) : Token() { Type = EASY_TOKEN_TYPE::INTEGER; Value = value; }
 };
 
 class DoubleToken : Token {
 public:
     double Value;
     DoubleToken() : Token() { Type = EASY_TOKEN_TYPE::DOUBLE; }
+	DoubleToken(int value) : Token() { Type = EASY_TOKEN_TYPE::DOUBLE; Value = value; }
 };
 
 class OperatorToken : Token {
 public:
     EASY_OPERATOR_TYPE Value;
-    OperatorToken() : Token() { Type = EASY_TOKEN_TYPE::OPERATOR; }
+	OperatorToken() : Token() { Type = EASY_TOKEN_TYPE::OPERATOR; }
+	OperatorToken(EASY_OPERATOR_TYPE value) : Token() { Type = EASY_TOKEN_TYPE::OPERATOR; Value = value; }
 };
 
 class SymbolToken : Token {

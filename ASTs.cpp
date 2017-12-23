@@ -19,6 +19,7 @@
 		return getToken() != nullptr && getToken()->GetType() == TYPE ;\
 	}
 #define AS_AST(ast) reinterpret_cast<Ast*>(ast)
+#define AS_TOKEN(token) reinterpret_cast<Token*>(token)
 
 class AstParserImpl
 {
@@ -107,14 +108,27 @@ public:
 		if (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::BLOCK_START)
 			return EASY_AST_TYPE::BLOCK;
 
-		if (tokenNext != nullptr && isOperator(tokenNext) && BinaryOperators.find(getOperator(tokenNext)) != BinaryOperators.end())
-			return EASY_AST_TYPE::BINARY_OPERATION;
+        if (tokenNext != nullptr && isOperator(tokenNext) && BinaryOperators.find(getOperator(tokenNext)) != BinaryOperators.end())
+            return EASY_AST_TYPE::BINARY_OPERATION;
 
 		if (tokenNext != nullptr && isOperator(tokenNext) && ControlOperators.find(getOperator(tokenNext)) != ControlOperators.end())
 			return EASY_AST_TYPE::CONTROL_OPERATION;
 
 		if (isPrimative(token))
 			return EASY_AST_TYPE::PRIMATIVE;
+
+		if (tokenNext != nullptr && isOperator(token) && isExpr(token) && isPrimative(tokenNext))
+		{
+			tokens->erase(tokens->begin() + index);
+			--tokensCount;
+
+			if (isInteger(tokenNext))
+				reinterpret_cast<IntegerToken*>(tokenNext)->Value *= -1;
+			else
+				reinterpret_cast<DoubleToken*>(tokenNext)->Value *= -1;
+
+			return detectType();
+		}
 
 		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
 			return EASY_AST_TYPE::VARIABLE;
@@ -127,15 +141,21 @@ public:
 		return isPrimative(getToken());
 	}
 
-	inline bool isPrimative(Token * token)
-	{
-		checkToken("Parse error");
-		return token != nullptr && (isInteger(token) ||
-			isText(token) ||
-			isDouble(token) ||
-			(isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::BOOL_TRUE) ||
-			(isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::BOOL_FALSE));
-	}
+    inline bool isPrimative(Token * token)
+    {
+        checkToken("Parse error");
+        return token != nullptr && (isInteger(token) ||
+                                    isText(token) ||
+                                    isDouble(token) ||
+                                    (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::BOOL_TRUE) ||
+                                    (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::BOOL_FALSE));
+    }
+
+    inline bool isNumber(Token * token)
+    {
+        checkToken("Parse error");
+        return token != nullptr && (isInteger(token) || isDouble(token));
+    }
 
 	inline void skip(EASY_TOKEN_TYPE skipToken)
 	{
@@ -903,6 +923,18 @@ public:
 		{
 			increaseAndClear();
 			return new VariableAst(getSymbol(token));
+		}
+		else if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::MINUS)
+		{
+			increaseAndClear();
+			token = getToken();
+			if (isDouble(token))
+				reinterpret_cast<DoubleToken*>(token)->Value *= -1;
+			else
+				reinterpret_cast<IntegerToken*>(token)->Value *= -1;
+
+			increaseAndClear();
+			return asPrimative(token);
 		}
 
         if (isOperator(token) && getOperator() == EASY_OPERATOR_TYPE::LEFT_PARENTHESES) {
