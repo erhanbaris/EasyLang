@@ -3,7 +3,7 @@ It is a programming language that has begun to be developed for testing purposes
 
 ![EasyLang](EasyLang.gif)
 
-####Primative Types
+###Primative Types
 1. Integer
 2. Double
 3. Text
@@ -12,7 +12,7 @@ It is a programming language that has begun to be developed for testing purposes
 6. Dictionary (soon)
 
 
-####Assignment operations
+###Assignment operations
 ```
 data1 = 1
 data2 = true
@@ -22,7 +22,7 @@ data5 = 1024
 data6 = []
 ```
 
-####Function descleration
+###Function descleration
 ```
 func HelloWorld()
     return "hello world"
@@ -38,7 +38,7 @@ func SumAndPrint(a, b)
 }
 ```
 
-####Function call
+###Function call
 ```
 HelloWorld()
 HelloWorld _
@@ -49,7 +49,7 @@ io::print (data1, data2, data3, data4, data5)
 ```
 You can call function with '_' for parameterless function.
 
-####If statement
+###If statement
 ```
 if data1 > 1 then
     io::print "bigger"
@@ -62,7 +62,7 @@ else
     io::print "not equal"
 ```
 
-####Loop
+###Loop
 ```
 i -> 0..100 
     io::print i + data5
@@ -94,12 +94,12 @@ Result
 (INTEGER) 89
 ```
 
-####Internal packages
+###Internal packages
 1. core
 2. array
 3. io
 
-####Internal functions
+###Internal functions
 ```
 
 #Type Operations
