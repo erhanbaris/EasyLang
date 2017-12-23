@@ -1,7 +1,7 @@
 #include "System.h"
-#include "corelib.h"
-#include "iolib.h"
-#include "arraylib.h"
+#include "lib/corelib.h"
+#include "lib/iolib.h"
+#include "lib/arraylib.h"
 
 std::unordered_map<std::wstring, FunctionInfo*> System::UserMethods;
 

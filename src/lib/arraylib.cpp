@@ -1,4 +1,4 @@
-#include "arraylib.h"
+#include "lib/arraylib.h"
 #include "Macros.h"
 #include "System.h"
 #include "Exceptions.h"
