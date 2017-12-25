@@ -60,8 +60,15 @@ TEST_CASE("Interpreter tests") {
 		REQUIRE(result != nullptr);
 		REQUIRE(result->IsInteger());
 		REQUIRE(result->Integer == 3);
-	}
 
+		tokinizer->Parse(L"test 2", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		result = backend->Execute();
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == 3);
+	}
 
 	SECTION("fibonacci test") {
 		tokinizer->Parse(L"func fibonacci(num) { if num <= 1 then return 1 left = fibonacci(num - 1) right = fibonacci(num - 2) return left + right }", tokens);
@@ -272,6 +279,55 @@ TEST_CASE("Interpreter tests") {
 		backend->Prepare(asts);
 		PrimativeValue* result = backend->Execute();
 		REQUIRE(result->Double == -0.1);
+	}
+
+	SECTION("core::length(\"test\")") {
+		tokinizer->Parse(L"core::length(\"test\")", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == 4);
+	}
+
+	SECTION("core::length(123)") {
+		tokinizer->Parse(L"core::length(123)", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsNull());
+	}
+
+	SECTION("data = [] core::length(data)") {
+		tokinizer->Parse(L"data = [] core::length(data)", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == 0);
+	}
+	
+	SECTION("data = 0 for i in 1 to 10 then data = data + i data") {
+		tokinizer->Parse(L"data = 0 for i in 1 to 10 then data = data + i data", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == 55);
+	}
+
+	SECTION("core::length([])") {
+		tokinizer->Parse(L"core::length([])", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == 0);
 	}
 }
 

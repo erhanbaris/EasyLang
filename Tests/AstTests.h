@@ -283,6 +283,18 @@ TEST_CASE("Block test") {
 	REQUIRE(reinterpret_cast<BlockAst*>(asts.get()->at(2))->Blocks->size() == 1);
 }
 
+TEST_CASE("loop test 1") {
+	Tokinizer* tokinizer = new StandartTokinizer();
+	AstParser* astParser = new AstParser();
+
+	std::shared_ptr<std::vector<Token* > > tokens = make_shared<std::vector<Token* > >();
+	std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
+
+	tokinizer->Parse(L"for i in 1 to 10 then core::print i", tokens);
+	astParser->Parse(tokens, asts);
+	REQUIRE(asts.get()->size() == 1);
+}
+
 TEST_CASE("If test") {
 	Tokinizer* tokinizer = new StandartTokinizer();
 	AstParser* astParser = new AstParser();

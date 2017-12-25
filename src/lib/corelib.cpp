@@ -174,6 +174,30 @@ void isDictionary(FunctionArgs const & args, PrimativeValue & returnValue)
     returnValue.SetBool(args->at(0)->IsDictionary());
 }
 
+void length(FunctionArgs const & args, PrimativeValue & returnValue)
+{
+	REQUIRED_ARGUMENT_COUNT(1);
+	auto* item = args->at(0);
+	switch (args->at(0)->Type)
+	{
+	case PrimativeValue::Type::PRI_STRING:
+		returnValue.SetInteger(item->String->size());
+		break;
+
+	case PrimativeValue::Type::PRI_ARRAY:
+		returnValue.SetInteger(item->Array->size());
+		break;
+
+	case PrimativeValue::Type::PRI_DICTIONARY:
+		returnValue.SetInteger(item->Dictionary->size());
+		break;
+
+	default:
+		returnValue.SetNull();
+		break;
+	}
+}
+
 CoreLibInit::CoreLibInit()
 {
     System::SystemPackages[L"core"] = std::unordered_map<std::wstring, MethodCallback>();
@@ -190,4 +214,5 @@ CoreLibInit::CoreLibInit()
     System::SystemPackages[L"core"][L"isBool"] = &isBool;
     System::SystemPackages[L"core"][L"isArray"] = &isArray;
     System::SystemPackages[L"core"][L"isDictionary"] = &isDictionary;
+	System::SystemPackages[L"core"][L"length"] = &length;
 }

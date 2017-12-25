@@ -64,10 +64,10 @@ else
 
 ### Loop
 ```
-i -> 0..100 
+for i in 0 to 10 then
     io::print i + data5
 
-i -> data1..data5 
+for i in data1 to data5 then
 {
     io::print i
     io::print (i, data1)
@@ -117,6 +117,7 @@ integer core::toInteger(item)
 double core::toDouble(item)
 bool toBool(core::item)
 string core::toString(item)
+integer core::length(item)
 
 #Array Operations
 void array::addTo(array, item)

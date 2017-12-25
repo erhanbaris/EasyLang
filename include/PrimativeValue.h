@@ -6,6 +6,7 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+#include <memory>
 
 struct PrimativeValue {
     enum class Type {

@@ -49,13 +49,6 @@ public:
                 getText();
                 continue;
             }
-            else if (ch == '.' && chNext == '.')
-            {
-                auto* opt = new KeywordToken;
-                opt->Value = EASY_KEYWORD_TYPE::FOR_SHORT;
-                TokenList->push_back(reinterpret_cast<Token*>(opt));
-                index += 2;
-            }
             else if ((ch >= '0' && ch <= '9') || ch == '.')
             {
                 getNumber();

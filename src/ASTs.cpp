@@ -87,10 +87,10 @@ public:
 		if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::LEFT_PARENTHESES)
 			return EASY_AST_TYPE::PARENTHESES_BLOCK;
 
-		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && isOperator(tokenNext) && getOperator(tokenNext) == EASY_OPERATOR_TYPE::OPERATION)
+		if (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::FOR)
 			return EASY_AST_TYPE::FOR;
 
-        if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && isOperator(tokenNext) && (getOperator(tokenNext) == EASY_OPERATOR_TYPE::UNDERLINE || getOperator(tokenNext) == EASY_OPERATOR_TYPE::DOUBLE_COLON || getOperator(tokenNext) == EASY_OPERATOR_TYPE::LEFT_PARENTHESES))
+        if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && ((isOperator(tokenNext) && (getOperator(tokenNext) == EASY_OPERATOR_TYPE::UNDERLINE || getOperator(tokenNext) == EASY_OPERATOR_TYPE::DOUBLE_COLON || getOperator(tokenNext) == EASY_OPERATOR_TYPE::LEFT_PARENTHESES)) || (System::UserMethods.find(getSymbol(token)) != System::UserMethods.end())))
             return EASY_AST_TYPE::FUNCTION_CALL;
 
 		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL && tokenNext != nullptr && isOperator(tokenNext) && getOperator(tokenNext) == EASY_OPERATOR_TYPE::ASSIGN)
@@ -265,7 +265,7 @@ public:
 				if (getOperator(token) == EASY_OPERATOR_TYPE ::SQUARE_BRACKET_START)
 				{
 					increaseAndClear();
-					consumeOperator(EASY_OPERATOR_TYPE::SQUARE_BRACKET_END);
+					checkOperator(EASY_OPERATOR_TYPE::SQUARE_BRACKET_END);
 					ast = new PrimativeAst(new std::vector<PrimativeValue*>());
 				}
 			}
@@ -542,49 +542,46 @@ public:
 	Ast* parseForStatement()
 	{
 		auto* ast = new ForStatementAst;
+		consumeKeyword(EASY_KEYWORD_TYPE::FOR);
 		skipWhiteSpace();
+		checkToken(EASY_TOKEN_TYPE::SYMBOL);
 		auto* token = getToken();
-		checkToken("Parse error");
-
 		ast->Variable = getSymbol(token);
-		skipWhiteSpace();
-		++index;
-		skipWhiteSpace();
-		++index;
+		increaseAndClear();
+		consumeKeyword(EASY_KEYWORD_TYPE::IN_KEYWORD);
 		skipWhiteSpace();
 		token = getToken();
-		checkToken("Parse error");
 
 		if (token->GetType() == EASY_TOKEN_TYPE::DOUBLE)
 			ast->Start = new PrimativeAst(getDouble(token));
 		else if (token->GetType() == EASY_TOKEN_TYPE::INTEGER)
 			ast->Start = new PrimativeAst(getInteger(token));
-		else if (token->GetType() == EASY_TOKEN_TYPE::VARIABLE)
+		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
 			ast->Start = new VariableAst(getVariable(token));
 		else
 			throw ParseError("For repeat works with variable, double and integer");
-		skipWhiteSpace();
-		++index;
-		skipWhiteSpace();
-		++index;
-		skipWhiteSpace();
+
+		increaseAndClear();
+		consumeKeyword(EASY_KEYWORD_TYPE::TO_KEYWORD);
+		increaseAndClear();
 		token = getToken();
-		checkToken("Parse error");
 
 		if (token->GetType() == EASY_TOKEN_TYPE::DOUBLE)
 			ast->End = new PrimativeAst(getDouble(token));
 		else if (token->GetType() == EASY_TOKEN_TYPE::INTEGER)
 			ast->End = new PrimativeAst(getInteger(token));
-		else if (token->GetType() == EASY_TOKEN_TYPE::VARIABLE)
+		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
 			ast->End = new VariableAst(getVariable(token));
 		else
 			throw ParseError("For repeat works with variable, double and integer");
 
+		increaseAndClear();
+		checkKeyword(EASY_KEYWORD_TYPE::THEN);
+
 		if (getNextToken() == nullptr)
 			throw ParseError("Repeat block missing");
 
-		++index;
-		skipWhiteSpace();
+		increaseAndClear();
 		ast->Repeat = parseAst();
 
 

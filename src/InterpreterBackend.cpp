@@ -102,24 +102,24 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             auto * call = reinterpret_cast<FunctionCallAst*>(ast);
             auto * returnValue = new PrimativeValue;
 
-            if (System::SystemPackages.find(call->Package) != System::SystemPackages.end() && System::SystemPackages[call->Package].find(call->Function) != System::SystemPackages[call->Package].end())
-            {
-                MethodCallback function = System::SystemPackages[call->Package][call->Function];
-                std::shared_ptr<std::vector<PrimativeValue*> > args = std::make_shared<std::vector<PrimativeValue*>>();
+			if (System::SystemPackages.find(call->Package) != System::SystemPackages.end() && System::SystemPackages[call->Package].find(call->Function) != System::SystemPackages[call->Package].end())
+			{
+				MethodCallback function = System::SystemPackages[call->Package][call->Function];
+				std::shared_ptr<std::vector<PrimativeValue*> > args = std::make_shared<std::vector<PrimativeValue*>>();
 
-                auto argsEnd = call->Args.cend();
-                for (auto it = call->Args.cbegin(); it != argsEnd; ++it)
-                {
-                    Ast* argAst = *it;
-                    auto argItem = getData(argAst, scope);
-                    args->push_back(argItem);
-                }
-                
-                function(args, *returnValue);
-            }
-            else if (System::UserMethods.find(call->Function) != System::UserMethods.end())
-            {
-                std::unordered_map<std::wstring, PrimativeValue*> args;
+				auto argsEnd = call->Args.cend();
+				for (auto it = call->Args.cbegin(); it != argsEnd; ++it)
+				{
+					Ast* argAst = *it;
+					auto argItem = getData(argAst, scope);
+					args->push_back(argItem);
+				}
+
+				function(args, *returnValue);
+			}
+			else if (System::UserMethods.find(call->Function) != System::UserMethods.end())
+			{
+				std::unordered_map<std::wstring, PrimativeValue*> args;
 				auto* functionInfo = System::UserMethods[call->Function];
 
 				size_t requiredParameterCount = functionInfo->FunctionAst->Args.size();
@@ -130,16 +130,18 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 					std::string errorMessage("Function require " + std::to_string(requiredParameterCount) + " but received " + std::to_string(currentParameterCount));
 					throw ParameterError(errorMessage);
 				}
-                
-                for (size_t i = 0; i < currentParameterCount; ++i)
-                {
-                    Ast* argAst = call->Args[i];
-                    PrimativeValue* argItem = getData(argAst, scope);
-                    args[functionInfo->FunctionAst->Args[i]] = argItem;
-                }
-                
-                functionInfo->Callback(args, returnValue, *Scope::GlobalScope);
-            }
+
+				for (size_t i = 0; i < currentParameterCount; ++i)
+				{
+					Ast* argAst = call->Args[i];
+					PrimativeValue* argItem = getData(argAst, scope);
+					args[functionInfo->FunctionAst->Args[i]] = argItem;
+				}
+
+				functionInfo->Callback(args, returnValue, *Scope::GlobalScope);
+			}
+			else
+				throw ParseError("Unknown method");
             
             return returnValue;
         }
@@ -167,12 +169,16 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             auto* startValue = getData(forStatement->Start, scope);
             auto* endValue = getData(forStatement->End, scope);
             
-            variables[forStatement->Variable] = startValue;
-            
-            for (size_t i = startValue->Integer; i < endValue->Integer; ++i)
+			Scope forScope(&scope);
+			forScope.SetVariable(forStatement->Variable, startValue);
+
+            for (size_t i = startValue->Integer; i <= endValue->Integer; ++i)
             {
-                variables[forStatement->Variable]->SetInteger(i);
-                getData(forStatement->Repeat, scope);
+                getData(forStatement->Repeat, forScope);
+
+				PrimativeValue* incrementSymbol = forScope.GetVariable(forStatement->Variable);
+				++incrementSymbol->Integer;
+				forScope.SetVariable(forStatement->Variable, incrementSymbol);
             }
         }
             break;

@@ -19,6 +19,7 @@ void isString(FunctionArgs const & args, PrimativeValue & returnValue);
 void isBool(FunctionArgs const & args, PrimativeValue & returnValue);
 void isArray(FunctionArgs const & args, PrimativeValue & returnValue);
 void isDictionary(FunctionArgs const & args, PrimativeValue & returnValue);
+void length(FunctionArgs const & args, PrimativeValue & returnValue);
 
 class CoreLibInit {
 public:
