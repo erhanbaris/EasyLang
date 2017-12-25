@@ -209,6 +209,12 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
                 case EASY_OPERATOR_TYPE::DIVISION:
                     value = (*lhs) / (*rhs);
                     break;
+                    
+                case EASY_OPERATOR_TYPE::APPEND:
+                    lhs->Append(rhs);
+                    
+                    value = lhs;
+                    break;
             }
             
             return value;

@@ -96,6 +96,35 @@ struct PrimativeValue {
     bool IsArray() { return Type == Type::PRI_ARRAY; }
     bool IsDictionary() { return Type == Type::PRI_DICTIONARY; }
     bool IsNull() { return Type == Type::PRI_NULL; }
+    
+    void Append(PrimativeValue * rhs)
+    {
+        switch (this->Type)
+        {
+            case PrimativeValue::Type::PRI_STRING:
+            {
+                switch (rhs->Type)
+                {
+                    case PrimativeValue::Type::PRI_INTEGER:
+                        this->String = new std::wstring(*this->String + std::to_wstring(rhs->Integer));
+                        break;
+                        
+                    case PrimativeValue::Type::PRI_DOUBLE:
+                        this->String = new std::wstring(*this->String + std::to_wstring(rhs->Double));
+                        break;
+                        
+                    case PrimativeValue::Type::PRI_STRING:
+                        this->String = new std::wstring(*this->String + *rhs->String);
+                        break;
+                }
+            }
+                break;
+                
+            case PrimativeValue::Type::PRI_ARRAY:
+                this->Array->push_back(rhs);
+                break;
+        }
+    }
 
     PrimativeValue & operator=(const PrimativeValue &rhs)
     {

@@ -899,7 +899,8 @@ public:
 	inline bool isExpr(Token* token)
 	{
 		return getOperator(token) == EASY_OPERATOR_TYPE::PLUS ||
-			getOperator(token) == EASY_OPERATOR_TYPE::MINUS;
+			getOperator(token) == EASY_OPERATOR_TYPE::MINUS ||
+            getOperator(token) == EASY_OPERATOR_TYPE::APPEND;
 	}
 
     Ast* factor()

@@ -239,6 +239,11 @@ public:
                         opt->Value = EASY_OPERATOR_TYPE::LOWER_EQUAL;
                         ++index;
                     }
+                    else if (chNext == '+')
+                    {
+                        opt->Value = EASY_OPERATOR_TYPE::APPEND;
+                        ++index;
+                    }
                     else
                         opt->Value = EASY_OPERATOR_TYPE::LOWER;
                     break;
