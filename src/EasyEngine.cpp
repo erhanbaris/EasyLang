@@ -29,6 +29,7 @@ public:
 	{
 		tokinizer->Parse(code, tokens);
 		astParser->Parse(tokens, asts);
+        //astParser->Dump(asts);
 		backend->Prepare(asts);
 		return backend->Execute();
 	}

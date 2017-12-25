@@ -28,7 +28,6 @@ public:
                     ch = getChar();
                 }
                 
-                TokenList->push_back(reinterpret_cast<Token*>(new WhitespaceToken));
                 continue;
             }
 			else if (ch == '_' && (chNext == '\0' || (isSymbol(ch) == false && ch >= '0' && ch <= '9')))

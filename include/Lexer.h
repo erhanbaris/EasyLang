@@ -21,8 +21,7 @@ DECLARE_ENUM(EASY_TOKEN_TYPE, TOKEN_NONE,
 			 OPERATOR,
 			 TEXT,
 			 VARIABLE,
-			 KEYWORD,
-             WHITESPACE)
+			 KEYWORD)
 
 DECLARE_ENUM(EASY_OPERATOR_TYPE,
 	OPERATOR_NONE,
@@ -142,11 +141,6 @@ public:
 
 protected:
 	EASY_TOKEN_TYPE Type;
-};
-
-class WhitespaceToken : Token {
-public:
-    WhitespaceToken() : Token() { Type = EASY_TOKEN_TYPE::WHITESPACE; }
 };
 
 class IntegerToken : Token {
