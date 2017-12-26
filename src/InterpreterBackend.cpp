@@ -211,7 +211,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
                     break;
                     
                 case EASY_OPERATOR_TYPE::APPEND:
-                    lhs->Append(rhs);
+                    lhs->Append(rhs->Clone());
                     
                     value = lhs;
                     break;
@@ -220,6 +220,58 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             return value;
         }
             break;
+
+		case EASY_AST_TYPE::STRUCT_OPERATION:
+		{
+			StructAst* callAst = reinterpret_cast<StructAst*>(ast);
+
+			PrimativeValue* lhs = getData(callAst->Target, scope);
+			PrimativeValue* rhs = getData(callAst->Source, scope);
+			PrimativeValue* value = nullptr;
+
+			switch (callAst->Op)
+			{
+			case EASY_OPERATOR_TYPE::APPEND:
+				lhs->Append(rhs->Clone());
+
+				value = lhs;
+				break;
+
+			case EASY_OPERATOR_TYPE::INDEXER:
+				if (rhs->Type != PrimativeValue::Type::PRI_INTEGER)
+					throw ParseError("Indexer must be integer.");
+
+				switch (lhs->Type)
+				{
+					case PrimativeValue::Type::PRI_ARRAY:
+					{
+						if (lhs->Array->size() <= rhs->Integer)
+							throw ParseError(std::to_string(rhs->Integer) + " bigger than array size");
+						
+						value = lhs->Array->at(rhs->Integer);
+					}
+					break;
+
+					case PrimativeValue::Type::PRI_STRING:
+					{
+						if (lhs->String->size() <= rhs->Integer)
+							throw ParseError(std::to_string(rhs->Integer) + " bigger than string size");
+
+						std::wstring data(1, (*lhs->String)[rhs->Integer]);
+						value = new PrimativeValue(data);
+					}
+					break;
+
+					default:
+						break;
+				}
+
+				break;
+			}
+
+			return value;
+		}
+		break;
             
         case EASY_AST_TYPE::CONTROL_OPERATION:
         {

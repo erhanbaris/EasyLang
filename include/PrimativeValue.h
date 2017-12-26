@@ -79,6 +79,37 @@ struct PrimativeValue {
 		return L"(NULL)";
 	}
 
+	PrimativeValue* Clone()
+	{
+		switch (Type)
+		{
+			case PrimativeValue::Type::PRI_BOOL:
+				return new PrimativeValue(Bool);
+			case PrimativeValue::Type::PRI_DOUBLE:
+				return new PrimativeValue(Double);
+			case PrimativeValue::Type::PRI_INTEGER:
+				return new PrimativeValue(Integer);
+			case PrimativeValue::Type::PRI_STRING:
+				return new PrimativeValue(*String);
+			case PrimativeValue::Type::PRI_ARRAY:
+			{
+				auto* returnValue = new PrimativeValue();
+				returnValue->SetArray(new std::vector<PrimativeValue*>());
+
+				if (Array != nullptr && !Array->empty())
+				{
+					for (int i = 0; i < Array->size(); ++i) {
+						returnValue->Array->push_back(Array->at(i)->Clone());
+					}
+				}
+
+				return returnValue;
+			}
+		}
+
+		return nullptr;
+	}
+
     void SetInteger(int value) { Integer = value; Type = Type::PRI_INTEGER; }
     void SetDouble(double value) { Double = value; Type = Type::PRI_DOUBLE; }
     void SetString(std::wstring value)
@@ -87,6 +118,8 @@ struct PrimativeValue {
         Type = Type::PRI_STRING;
     }
     void SetBool(bool value) { Bool = value; Type = Type::PRI_BOOL; }
+	void SetArray(std::vector<PrimativeValue*>* value) { Array = value; Type = Type::PRI_ARRAY; }
+	void SetDictionary(std::unordered_map<std::wstring, PrimativeValue*>* value) { Dictionary = value; Type = Type::PRI_DICTIONARY; }
     void SetNull() { Integer = 0; Type = Type::PRI_NULL; }
 
     bool IsInteger() { return Type == Type::PRI_INTEGER; }

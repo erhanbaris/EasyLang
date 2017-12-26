@@ -21,6 +21,7 @@ enum class EASY_AST_TYPE {
 	VARIABLE,
 	PRIMATIVE,
 	BINARY_OPERATION,
+	STRUCT_OPERATION,
 	CONTROL_OPERATION,
 	FUNCTION_CALL,
 	BLOCK,
@@ -85,10 +86,19 @@ public:
 class BinaryAst : public Ast
 {
 public:
-    Ast* Left{nullptr};
-    Ast* Right{nullptr};
-    EASY_OPERATOR_TYPE Op;
-    BinaryAst() : Left(nullptr), Right(nullptr) { Type = EASY_AST_TYPE::BINARY_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
+	Ast* Left{ nullptr };
+	Ast* Right{ nullptr };
+	EASY_OPERATOR_TYPE Op;
+	BinaryAst() : Left(nullptr), Right(nullptr) { Type = EASY_AST_TYPE::BINARY_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
+};
+
+class StructAst : public Ast
+{
+public:
+	Ast* Target{ nullptr };
+	Ast* Source{ nullptr };
+	EASY_OPERATOR_TYPE Op;
+	StructAst() : Target(nullptr), Source(nullptr) { Type = EASY_AST_TYPE::STRUCT_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
 };
 
 class IfStatementAst : public Ast

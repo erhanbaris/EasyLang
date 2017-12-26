@@ -22,13 +22,63 @@ data5 = 1024
 data6 = []
 ```
 
-### Function descleration
+### Append operations
+This operation works for string and array types.
+```
+array = []
+array <+ "test"
+array <+ true
+array <+ 2000
+tmpArray = []
+array <+ tmpArray
+```
+
+Result
+```
+(ARRAY) Size: 3
+0. (STRING) test
+1. (BOOL) true
+2. (INTEGER) 2000
+```
+
+### Indexer operations
+This operation works for string and array types.
+```
+array = []
+array <+ "test"
+array <+ true
+array <+ 2000
+array!0
+```
+
+Result
+```
+(STRING) test
+```
+
+```
+text = "test"
+text!1
+```
+
+Result
+```
+(STRING) e
+```
+
+### Function decleration
+##### Function decleration
+Singline decleration
 ```
 func HelloWorld()
     return "hello world"
 
 func SumTwoNumber(a, b)
     return a + b
+```
+
+Multiline decleration
+```
 
 func SumAndPrint(a, b)
 {
@@ -36,17 +86,27 @@ func SumAndPrint(a, b)
     io::print (sum)
     return sum
 }
+
 ```
 
 ### Function call
+Parameterless function call
 ```
-HelloWorld()
 HelloWorld _
-SumAndPrint(10, 20)
+HelloWorld()
+```
 
-io::print data1
+With parameter
+```
+SumAndPrint(10, 20)
 io::print (data1, data2, data3, data4, data5)
 ```
+
+Also single parameter can call without parentheses
+```
+io::print data1
+```
+
 You can call function with '_' for parameterless function.
 
 ### If statement

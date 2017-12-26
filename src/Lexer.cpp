@@ -276,9 +276,13 @@ public:
                     opt->Value = EASY_OPERATOR_TYPE::SQUARE_BRACKET_START;
                     break;
 
-                case ']':
-                    opt->Value = EASY_OPERATOR_TYPE::SQUARE_BRACKET_END;
-                    break;
+				case ']':
+					opt->Value = EASY_OPERATOR_TYPE::SQUARE_BRACKET_END;
+					break;   
+				
+				case '!':
+						opt->Value = EASY_OPERATOR_TYPE::INDEXER;
+						break;
 
 				case ',':
 					opt->Value = EASY_OPERATOR_TYPE::COMMA;

@@ -51,7 +51,8 @@ DECLARE_ENUM(EASY_OPERATOR_TYPE,
 	SINGLE_COLON,
 	DOUBLE_COLON,
 	UNDERLINE,
-    APPEND)
+    APPEND,
+	INDEXER)
 
 DECLARE_ENUM(EASY_KEYWORD_TYPE,
 	KEYWORD_NONE,
@@ -79,14 +80,19 @@ struct EnumClassHash
 	}
 };
 
-static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash> BinaryOperators {
+static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash> BinaryOperators{
 	EASY_OPERATOR_TYPE::MINUS,
 	EASY_OPERATOR_TYPE::PLUS,
 	EASY_OPERATOR_TYPE::DIVISION,
-	EASY_OPERATOR_TYPE::MULTIPLICATION,
-    EASY_OPERATOR_TYPE::APPEND
+	EASY_OPERATOR_TYPE::MULTIPLICATION
 };
 static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash>::const_iterator BinaryOperatorsEnd = BinaryOperators.cend();
+
+static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash> StructOperators{
+	EASY_OPERATOR_TYPE::INDEXER,
+	EASY_OPERATOR_TYPE::APPEND
+};
+static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash>::const_iterator StructOperatorsEnd = StructOperators.cend();
 
 static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash> ControlOperators{
 	EASY_OPERATOR_TYPE::EQUAL,

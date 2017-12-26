@@ -329,6 +329,16 @@ TEST_CASE("Interpreter tests") {
 		REQUIRE(result->IsInteger());
 		REQUIRE(result->Integer == 0);
 	}
+
+	SECTION("data = [] data <+ \"test\" core::length(data)") {
+		tokinizer->Parse(L"data = [] data <+ \"test\" core::length(data)", tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		PrimativeValue* result = backend->Execute();
+		REQUIRE(result != nullptr);
+		REQUIRE(result->IsInteger());
+		REQUIRE(result->Integer == 1);
+	}
 }
 
 #endif //EASYLANG_INTERPRETERTESTS_H

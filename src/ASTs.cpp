@@ -111,6 +111,9 @@ public:
         if (tokenNext != nullptr && isOperator(tokenNext) && BinaryOperators.find(getOperator(tokenNext)) != BinaryOperators.end())
             return EASY_AST_TYPE::BINARY_OPERATION;
 
+		if (tokenNext != nullptr && isOperator(tokenNext) && StructOperators.find(getOperator(tokenNext)) != StructOperatorsEnd)
+			return EASY_AST_TYPE::STRUCT_OPERATION;
+
 		if (tokenNext != nullptr && isOperator(tokenNext) && ControlOperators.find(getOperator(tokenNext)) != ControlOperators.end())
 			return EASY_AST_TYPE::CONTROL_OPERATION;
 
@@ -452,6 +455,57 @@ public:
 		return AS_AST(ast);
 	}
 
+	Ast* parseStructOperationStatement(Ast* left = nullptr)
+	{
+		auto* ast = new StructAst;
+
+		auto* token = getToken();
+
+		if (left == nullptr)
+		{
+			if (isPrimative(token))
+				ast->Target = parsePrimative(token);
+			else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
+			{
+				ast->Target = new VariableAst(getSymbol(token));
+				increase();
+			}
+		}
+		else
+			ast->Target = left;
+
+		if (ast->Target == nullptr)
+			throw ParseError("Struct operation left argument is empty.");
+
+
+		token = getToken();
+		checkToken("Parse error");
+
+		if (isOperator(token) &&
+			StructOperators.find(getOperator(token)) != StructOperatorsEnd)
+			ast->Op = getOperator(token);
+		else
+			ast->Op = EASY_OPERATOR_TYPE::OPERATOR_NONE;
+
+		if (ast->Op == EASY_OPERATOR_TYPE::OPERATOR_NONE)
+			throw ParseError("Struct operation operator is empty.");
+
+		increase();
+
+		token = getToken();
+		if (isPrimative(token))
+			ast->Source = parsePrimative(token);
+		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
+			ast->Source = new VariableAst(getSymbol(token));
+		else if (token != nullptr && isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::LEFT_PARENTHESES)
+			ast->Source = parseParenthesesGroup();
+
+		if (ast->Source == nullptr)
+			throw ParseError("Struct operation right argument is empty.");
+
+		return AS_AST(ast);
+	}
+
 	/*
 	 func test() return 1
 	 func test() { return 1 }
@@ -655,6 +709,10 @@ public:
 
 		case EASY_AST_TYPE::BLOCK:
 			ast = parseBlock();
+			break;
+
+		case EASY_AST_TYPE::STRUCT_OPERATION:
+			ast = parseStructOperationStatement();
 			break;
 
 		case EASY_AST_TYPE::BINARY_OPERATION:
@@ -899,8 +957,7 @@ public:
 	inline bool isExpr(Token* token)
 	{
 		return getOperator(token) == EASY_OPERATOR_TYPE::PLUS ||
-			getOperator(token) == EASY_OPERATOR_TYPE::MINUS ||
-            getOperator(token) == EASY_OPERATOR_TYPE::APPEND;
+			getOperator(token) == EASY_OPERATOR_TYPE::MINUS;
 	}
 
     Ast* factor()
