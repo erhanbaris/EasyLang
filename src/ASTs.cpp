@@ -494,14 +494,21 @@ public:
 
 		token = getToken();
 		if (isPrimative(token))
-			ast->Source = parsePrimative(token);
+			ast->Source1 = parsePrimative(token);
 		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
-			ast->Source = new VariableAst(getSymbol(token));
+			ast->Source1 = new VariableAst(getSymbol(token));
 		else if (token != nullptr && isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::LEFT_PARENTHESES)
-			ast->Source = parseParenthesesGroup();
+			ast->Source1 = parseParenthesesGroup();
 
-		if (ast->Source == nullptr)
+		if (ast->Source1 == nullptr)
 			throw ParseError("Struct operation right argument is empty.");
+
+		token = getToken();
+		if (token != nullptr && isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::SINGLE_COLON)
+		{
+			increase();
+			ast->Source2 = parseAst();
+		}
 
 		return AS_AST(ast);
 	}

@@ -96,9 +96,10 @@ class StructAst : public Ast
 {
 public:
 	Ast* Target{ nullptr };
-	Ast* Source{ nullptr };
+	Ast* Source1{ nullptr };
+	Ast* Source2{ nullptr };
 	EASY_OPERATOR_TYPE Op;
-	StructAst() : Target(nullptr), Source(nullptr) { Type = EASY_AST_TYPE::STRUCT_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
+	StructAst() : Target(nullptr), Source1(nullptr), Source2(nullptr) { Type = EASY_AST_TYPE::STRUCT_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
 };
 
 class IfStatementAst : public Ast

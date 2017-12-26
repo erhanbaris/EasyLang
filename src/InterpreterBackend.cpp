@@ -225,40 +225,77 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 		{
 			StructAst* callAst = reinterpret_cast<StructAst*>(ast);
 
-			PrimativeValue* lhs = getData(callAst->Target, scope);
-			PrimativeValue* rhs = getData(callAst->Source, scope);
+			PrimativeValue* target = getData(callAst->Target, scope);
+			PrimativeValue* source1 = getData(callAst->Source1, scope);
+			PrimativeValue* source2 = nullptr;
+
+			if (callAst->Source2 != nullptr)
+				source2 = getData(callAst->Source2, scope);
+
 			PrimativeValue* value = nullptr;
 
 			switch (callAst->Op)
 			{
 			case EASY_OPERATOR_TYPE::APPEND:
-				lhs->Append(rhs->Clone());
+				target->Append(source1->Clone());
 
-				value = lhs;
+				value = target;
 				break;
 
 			case EASY_OPERATOR_TYPE::INDEXER:
-				if (rhs->Type != PrimativeValue::Type::PRI_INTEGER)
+				if (source1->Type != PrimativeValue::Type::PRI_INTEGER)
 					throw ParseError("Indexer must be integer.");
 
-				switch (lhs->Type)
+				switch (target->Type)
 				{
 					case PrimativeValue::Type::PRI_ARRAY:
 					{
-						if (lhs->Array->size() <= rhs->Integer)
-							throw ParseError(std::to_string(rhs->Integer) + " bigger than array size");
+						if (target->Array->size() <= source1->Integer)
+							throw ParseError(std::to_string(source1->Integer) + " bigger than array size");
 						
-						value = lhs->Array->at(rhs->Integer);
+						if (source1->Integer < 0)
+							throw ParseError(std::to_string(source1->Integer) + " can not be smaller than zero");
+
+						if (source2 != nullptr)
+						{
+							if (target->Array->size() <= source2->Integer)
+								throw ParseError(std::to_string(source2->Integer) + " bigger than array size");
+
+							if (source2->Integer < 0)
+								throw ParseError(std::to_string(source2->Integer) + " can not be smaller than zero");
+
+							value = PrimativeValue::CreateArray();
+							for (size_t i = source1->Integer; i < source2->Integer + source1->Integer; ++i)
+								value->Array->push_back(target->Array->at(i));
+						}
+						else 
+							value = target->Array->at(source1->Integer);
 					}
 					break;
 
 					case PrimativeValue::Type::PRI_STRING:
 					{
-						if (lhs->String->size() <= rhs->Integer)
-							throw ParseError(std::to_string(rhs->Integer) + " bigger than string size");
+						if (target->String->size() <= source1->Integer)
+							throw ParseError(std::to_string(source1->Integer) + " bigger than string size");
 
-						std::wstring data(1, (*lhs->String)[rhs->Integer]);
-						value = new PrimativeValue(data);
+						if (source1->Integer < 0)
+							throw ParseError(std::to_string(source1->Integer) + " can not be smaller than zero");
+
+						if (source2 != nullptr)
+						{
+							if (target->Array->size() <= source2->Integer)
+								throw ParseError(std::to_string(source2->Integer) + " bigger than array size");
+							
+							if (source2->Integer < 0)
+								throw ParseError(std::to_string(source2->Integer) + " can not be smaller than zero");
+
+							value = PrimativeValue::CreateString(target->String->substr(source1->Integer, source2->Integer));
+						}
+						else
+						{
+							std::wstring data(1, (*target->String)[source1->Integer]);
+							value = new PrimativeValue(data);
+						}
 					}
 					break;
 

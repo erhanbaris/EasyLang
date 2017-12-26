@@ -1,5 +1,5 @@
 # EasyLang
-It is a programming language that has begun to be developed for testing purposes.
+It is a programming language that has begun to be developed for testing purposes. It is still in development and it is not stable at this time.
 
 ![EasyLang](EasyLang.gif)
 
@@ -42,7 +42,9 @@ Result
 ```
 
 ### Indexer operations
+Fetch value from array or string via index.
 This operation works for string and array types.
+##### Get item from index
 ```
 array = []
 array <+ "test"
@@ -64,6 +66,32 @@ text!1
 Result
 ```
 (STRING) e
+```
+
+##### Get items with range
+```
+array = []
+array <+ "test"
+array <+ true
+array <+ 2000
+array!1:2
+```
+
+Result
+```
+(ARRAY) Size: 2
+0. (BOOL) true
+1. (INTEGER) 2000
+```
+
+```
+text = "test 123"
+text!5:3
+```
+
+Result
+```
+(STRING) 123
 ```
 
 ### Function decleration

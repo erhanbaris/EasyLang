@@ -38,6 +38,63 @@ struct PrimativeValue {
     PrimativeValue(std::vector<PrimativeValue*>* value) { Array = value; Type = Type::PRI_ARRAY;}
     PrimativeValue(std::unordered_map<std::wstring, PrimativeValue*>* value) { Dictionary = value; Type = Type::PRI_DICTIONARY;}
 
+
+	static PrimativeValue* CreateArray()
+	{
+		return new PrimativeValue(new std::vector<PrimativeValue*>());
+	}
+
+	static PrimativeValue* CreateArray(size_t length)
+	{
+		return new PrimativeValue(new std::vector<PrimativeValue*>(length));
+	}
+
+	static PrimativeValue* CreateDictionary()
+	{
+		return new PrimativeValue(new std::unordered_map<std::wstring, PrimativeValue*>());
+	}
+
+	static PrimativeValue* CreateBool()
+	{
+		return new PrimativeValue(false);
+	}
+
+	static PrimativeValue* CreateBool(bool value)
+	{
+		return new PrimativeValue(value);
+	}
+
+	static PrimativeValue* CreateString(std::wstring const & value)
+	{
+		return new PrimativeValue(value);
+	}
+
+	static PrimativeValue* CreateString()
+	{
+		return new PrimativeValue(L"");
+	}
+
+	static PrimativeValue* CreateDouble(double value)
+	{
+		return new PrimativeValue(value);
+	}
+
+	static PrimativeValue* CreateDouble()
+	{
+		return new PrimativeValue(0.0);
+	}
+
+	static PrimativeValue* CreateInteger(int value)
+	{
+		return new PrimativeValue(value);
+	}
+
+	static PrimativeValue* CreateInteger()
+	{
+		return new PrimativeValue(0);
+	}
+
+
     ~PrimativeValue() { }
 
 	std::wstring Describe()
