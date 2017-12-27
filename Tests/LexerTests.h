@@ -16,19 +16,19 @@ using namespace std;
 TEST_CASE( "Double test" ) {
     Tokinizer* parser = new StandartTokinizer();
     auto tokens = make_shared<std::vector<Token*>>();
-    parser->Parse(L".1", tokens);
+    parser->Parse(_T(".1"), tokens);
     REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::DOUBLE);
     REQUIRE(reinterpret_cast<DoubleToken*>(tokens->at(0))->Value == 0.1);
     
-    parser->Parse(L"1.1", tokens);
+    parser->Parse(_T("1.1"), tokens);
     REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::DOUBLE);
     REQUIRE(reinterpret_cast<DoubleToken*>(tokens->at(0))->Value == 1.1);
     
-    parser->Parse(L"1990.0001", tokens);
+    parser->Parse(_T("1990.0001"), tokens);
     REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::DOUBLE);
     REQUIRE(reinterpret_cast<DoubleToken*>(tokens->at(0))->Value == 1990.0001);
     
-    parser->Parse(L"-10.1", tokens);
+    parser->Parse(_T("-10.1"), tokens);
 
     REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
     REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(0))->Value == EASY_OPERATOR_TYPE::MINUS);
@@ -36,7 +36,7 @@ TEST_CASE( "Double test" ) {
     REQUIRE(tokens->at(1)->GetType() == EASY_TOKEN_TYPE::DOUBLE);
     REQUIRE(reinterpret_cast<DoubleToken*>(tokens->at(1))->Value == 10.1);
     
-    parser->Parse(L"-.1", tokens);
+    parser->Parse(_T("-.1"), tokens);
     REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
     REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(0))->Value == EASY_OPERATOR_TYPE::MINUS);
 
@@ -47,15 +47,15 @@ TEST_CASE( "Double test" ) {
 TEST_CASE( "Integer test" ) {
     Tokinizer* parser = new StandartTokinizer();
     auto tokens = make_shared<std::vector<Token*>>();
-    parser->Parse(L"1", tokens);
+    parser->Parse(_T("1"), tokens);
     REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
     REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 1);
     
-    parser->Parse(L"12345", tokens);
+    parser->Parse(_T("12345"), tokens);
     REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
     REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 12345);
     
-    parser->Parse(L"-12345", tokens);
+    parser->Parse(_T("-12345"), tokens);
     REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
     REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(0))->Value == EASY_OPERATOR_TYPE::MINUS);
 
@@ -66,20 +66,20 @@ TEST_CASE( "Integer test" ) {
 TEST_CASE( "String test" ) {
     Tokinizer* parser = new StandartTokinizer();
     auto tokens = make_shared<std::vector<Token*>>();
-    parser->Parse(L"\"erhan\"", tokens);
+    parser->Parse(_T("\"erhan\""), tokens);
     REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::TEXT);
-    REQUIRE(reinterpret_cast<TextToken*>(tokens->at(0))->Value == L"erhan");
+    REQUIRE(reinterpret_cast<TextToken*>(tokens->at(0))->Value == _T("erhan"));
     
-    parser->Parse(L"\"'erhan'\"", tokens);
+    parser->Parse(_T("\"'erhan'\""), tokens);
     REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::TEXT);
-    REQUIRE(reinterpret_cast<TextToken*>(tokens->at(0))->Value == L"'erhan'");
+    REQUIRE(reinterpret_cast<TextToken*>(tokens->at(0))->Value == _T("'erhan'"));
     
-    parser->Parse(L"\"\\\"erhan\\\"\"", tokens);
+    parser->Parse(_T("\"\\\"erhan\\\"\""), tokens);
     REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::TEXT);
-    REQUIRE(reinterpret_cast<TextToken*>(tokens->at(0))->Value == L"\"erhan\"");
+    REQUIRE(reinterpret_cast<TextToken*>(tokens->at(0))->Value == _T("\"erhan\""));
     
-    SECTION( "Sembol" ) {
-        parser->Parse(L"17 <= 40", tokens);
+    SECTION( "Sembo_T(" ) {
+        parser->Parse(_T("17 <= 40"), tokens);
         REQUIRE(tokens->size() == 3);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 17);
@@ -92,7 +92,7 @@ TEST_CASE( "String test" ) {
     }
     
     SECTION( "17 > 40" ) {
-        parser->Parse(L"17 > 40", tokens);
+        parser->Parse(_T("17 > 40"), tokens);
         REQUIRE(tokens->size() == 3);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 17);
@@ -110,7 +110,7 @@ TEST_CASE( "Operator lexer test" ) {
     auto tokens = make_shared<std::vector<Token*>>();
     
     SECTION( "10 / 10" ) {
-        parser->Parse(L"10 / 10", tokens);
+        parser->Parse(_T("10 / 10"), tokens);
         REQUIRE(tokens->size() == 3);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 10);
@@ -123,7 +123,7 @@ TEST_CASE( "Operator lexer test" ) {
     }
     
     SECTION( "10 - 10" ) {
-        parser->Parse(L"10 - 10", tokens);
+        parser->Parse(_T("10 - 10"), tokens);
         REQUIRE(tokens->size() == 3);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 10);
@@ -136,7 +136,7 @@ TEST_CASE( "Operator lexer test" ) {
     }
     
     SECTION( "10 + 10" ) {
-        parser->Parse(L"10 + 10", tokens);
+        parser->Parse(_T("10 + 10"), tokens);
         REQUIRE(tokens->size() == 3);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 10);
@@ -149,7 +149,7 @@ TEST_CASE( "Operator lexer test" ) {
     }
 
     SECTION( "10 * 10" ) {
-        parser->Parse(L"10 * 10", tokens);
+        parser->Parse(_T("10 * 10"), tokens);
         REQUIRE(tokens->size() == 3);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 10);
@@ -167,13 +167,13 @@ TEST_CASE( "Function lexer test" ) {
     auto tokens = make_shared<std::vector<Token*>>();
     
     SECTION( "func test () return 1" ) {
-        parser->Parse(L"func test () return 1", tokens);
+        parser->Parse(_T("func test () return 1"), tokens);
         REQUIRE(tokens->size() == 6);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::KEYWORD);
         REQUIRE(reinterpret_cast<KeywordToken*>(tokens->at(0))->Value == EASY_KEYWORD_TYPE::FUNC);
         
         REQUIRE(tokens->at(1)->GetType() == EASY_TOKEN_TYPE::SYMBOL);
-        REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(1))->Value == L"test");
+        REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(1))->Value == _T("test"));
         
         REQUIRE(tokens->at(4)->GetType() == EASY_TOKEN_TYPE::KEYWORD);
         REQUIRE(reinterpret_cast<KeywordToken*>(tokens->at(4))->Value == EASY_KEYWORD_TYPE::RETURN);
@@ -189,34 +189,34 @@ TEST_CASE( "Package lexer test" ) {
     auto tokens = make_shared<std::vector<Token*>>();
 
     SECTION( "package test" ) {
-        parser->Parse(L"package test", tokens);
+        parser->Parse(_T("package test"), tokens);
         REQUIRE(tokens->size() == 2);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::KEYWORD);
         REQUIRE(reinterpret_cast<KeywordToken*>(tokens->at(0))->Value == EASY_KEYWORD_TYPE::PACKAGE);
 
         REQUIRE(tokens->at(1)->GetType() == EASY_TOKEN_TYPE::SYMBOL);
-        REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(1))->Value == L"test");
+        REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(1))->Value == _T("test"));
     }
 
     SECTION( "core::isBool" ) {
-        parser->Parse(L"core::isBool", tokens);
+        parser->Parse(_T("core::isBool"), tokens);
         REQUIRE(tokens->size() == 3);
 
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::SYMBOL);
-        REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(0))->Value == L"core");
+        REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(0))->Value == _T("core"));
 
         REQUIRE(tokens->at(1)->GetType() == EASY_TOKEN_TYPE::OPERATOR);
         REQUIRE(reinterpret_cast<OperatorToken*>(tokens->at(1))->Value == EASY_OPERATOR_TYPE::DOUBLE_COLON);
 
         REQUIRE(tokens->at(2)->GetType() == EASY_TOKEN_TYPE::SYMBOL);
-        REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(2))->Value == L"isBool");
+        REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(2))->Value == _T("isBool"));
     }
 }
 
 TEST_CASE("for i to 1 to 10 then core::print i") {
 	Tokinizer* parser = new StandartTokinizer();
 	auto tokens = make_shared<std::vector<Token*>>();
-	parser->Parse(L"for i to 1 to 10 then core::print i", tokens);
+	parser->Parse(_T("for i to 1 to 10 then core::print i"), tokens);
 	REQUIRE(tokens->size() == 11);
 }
 

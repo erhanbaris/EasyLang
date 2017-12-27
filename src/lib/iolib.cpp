@@ -12,26 +12,26 @@ void print(FunctionArgs const & args, PrimativeValue & returnValue)
 		{
 			if ((*it) == nullptr)
 			{
-				std::wcout << L"#ERROR Argument not found" << '\n';
+				console_out << _T("#ERROR Argument not found\n");
 				return;
 			}
 
-			std::wcout << (*it)->Describe() << '\n';
+			console_out << (*it)->Describe() << '\n';
 		}
 	}
 }
 
 void readline(FunctionArgs const & args, PrimativeValue & returnValue)
 {
-	std::wstring text;
-	std::getline(std::wcin, text);
+	string_type text;
+	std::getline(console_in, text);
 	returnValue.SetString(text);
 }
 
 IOLibInit::IOLibInit()
 {
-    System::SystemPackages[L"io"] = std::unordered_map<std::wstring, MethodCallback>();
+    System::SystemPackages[_T("io")] = std::unordered_map<string_type, MethodCallback>();
 
-    System::SystemPackages[L"io"][L"print"] = &print;
-    System::SystemPackages[L"io"][L"readline"] = &readline;
+    System::SystemPackages[_T("io")][_T("print")] = &print;
+    System::SystemPackages[_T("io")][_T("readline")] = &readline;
 }

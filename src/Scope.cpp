@@ -12,7 +12,7 @@ Scope::Scope(Scope* pBaseScope) : variablesEnd(variables.end())
     baseScope = pBaseScope;
 }
 
-bool Scope::setVariable(std::wstring const & key, PrimativeValue* value)
+bool Scope::setVariable(string_type const & key, PrimativeValue* value)
 {
     auto item = variables.find(key);
     if (item != variablesEnd)
@@ -27,7 +27,7 @@ bool Scope::setVariable(std::wstring const & key, PrimativeValue* value)
     return false;
 }
 
-PrimativeValue* Scope::GetVariable(std::wstring const & key)
+PrimativeValue* Scope::GetVariable(string_type const & key)
 {
 	auto item = variables.find(key);
     if (item != variablesEnd)
@@ -39,7 +39,7 @@ PrimativeValue* Scope::GetVariable(std::wstring const & key)
     return nullptr;
 }
 
-void Scope::SetVariable(std::wstring const & key, PrimativeValue* value)
+void Scope::SetVariable(string_type const & key, PrimativeValue* value)
 {
     auto item = variables.find(key);
     if (item != variablesEnd)
@@ -50,7 +50,3 @@ void Scope::SetVariable(std::wstring const & key, PrimativeValue* value)
         variablesEnd = variables.end();
     }
 }
-
-/*
- func fibonacci(num) { if num <= 1 then return 1 left = fibonacci(num - 1) right = fibonacci(num - 2) return left + right }
- * */

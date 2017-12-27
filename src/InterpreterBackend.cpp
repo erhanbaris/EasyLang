@@ -51,7 +51,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             AssignmentAst* assignment = reinterpret_cast<AssignmentAst*>(ast);
             auto* value = getData(assignment->Data, scope);
 			if (value == nullptr)
-				throw NullException("Value not found");
+				throw NullException(_T("Value not found"));
 
 			scope.SetVariable(assignment->Name, value);
         }
@@ -79,7 +79,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             FunctionDefinetionAst* func = reinterpret_cast<FunctionDefinetionAst*>(ast);
 			FunctionInfo* info = new FunctionInfo;
 			info->FunctionAst = func;
-			info->Callback = [=](std::unordered_map<std::wstring, PrimativeValue*> const & args, PrimativeValue * returnValue, Scope & functionScope)
+			info->Callback = [=](std::unordered_map<string_type, PrimativeValue*> const & args, PrimativeValue * returnValue, Scope & functionScope)
 			{
                 Scope innerScope(&functionScope);
 
@@ -119,7 +119,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 			}
 			else if (System::UserMethods.find(call->Function) != System::UserMethods.end())
 			{
-				std::unordered_map<std::wstring, PrimativeValue*> args;
+				std::unordered_map<string_type, PrimativeValue*> args;
 				auto* functionInfo = System::UserMethods[call->Function];
 
 				size_t requiredParameterCount = functionInfo->FunctionAst->Args.size();
@@ -127,7 +127,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 
 				if (requiredParameterCount != currentParameterCount)
 				{
-					std::string errorMessage("Function require " + std::to_string(requiredParameterCount) + " but received " + std::to_string(currentParameterCount));
+					string_type errorMessage(_T("Function require ") + AS_STRING(requiredParameterCount) + _T(" but received ") + AS_STRING(currentParameterCount));
 					throw ParameterError(errorMessage);
 				}
 
@@ -251,18 +251,18 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 					case PrimativeValue::Type::PRI_ARRAY:
 					{
 						if (target->Array->size() <= source1->Integer)
-							throw ParseError(std::to_string(source1->Integer) + " bigger than array size");
+							throw ParseError(AS_STRING(source1->Integer) + " bigger than array size");
 						
 						if (source1->Integer < 0)
-							throw ParseError(std::to_string(source1->Integer) + " can not be smaller than zero");
+							throw ParseError(AS_STRING(source1->Integer) + " can not be smaller than zero");
 
 						if (source2 != nullptr)
 						{
 							if (target->Array->size() <= source2->Integer)
-								throw ParseError(std::to_string(source2->Integer) + " bigger than array size");
+								throw ParseError(AS_STRING(source2->Integer) + " bigger than array size");
 
 							if (source2->Integer < 0)
-								throw ParseError(std::to_string(source2->Integer) + " can not be smaller than zero");
+								throw ParseError(AS_STRING(source2->Integer) + " can not be smaller than zero");
 
 							value = PrimativeValue::CreateArray();
 							for (size_t i = source1->Integer; i < source2->Integer + source1->Integer; ++i)
@@ -276,24 +276,24 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 					case PrimativeValue::Type::PRI_STRING:
 					{
 						if (target->String->size() <= source1->Integer)
-							throw ParseError(std::to_string(source1->Integer) + " bigger than string size");
+							throw ParseError(AS_STRING(source1->Integer) + " bigger than string size");
 
 						if (source1->Integer < 0)
-							throw ParseError(std::to_string(source1->Integer) + " can not be smaller than zero");
+							throw ParseError(AS_STRING(source1->Integer) + " can not be smaller than zero");
 
 						if (source2 != nullptr)
 						{
 							if (target->Array->size() <= source2->Integer)
-								throw ParseError(std::to_string(source2->Integer) + " bigger than array size");
+								throw ParseError(AS_STRING(source2->Integer) + " bigger than array size");
 							
 							if (source2->Integer < 0)
-								throw ParseError(std::to_string(source2->Integer) + " can not be smaller than zero");
+								throw ParseError(AS_STRING(source2->Integer) + " can not be smaller than zero");
 
 							value = PrimativeValue::CreateString(target->String->substr(source1->Integer, source2->Integer));
 						}
 						else
 						{
-							std::wstring data(1, (*target->String)[source1->Integer]);
+							string_type data(1, (*target->String)[source1->Integer]);
 							value = new PrimativeValue(data);
 						}
 					}
@@ -371,7 +371,7 @@ PrimativeValue* InterpreterBackend::Execute()
 
 		if (result != nullptr)
 		{
-			std::wcout << result->Describe() << '\n';
+			console_out << result->Describe() << '\n';
 		}
 
 		asts.push_back(*it);

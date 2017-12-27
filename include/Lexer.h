@@ -13,6 +13,7 @@
 #include <unordered_set>
 
 #include "Macros.h"
+#include "Definitions.h"
 
 DECLARE_ENUM(EASY_TOKEN_TYPE, TOKEN_NONE,
 			 INTEGER,
@@ -106,41 +107,22 @@ static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash> ControlOperators{
 };
 static std::unordered_set<EASY_OPERATOR_TYPE, EnumClassHash>::const_iterator ControlOperatorsEnd = ControlOperators.cend();
 
-static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE> Keywords {
-	{ L"func", EASY_KEYWORD_TYPE::FUNC },
-	{ L"return", EASY_KEYWORD_TYPE::RETURN },
-	{ L"if", EASY_KEYWORD_TYPE::IF },
-    { L"var", EASY_KEYWORD_TYPE::ASSIGNMENT },
-    { L"else", EASY_KEYWORD_TYPE::ELSE },
-    { L"then", EASY_KEYWORD_TYPE::THEN },
-    /*{ L"yes", EASY_KEYWORD_TYPE::BOOL_TRUE },
-    { L"no", EASY_KEYWORD_TYPE::BOOL_FALSE },*/
-    { L"true", EASY_KEYWORD_TYPE::BOOL_TRUE },
-    { L"false", EASY_KEYWORD_TYPE::BOOL_FALSE },
-	{ L"package", EASY_KEYWORD_TYPE::PACKAGE },
-	{ L"for", EASY_KEYWORD_TYPE::FOR },
-	{ L"in", EASY_KEYWORD_TYPE::IN_KEYWORD },
-	{ L"to", EASY_KEYWORD_TYPE::TO_KEYWORD },
-	{ L"step", EASY_KEYWORD_TYPE::STEP_KEYWORD }
-
-    /*{ L"eğer", EASY_KEYWORD_TYPE::IF },
-    { L"atama", EASY_KEYWORD_TYPE::ASSIGNMENT },
-    { L"değilse", EASY_KEYWORD_TYPE::ELSE },
-    { L"sonra", EASY_KEYWORD_TYPE::THEN },
-	{ L"a", EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX },
-	{ L"e", EASY_KEYWORD_TYPE::ASSIGNMENT_SUFFIX },
-    { L"ve", EASY_KEYWORD_TYPE::AND},
-    { L"veya", EASY_KEYWORD_TYPE::OR},
-    { L"başla", EASY_KEYWORD_TYPE::BLOCK_START },
-	{ L"başlangıç", EASY_KEYWORD_TYPE::BLOCK_START },
-	{ L"bitir", EASY_KEYWORD_TYPE::BLOCK_END },
-    { L"bitiş", EASY_KEYWORD_TYPE::BLOCK_END },
-    { L"evet", EASY_KEYWORD_TYPE::BOOL_TRUE },
-    { L"hayır", EASY_KEYWORD_TYPE::BOOL_FALSE },
-    { L"doğru", EASY_KEYWORD_TYPE::BOOL_TRUE },
-    { L"yanlış", EASY_KEYWORD_TYPE::BOOL_FALSE }*/
+static std::unordered_map<string_type, EASY_KEYWORD_TYPE> Keywords {
+	{ _T("func"), EASY_KEYWORD_TYPE::FUNC },
+	{ _T("return"), EASY_KEYWORD_TYPE::RETURN },
+	{ _T("if"), EASY_KEYWORD_TYPE::IF },
+    { _T("var"), EASY_KEYWORD_TYPE::ASSIGNMENT },
+    { _T("else"), EASY_KEYWORD_TYPE::ELSE },
+    { _T("then"), EASY_KEYWORD_TYPE::THEN },
+    { _T("true"), EASY_KEYWORD_TYPE::BOOL_TRUE },
+    { _T("false"), EASY_KEYWORD_TYPE::BOOL_FALSE },
+	{ _T("package"), EASY_KEYWORD_TYPE::PACKAGE },
+	{ _T("for"), EASY_KEYWORD_TYPE::FOR },
+	{ _T("in"), EASY_KEYWORD_TYPE::IN_KEYWORD },
+	{ _T("to"), EASY_KEYWORD_TYPE::TO_KEYWORD },
+	{ _T("step"), EASY_KEYWORD_TYPE::STEP_KEYWORD }
 };
-static std::unordered_map<std::wstring, EASY_KEYWORD_TYPE>::const_iterator KeywordsEnd = Keywords.cend();
+static std::unordered_map<string_type, EASY_KEYWORD_TYPE>::const_iterator KeywordsEnd = Keywords.cend();
 
 class Token
 {
@@ -174,19 +156,19 @@ public:
 
 class SymbolToken : Token {
 public:
-    std::wstring Value;
+    string_type Value;
     SymbolToken() : Token() { Type = EASY_TOKEN_TYPE::SYMBOL; }
 };
 
 class TextToken : Token {
 public:
-    std::wstring Value;
+    string_type Value;
     TextToken() : Token() { Type = EASY_TOKEN_TYPE::TEXT; }
 };
 
 class VariableToken : Token {
 public:
-    std::wstring Value;
+    string_type Value;
     VariableToken() : Token() { Type = EASY_TOKEN_TYPE::VARIABLE; }
 };
 
@@ -199,7 +181,7 @@ public:
 class Tokinizer
 {
 public:
-    virtual void Parse(std::wstring const & data, std::shared_ptr<std::vector<Token*>> Tokens) = 0;
+    virtual void Parse(string_type const & data, std::shared_ptr<std::vector<Token*>> Tokens) = 0;
 	virtual void Dump(std::shared_ptr <std::vector<Token *>> Tokens) = 0;
 };
 
@@ -207,10 +189,10 @@ class StandartTokinizerImpl;
 class StandartTokinizer : public Tokinizer {
 public:
     StandartTokinizer();
-    void Parse(std::wstring const &data, std::shared_ptr <std::vector<Token *>> Tokens) override;
+    void Parse(string_type const &data, std::shared_ptr <std::vector<Token *>> Tokens) override;
 	void Dump(std::shared_ptr <std::vector<Token *>> Tokens) override;
     bool HasError();
-    std::wstring ErrorMessage();
+    string_type ErrorMessage();
 
 private:
     StandartTokinizerImpl *impl;

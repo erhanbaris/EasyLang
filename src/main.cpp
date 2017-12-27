@@ -11,12 +11,14 @@
 #include "Catch.h"
 #include "System.h"
 #include "EasyEngine.h"
+#include "Definitions.h"
 
 #include "../Tests/LexerTests.h"
 #include "../Tests/AstTests.h"
 #include "../Tests/InterpreterTests.h"
 
 using namespace std;
+
 
 int main(int argc, char* argv[]) {
 	System::WarmUp();
@@ -25,18 +27,18 @@ int main(int argc, char* argv[]) {
 
     auto* engine = EasyEngine::Interpreter();
 
-	std::wstring line;
-	std::wcout << "EasyLang Interpreter\n\n";
-	std::wcout << "easy > ";
-	while (std::getline(std::wcin, line))
+	string_type line;
+	console_out << _T("EasyLang Interpreter\n\n");
+	console_out << _T("easy > ");
+	while (std::getline(console_in, line))
 	{
         try {
 			engine->Execute(line);
         } catch (exception& e) {
-            std::wcout << "#ERROR " << e.what() << '\n';
+			console_out << _T("#ERROR ") << e.what() << '\n';
         }
 
-		std::wcout << "easy > ";
+		console_out << _T("easy > ");
 	}
 
     getchar();

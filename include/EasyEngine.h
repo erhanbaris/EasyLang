@@ -7,12 +7,13 @@
 #include <iostream>
 #include "PrimativeValue.h"
 #include "Backend.h"
+#include "Definitions.h"
 
 class EasyEngineImpl;
 class EasyEngine {
 public:
 	static EasyEngine * Interpreter();
-	PrimativeValue* Execute(std::wstring const & code);
+	PrimativeValue* Execute(string_type const & code);
 	~EasyEngine();
 
 private:

@@ -26,7 +26,7 @@ class AstParserImpl
 public:
 	std::shared_ptr<std::vector<Token*>> tokens;
 	std::shared_ptr<std::vector<Ast*>> asts;
-	std::unordered_map<std::wstring, MethodCallback> userMethods;
+	std::unordered_map<string_type, MethodCallback> userMethods;
 
 	size_t tokensCount;
 	size_t index;
@@ -38,9 +38,9 @@ public:
 	GET_ITEM(Operator, EASY_TOKEN_TYPE::OPERATOR, OperatorToken, EASY_OPERATOR_TYPE);
 	GET_ITEM(Integer, EASY_TOKEN_TYPE::INTEGER, IntegerToken, int);
 	GET_ITEM(Double, EASY_TOKEN_TYPE::DOUBLE, DoubleToken, double);
-	GET_ITEM(Text, EASY_TOKEN_TYPE::TEXT, TextToken, std::wstring);
-	GET_ITEM(Symbol, EASY_TOKEN_TYPE::SYMBOL, SymbolToken, std::wstring);
-	GET_ITEM(Variable, EASY_TOKEN_TYPE::VARIABLE, VariableToken, std::wstring);
+	GET_ITEM(Text, EASY_TOKEN_TYPE::TEXT, TextToken, string_type);
+	GET_ITEM(Symbol, EASY_TOKEN_TYPE::SYMBOL, SymbolToken, string_type);
+	GET_ITEM(Variable, EASY_TOKEN_TYPE::VARIABLE, VariableToken, string_type);
 
 	Token* getToken()
 	{
@@ -50,7 +50,7 @@ public:
 		return nullptr;
 	}
 
-	void checkToken(std::string const & message)
+	void checkToken(string_type const & message)
 	{
 		if (getToken() == nullptr)
 			throw ParseError(message);
@@ -83,7 +83,7 @@ public:
 		auto* token = getToken();
 		auto* tokenNext = getNextToken();
 
-		checkToken("Parse error");
+		checkToken(_T("Parse error"));
 		if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::LEFT_PARENTHESES)
 			return EASY_AST_TYPE::PARENTHESES_BLOCK;
 
@@ -139,7 +139,7 @@ public:
 		if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
 			return EASY_AST_TYPE::VARIABLE;
 
-		throw ParseError("Parse error");
+		throw ParseError(_T("Parse error"));
 	}
 
 	inline bool isPrimative()
@@ -149,7 +149,7 @@ public:
 
     inline bool isPrimative(Token * token)
     {
-        checkToken("Parse error");
+        checkToken(_T("Parse error"));
         return token != nullptr && (isInteger(token) ||
                                     isText(token) ||
                                     isDouble(token) ||
@@ -159,7 +159,7 @@ public:
 
     inline bool isNumber(Token * token)
     {
-        checkToken("Parse error");
+        checkToken(_T("Parse error"));
         return token != nullptr && (isInteger(token) || isDouble(token));
     }
 
@@ -178,7 +178,7 @@ public:
 		if (token != nullptr && token->GetType() == type)
 			increase();
 		else
-			throw ParseError("Syntax error. '" + std::string(EASY_TOKEN_TYPEToString(type)) + "' required");
+			throw ParseError(_T("Syntax error. '") + string_type(EASY_TOKEN_TYPEToString(type)) + _T("' required"));
 	}
 
 	inline void consumeOperator(EASY_OPERATOR_TYPE type)
@@ -187,7 +187,7 @@ public:
 		if (token != nullptr && isOperator(token) && getOperator(token) == type)
 			increase();
 		else
-			throw ParseError("Syntax error. '" + std::string(EASY_OPERATOR_TYPEToString(type)) + "' required");
+			throw ParseError(_T("Syntax error. '") + string_type(EASY_OPERATOR_TYPEToString(type)) + _T("' required"));
 	}
 
 	inline void consumeKeyword(EASY_KEYWORD_TYPE type)
@@ -196,28 +196,28 @@ public:
 		if (token != nullptr && isKeyword(token) && getKeyword(token) == type)
 			increase();
 		else
-			throw ParseError("Syntax error. '" + std::string(EASY_KEYWORD_TYPEToString(type)) + "' required");
+			throw ParseError(_T("Syntax error. '") + string_type(EASY_KEYWORD_TYPEToString(type)) + _T("' required"));
 	}
 
 	inline void checkToken(EASY_TOKEN_TYPE type)
 	{
 		Token* token = getToken();
 		if (token == nullptr || token->GetType() != type)
-			throw ParseError("Syntax error. '" + std::string(EASY_TOKEN_TYPEToString(type)) + "' required");
+			throw ParseError(_T("Syntax error. '") + string_type(EASY_TOKEN_TYPEToString(type)) + _T("' required"));
 	}
 
 	inline void checkOperator(EASY_OPERATOR_TYPE type)
 	{
 		Token* token = getToken();
 		if (token == nullptr || token->GetType() != EASY_TOKEN_TYPE::OPERATOR || getOperator(token) != type)
-			throw ParseError("Syntax error. '" + std::string(EASY_OPERATOR_TYPEToString(type)) + "' required");
+			throw ParseError(_T("Syntax error. '") + string_type(EASY_OPERATOR_TYPEToString(type)) + _T("' required"));
 	}
 
 	inline void checkKeyword(EASY_KEYWORD_TYPE type)
 	{
 		Token* token = getToken();
 		if (!isKeyword(token) || getKeyword(token) != type)
-			throw ParseError("Syntax error. '" + std::string(EASY_KEYWORD_TYPEToString(type)) + "' required");
+			throw ParseError(_T("Syntax error. '") + string_type(EASY_KEYWORD_TYPEToString(type)) + _T("' required"));
 	}
 
 	inline Ast* parsePrimative()
@@ -283,7 +283,7 @@ public:
 	Ast* parseAssignment()
 	{
 		auto* token = getToken();
-		checkToken("Parse error");
+		checkToken(_T("Parse error"));
 
 		auto* ast = new AssignmentAst;
 		ast->Name = getSymbol(token);
@@ -293,7 +293,7 @@ public:
 		token = getToken();
 
 		if (token == nullptr)
-			throw ParseError("Value required");
+			throw ParseError(_T("Value required"));
 
 		ast->Data = parseAst();
 		return AS_AST(ast);
@@ -324,7 +324,7 @@ public:
 		auto* ast = new FunctionCallAst;
 		auto* token = getToken();
         auto* tokenNext = getNextToken();
-		checkToken("Parse error");
+		checkToken(_T("Parse error"));
 
         if (isOperator(tokenNext) && getOperator(tokenNext) == EASY_OPERATOR_TYPE::DOUBLE_COLON)
         {
@@ -340,7 +340,7 @@ public:
 		token = getToken();
 
 		if (token == nullptr)
-			throw ParseError("Function call exception");
+			throw ParseError(_T("Function call exception"));
 
 		if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::LEFT_PARENTHESES)
 		{
@@ -348,7 +348,7 @@ public:
 			{
 				increase();
 				token = getToken();
-				checkToken("Parse error");
+				checkToken(_T("Parse error"));
 
 				if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::RIGHT_PARENTHESES)
 					break;
@@ -356,14 +356,14 @@ public:
 				ast->Args.push_back(parseAst());
 				
 				token = getToken();
-				checkToken("Parse error");
+				checkToken(_T("Parse error"));
 
 				if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::RIGHT_PARENTHESES)
 					break;
 				else if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::COMMA)
 					continue;
 
-				throw ParseError("',' required");
+				throw ParseError(_T("',' required"));
 			}
 
 			
@@ -390,7 +390,7 @@ public:
 		while (index < tokensCount)
 		{
 			auto* token = getToken();
-			checkToken("Parse error");
+			checkToken(_T("Parse error"));
 
 			if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::BLOCK_END)
 			{
@@ -424,11 +424,11 @@ public:
 			ast->Left = left;
 
 		if (ast->Left == nullptr)
-			throw ParseError("Binary operation left argument is empty.");
+			throw ParseError(_T("Binary operation left argument is empty."));
 
 		
 		token = getToken();
-		checkToken("Parse error");
+		checkToken(_T("Parse error"));
 
 		if (isOperator(token) &&
 			ControlOperators.find(getOperator(token)) != ControlOperatorsEnd)
@@ -437,7 +437,7 @@ public:
 			ast->Op = EASY_OPERATOR_TYPE::OPERATOR_NONE;
 
 		if (ast->Op == EASY_OPERATOR_TYPE::OPERATOR_NONE)
-			throw ParseError("Binary operation operator is empty.");
+			throw ParseError(_T("Binary operation operator is empty."));
 
 		increase();
 		
@@ -450,7 +450,7 @@ public:
 			ast->Right = parseParenthesesGroup();
 
 		if (ast->Right == nullptr)
-			throw ParseError("Binary operation right argument is empty.");
+			throw ParseError(_T("Binary operation right argument is empty."));
 
 		return AS_AST(ast);
 	}
@@ -475,11 +475,11 @@ public:
 			ast->Target = left;
 
 		if (ast->Target == nullptr)
-			throw ParseError("Struct operation left argument is empty.");
+			throw ParseError(_T("Struct operation left argument is empty."));
 
 
 		token = getToken();
-		checkToken("Parse error");
+		checkToken(_T("Parse error"));
 
 		if (isOperator(token) &&
 			StructOperators.find(getOperator(token)) != StructOperatorsEnd)
@@ -488,7 +488,7 @@ public:
 			ast->Op = EASY_OPERATOR_TYPE::OPERATOR_NONE;
 
 		if (ast->Op == EASY_OPERATOR_TYPE::OPERATOR_NONE)
-			throw ParseError("Struct operation operator is empty.");
+			throw ParseError(_T("Struct operation operator is empty."));
 
 		increase();
 
@@ -501,7 +501,7 @@ public:
 			ast->Source1 = parseParenthesesGroup();
 
 		if (ast->Source1 == nullptr)
-			throw ParseError("Struct operation right argument is empty.");
+			throw ParseError(_T("Struct operation right argument is empty."));
 
 		token = getToken();
 		if (token != nullptr && isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::SINGLE_COLON)
@@ -535,7 +535,7 @@ public:
 		{
 			increase();
 			token = getToken();
-			checkToken("Parse error");
+			checkToken(_T("Parse error"));
 
 			if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::RIGHT_PARENTHESES)
 				break;
@@ -544,20 +544,20 @@ public:
 
 			increase();
 			token = getToken();
-			checkToken("Parse error");
+			checkToken(_T("Parse error"));
 
 			if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::RIGHT_PARENTHESES)
 				break;
 			else if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::COMMA)
 				continue;
 
-			throw ParseError("',' required");
+			throw ParseError(_T("',' required"));
 		}
 
 		
 		consumeOperator(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
 		token = getToken();
-		checkToken("Parse error");
+		checkToken(_T("Parse error"));
 
 		ast->Body = parseAst();
 
@@ -584,7 +584,7 @@ public:
 		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
 			ast->Start = new VariableAst(getVariable(token));
 		else
-			throw ParseError("For repeat works with variable, double and integer");
+			throw ParseError(_T("For repeat works with variable, double and integer"));
 
 		increase();
 		consumeKeyword(EASY_KEYWORD_TYPE::TO_KEYWORD);
@@ -597,13 +597,13 @@ public:
 		else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
 			ast->End = new VariableAst(getVariable(token));
 		else
-			throw ParseError("For repeat works with variable, double and integer");
+			throw ParseError(_T("For repeat works with variable, double and integer"));
 
 		increase();
 		checkKeyword(EASY_KEYWORD_TYPE::THEN);
 
 		if (getNextToken() == nullptr)
-			throw ParseError("Repeat block missing");
+			throw ParseError(_T("Repeat block missing"));
 
 		increase();
 		ast->Repeat = parseAst();
@@ -640,10 +640,10 @@ public:
 				}
 
 				if (ast->Left == nullptr)
-					throw ParseError("Binary operation left argument is empty.");
+					throw ParseError(_T("Binary operation left argument is empty."));
 				
 				token = getToken();
-				checkToken("Parse error");
+				checkToken(_T("Parse error"));
 
 				if (isOperator(token) &&
 					BinaryOperators.find(getOperator(token)) != BinaryOperatorsEnd)
@@ -652,7 +652,7 @@ public:
 					ast->Op = EASY_OPERATOR_TYPE::OPERATOR_NONE;
 
 				if (ast->Op == EASY_OPERATOR_TYPE::OPERATOR_NONE)
-					throw ParseError("Binary operation operator is empty.");
+					throw ParseError(_T("Binary operation operator is empty."));
 
 				increase();
 				
@@ -668,7 +668,7 @@ public:
 					ast->Right = parseParenthesesGroup();
 
 				if (ast->Right == nullptr)
-					throw ParseError("Binary operation right argument is empty.");
+					throw ParseError(_T("Binary operation right argument is empty."));
 
 			}
 		}
@@ -737,7 +737,7 @@ public:
 		case EASY_AST_TYPE::VARIABLE:
 		{
 			auto* variableAst = new VariableAst;
-			checkToken("Parse error");
+			checkToken(_T("Parse error"));
 			variableAst->Value = getVariable();
 			ast = AS_AST(variableAst);
 			increase();
@@ -745,7 +745,7 @@ public:
 		break;
 
 		default:
-			throw ParseError("#ERROR");
+			throw ParseError(_T("#ERROR"));
 			break;
 		}
 
@@ -766,40 +766,40 @@ public:
 
 	void dump(std::shared_ptr<std::vector<Ast*>> asts)
 	{
-        std::wstringstream buffer;
-        buffer << L"digraph AST {";
-		std::wcout << std::endl << std::endl << "### AST TREE ###" << std::endl << std::endl;
+        string_stream buffer;
+        buffer << _T("digraph AST {");
+		console_out << std::endl << std::endl << _T("### AST TREE ###") << std::endl << std::endl;
 
 		auto astsEnd = asts->end();
 		for (auto it = asts->begin(); it != astsEnd; ++it) {
-			dumpLevel(*it, L"main", buffer);
+			dumpLevel(*it, _T("main"), buffer);
 		}
         
-        buffer << L"}\n\n";
+        buffer << _T("}\n\n");
         
-        std::wcout << buffer.str();
+		console_out << buffer.str();
 	}
 
 	void levelPadding(int level)
 	{
 		for (int i = 0; i < level; ++i)
-			std::cout << "  ";
+			std::cout << _T("  ");
 	}
 
     int dumpIndexer = 1;
-    std::wstring getDumpIndex()
+    string_type getDumpIndex()
     {
-        return L"NODE" + std::to_wstring(++dumpIndexer);
+        return _T("NODE") + AS_STRING(++dumpIndexer);
     }
     
-    void dumpLevel(Ast* ast, std::wstring const & main, std::wstringstream & buffer)
+    void dumpLevel(Ast* ast, string_type const & main, string_stream & buffer)
 	{
 		if (ast == nullptr)
 		{
 			return;
 		}
         
-        std::wstring name;
+        string_type name;
 		switch (ast->GetType())
 		{
 		case EASY_AST_TYPE::IF_STATEMENT:
@@ -807,12 +807,12 @@ public:
 			auto* ifStatement = reinterpret_cast<IfStatementAst*>(ast);
             name = getDumpIndex();
             
-            buffer << L"subgraph " << getDumpIndex() << L" {\n";
+            buffer << _T("subgraph ") << getDumpIndex() << _T(" {\n");
 			dumpLevel(ifStatement->ControlOpt,  name, buffer);
-            buffer << L"}\n";
+            buffer << _T("}\n");
             
-            buffer << name << L"[label=\"IF STATEMENT" << "\"]\n";
-            buffer << main << L" -> " << name << L";\n";
+            buffer << name << _T("[label=\"IF STATEMENT") << _T("\"]\n");
+            buffer << main << _T(" -> " << name << _T(";\n");
             
 			dumpLevel(ifStatement->True, name, buffer);
 			dumpLevel(ifStatement->False, name,buffer);
@@ -822,8 +822,8 @@ public:
 		case EASY_AST_TYPE::ASSIGNMENT: {
 			auto *assignment = reinterpret_cast<AssignmentAst *>(ast);
             name = getDumpIndex();
-            buffer << name << L"[label=\"" << assignment->Name << "\"]\n";
-            buffer << main << L" -> " << name << L";\n";
+            buffer << name << _T("[label=\"") << assignment->Name << _T("\"]\n");
+            buffer << main << _T(" -> ") << name << _T(";\n");
             
 			dumpLevel(assignment->Data, name, buffer);
 		}
@@ -832,7 +832,7 @@ public:
 		case EASY_AST_TYPE::VARIABLE: {
 			auto *variable = reinterpret_cast<VariableAst *>(ast);
             name = getDumpIndex();
-            buffer << main << L" -> " << name << L";\n";
+            buffer << main << _T(" -> ") << name << _T(";\n");
 		}
 									  break;
 
@@ -842,23 +842,23 @@ public:
             
 			switch (primative->Value->Type) {
 			case PrimativeValue::Type::PRI_INTEGER:
-                buffer << name << L"[label=\"" << primative->Value->Integer << "\"]\n";
-				buffer << main << L" -> " << name << L";\n";
+                buffer << name << _T("[label=\"") << primative->Value->Integer << _T("\"]\n");
+				buffer << main << _T(" -> ") << name << _T(";\n");
 				break;
 
 			case PrimativeValue::Type::PRI_DOUBLE:
-                buffer << name << L"[label=\"" << primative->Value->Double << "\"]\n";
-				buffer << main << L" -> " << name << L";\n";
+                buffer << name << _T("[label=\"") << primative->Value->Double << "\"]\n");
+				buffer << main << _T(" -> ") << name << _T(";\n");
 				break;
 
 			case PrimativeValue::Type::PRI_STRING:
-                buffer << name << L"[label=\"" << primative->Value->String << "\"]\n";
-				buffer << main << L" -> " << name << L";";
+                buffer << name << _T("[label=\"") << primative->Value->String << _T("\"]\n");
+				buffer << main << _T(" -> ") << name << _T(";");
 				break;
 
 			case PrimativeValue::Type::PRI_BOOL:
-                buffer << name << L"[label=\"" << primative->Value->Bool << "\"]\n";
-                buffer << main << L" -> " << name << L";\n";
+                buffer << name << _T("[label=\"") << primative->Value->Bool << _T("\"]\n");
+                buffer << main << _T(" -> ") << name << _T(";\n");
 				break;
 			}
 		}
@@ -868,8 +868,8 @@ public:
 			auto *binary = reinterpret_cast<BinaryAst *>(ast);
             auto op = getDumpIndex();
             
-            buffer << op << L"[label=\"" << EASY_OPERATOR_TYPEToString(binary->Op) << "\"]\n";
-            buffer << main << L" -> " << op << L";\n";
+            buffer << op << _T("[label=\"") << EASY_OPERATOR_TYPEToString(binary->Op) << _T("\"]\n");
+            buffer << main << _T(" -> ") << op << _T(";\n");
             
             dumpLevel(binary->Left, op, buffer);
             dumpLevel(binary->Right, op, buffer);
@@ -880,8 +880,8 @@ public:
 			auto *binary = reinterpret_cast<ControlAst *>(ast);
             auto op = getDumpIndex();
             
-            buffer << op << L"[label=\"" << EASY_OPERATOR_TYPEToString(binary->Op) << "\"]\n";
-            buffer << main << L" -> " << op << L";\n";
+            buffer << op << _T("[label=\"") << EASY_OPERATOR_TYPEToString(binary->Op) << _T("\"]\n");
+            buffer << main << _T(" -> ") << op << _T(";\n");
             
             dumpLevel(binary->Left, op, buffer);
             dumpLevel(binary->Right, op, buffer);
@@ -891,12 +891,12 @@ public:
 		case EASY_AST_TYPE::FUNCTION_CALL:
 		{
 			auto* functionCall = reinterpret_cast<FunctionCallAst*>(ast);
-			std::wcout << "#METHOD CALL : " << functionCall->Function << " ";
+			console_out << _T("#METHOD CALL : ") << functionCall->Function << _T(" ");
 			auto astsEnd = functionCall->Args.end();
 			for (auto it = functionCall->Args.begin(); it != astsEnd; ++it)
 			{
 				//dumpLevel(*it, buffer);
-				std::wcout << " ";
+				console_out << " ";
 			}
 		}
 		break;
@@ -952,7 +952,7 @@ public:
 		if (isOperator(current_token) && getOperator(current_token) == opt)
 			return current_token;
 
-		throw ParseError(std::string(EASY_OPERATOR_TYPEToString(opt)) + " Required");
+		throw ParseError(string_type(EASY_OPERATOR_TYPEToString(opt)) + _T(" Required"));
 	}
 
 	inline bool isTerm(Token* token)
@@ -1001,7 +1001,7 @@ public:
             return ast;
         }
 
-        throw ParseError("Problem with parse");
+        throw ParseError(_T("Problem with parse"));
     }
 
     Ast* term()

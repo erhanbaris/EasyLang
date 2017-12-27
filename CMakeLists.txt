@@ -33,4 +33,5 @@ add_executable(EasyLang
         src/EasyEngine.cpp
         include/EasyEngine.h
         include/Catch.h
+		include/Definitions.h
         )

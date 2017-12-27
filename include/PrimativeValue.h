@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iostream>
 #include <memory>
+#include "Definitions.h"
 
 struct PrimativeValue {
     enum class Type {
@@ -25,18 +26,18 @@ struct PrimativeValue {
         int Integer;
         double Double;
         bool Bool;
-        std::wstring* String;
+		string_type* String;
         std::vector<PrimativeValue*>* Array;
-        std::unordered_map<std::wstring, PrimativeValue*>* Dictionary;
+        std::unordered_map<string_type, PrimativeValue*>* Dictionary;
     };
 
     PrimativeValue() { Integer = 0; Type = Type::PRI_NULL; }
     PrimativeValue(int value) { Integer = value; Type = Type::PRI_INTEGER; }
     PrimativeValue(double value) { Double = value; Type = Type::PRI_DOUBLE;}
-    PrimativeValue(std::wstring const & value) { String = new std::wstring(value); Type = Type::PRI_STRING;}
+    PrimativeValue(string_type const & value) { String = new string_type(value); Type = Type::PRI_STRING;}
     PrimativeValue(bool value) { Bool = value; Type = Type::PRI_BOOL;}
     PrimativeValue(std::vector<PrimativeValue*>* value) { Array = value; Type = Type::PRI_ARRAY;}
-    PrimativeValue(std::unordered_map<std::wstring, PrimativeValue*>* value) { Dictionary = value; Type = Type::PRI_DICTIONARY;}
+    PrimativeValue(std::unordered_map<string_type, PrimativeValue*>* value) { Dictionary = value; Type = Type::PRI_DICTIONARY;}
 
 
 	static PrimativeValue* CreateArray()
@@ -51,7 +52,7 @@ struct PrimativeValue {
 
 	static PrimativeValue* CreateDictionary()
 	{
-		return new PrimativeValue(new std::unordered_map<std::wstring, PrimativeValue*>());
+		return new PrimativeValue(new std::unordered_map<string_type, PrimativeValue*>());
 	}
 
 	static PrimativeValue* CreateBool()
@@ -64,7 +65,7 @@ struct PrimativeValue {
 		return new PrimativeValue(value);
 	}
 
-	static PrimativeValue* CreateString(std::wstring const & value)
+	static PrimativeValue* CreateString(string_type const & value)
 	{
 		return new PrimativeValue(value);
 	}
@@ -97,43 +98,43 @@ struct PrimativeValue {
 
     ~PrimativeValue() { }
 
-	std::wstring Describe()
+	string_type Describe()
 	{
 		switch (Type)
 		{
 		case PrimativeValue::Type::PRI_BOOL:
-			return Bool ? L"(BOOL) true" : L"(BOOL) false";
+			return Bool ? _T("(BOOL) true") : _T("(BOOL) false");
 		case PrimativeValue::Type::PRI_DOUBLE:
-			return L"(DOUBLE) " + std::to_wstring(Double);
+			return _T("(DOUBLE) ") + AS_STRING(Double);
 		case PrimativeValue::Type::PRI_INTEGER:
-			return L"(INTEGER) " + std::to_wstring(Integer);
+			return _T("(INTEGER) ") + AS_STRING(Integer);
 		case PrimativeValue::Type::PRI_STRING:
-			return L"(STRING) " + *String;
+			return _T("(STRING) ") + *String;
         case PrimativeValue::Type::PRI_ARRAY:
         {
-            std::wstringstream stream;
-            stream << L"(ARRAY) ";
+			string_stream stream;
+            stream << _T("(ARRAY) ");
 
             if (Array != nullptr && !Array->empty())
             {
-                stream << L"Size: "
+                stream << _T("Size: ")
                        << Array->size()
                        << '\n';
 
                 for (int i = 0; i < Array->size(); ++i) {
-                    stream  << i << L". "
+                    stream  << i << _T(". ")
                             << Array->at(i)->Describe()
                             << '\n';
                 }
             }
             else
-                stream << L"Size: 0";
+                stream << _T("Size: 0");
 
             return stream.str();
         }
         }
 
-		return L"(NULL)";
+		return _T("(NULL)");
 	}
 
 	PrimativeValue* Clone()
@@ -169,14 +170,14 @@ struct PrimativeValue {
 
     void SetInteger(int value) { Integer = value; Type = Type::PRI_INTEGER; }
     void SetDouble(double value) { Double = value; Type = Type::PRI_DOUBLE; }
-    void SetString(std::wstring value)
+    void SetString(string_type value)
     {
-        String = new std::wstring(value);
+        String = new string_type(value);
         Type = Type::PRI_STRING;
     }
     void SetBool(bool value) { Bool = value; Type = Type::PRI_BOOL; }
 	void SetArray(std::vector<PrimativeValue*>* value) { Array = value; Type = Type::PRI_ARRAY; }
-	void SetDictionary(std::unordered_map<std::wstring, PrimativeValue*>* value) { Dictionary = value; Type = Type::PRI_DICTIONARY; }
+	void SetDictionary(std::unordered_map<string_type, PrimativeValue*>* value) { Dictionary = value; Type = Type::PRI_DICTIONARY; }
     void SetNull() { Integer = 0; Type = Type::PRI_NULL; }
 
     bool IsInteger() { return Type == Type::PRI_INTEGER; }
@@ -196,15 +197,15 @@ struct PrimativeValue {
                 switch (rhs->Type)
                 {
                     case PrimativeValue::Type::PRI_INTEGER:
-                        this->String = new std::wstring(*this->String + std::to_wstring(rhs->Integer));
+                        this->String = new string_type(*this->String + AS_STRING(rhs->Integer));
                         break;
                         
                     case PrimativeValue::Type::PRI_DOUBLE:
-                        this->String = new std::wstring(*this->String + std::to_wstring(rhs->Double));
+                        this->String = new string_type(*this->String + AS_STRING(rhs->Double));
                         break;
                         
                     case PrimativeValue::Type::PRI_STRING:
-                        this->String = new std::wstring(*this->String + *rhs->String);
+                        this->String = new string_type(*this->String + *rhs->String);
                         break;
                 }
             }

@@ -1,30 +1,27 @@
-//
-// Created by Erhan on 18/12/2017.
-//
-
 #ifndef EASYLANG_SCOPE_H
 #define EASYLANG_SCOPE_H
 
 #include <string>
 #include <unordered_map>
 #include "PrimativeValue.h"
+#include "Definitions.h"
 
 class Scope {
 public:
     Scope();
     Scope(Scope* pBaseScope);
-    PrimativeValue* GetVariable(std::wstring const & key);
-    void SetVariable(std::wstring const & key, PrimativeValue* value);
+    PrimativeValue* GetVariable(string_type const & key);
+    void SetVariable(string_type const & key, PrimativeValue* value);
 
     static Scope* GlobalScope;
 
 protected:
-    bool setVariable(std::wstring const & key, PrimativeValue* value);
+    bool setVariable(string_type const & key, PrimativeValue* value);
 
 private:
     Scope* baseScope { nullptr };
-    std::unordered_map<std::wstring, PrimativeValue*> variables;
-	std::unordered_map<std::wstring, PrimativeValue*>::iterator variablesEnd;
+    std::unordered_map<string_type, PrimativeValue*> variables;
+	std::unordered_map<string_type, PrimativeValue*>::iterator variablesEnd;
 };
 
 

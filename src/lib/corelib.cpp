@@ -58,15 +58,15 @@ void toString(FunctionArgs const & args, PrimativeValue & returnValue)
     switch (args->at(0)->Type)
     {
         case PrimativeValue::Type::PRI_BOOL:
-            returnValue.SetString(item->Bool ? L"true": L"false");
+            returnValue.SetString(item->Bool ? _T("true"): _T("false"));
             break;
             
         case PrimativeValue::Type::PRI_DOUBLE:
-            returnValue.SetString(std::to_wstring(item->Double));
+            returnValue.SetString(AS_STRING(item->Double));
             break;
             
         case PrimativeValue::Type::PRI_INTEGER:
-            returnValue.SetString(std::to_wstring(item->Integer));
+            returnValue.SetString(AS_STRING(item->Integer));
             break;
             
         case PrimativeValue::Type::PRI_STRING:
@@ -200,19 +200,19 @@ void length(FunctionArgs const & args, PrimativeValue & returnValue)
 
 CoreLibInit::CoreLibInit()
 {
-    System::SystemPackages[L"core"] = std::unordered_map<std::wstring, MethodCallback>();
+    System::SystemPackages[_T("core")] = std::unordered_map<string_type, MethodCallback>();
 
-    System::SystemPackages[L"core"][L"toInt"] = &toInt;
-    System::SystemPackages[L"core"][L"toDouble"] = &toDouble;
-    System::SystemPackages[L"core"][L"toString"] = &toString;
-    System::SystemPackages[L"core"][L"toBool"] = &toBool;
-    System::SystemPackages[L"core"][L"isEmpty"] = &isEmpty;
+    System::SystemPackages[_T("core")][_T("toInt")] = &toInt;
+    System::SystemPackages[_T("core")][_T("toDouble")] = &toDouble;
+    System::SystemPackages[_T("core")][_T("toString")] = &toString;
+    System::SystemPackages[_T("core")][_T("toBool")] = &toBool;
+    System::SystemPackages[_T("core")][_T("isEmpty")] = &isEmpty;
 
-    System::SystemPackages[L"core"][L"isInt"] = &isInt;
-    System::SystemPackages[L"core"][L"isDouble"] = &isDouble;
-    System::SystemPackages[L"core"][L"isString"] = &isString;
-    System::SystemPackages[L"core"][L"isBool"] = &isBool;
-    System::SystemPackages[L"core"][L"isArray"] = &isArray;
-    System::SystemPackages[L"core"][L"isDictionary"] = &isDictionary;
-	System::SystemPackages[L"core"][L"length"] = &length;
+    System::SystemPackages[_T("core")][_T("isInt")] = &isInt;
+    System::SystemPackages[_T("core")][_T("isDouble")] = &isDouble;
+    System::SystemPackages[_T("core")][_T("isString")] = &isString;
+    System::SystemPackages[_T("core")][_T("isBool")] = &isBool;
+    System::SystemPackages[_T("core")][_T("isArray")] = &isArray;
+    System::SystemPackages[_T("core")][_T("isDictionary")] = &isDictionary;
+	System::SystemPackages[_T("core")][_T("length")] = &length;
 }

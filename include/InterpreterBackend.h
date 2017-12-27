@@ -18,7 +18,7 @@ public:
 private:
     std::vector<Ast*> asts;
 	std::vector<Ast*> temporaryAsts;
-    std::unordered_map<std::wstring, PrimativeValue*> variables;
+    std::unordered_map<string_type, PrimativeValue*> variables;
 };
 
 #endif //EASYLANG_INTERPRETERBACKEND_H

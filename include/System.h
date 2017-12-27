@@ -11,6 +11,7 @@
 #include <functional>
 #include "Scope.h"
 #include "ASTs.h"
+#include "Definitions.h"
 
 struct PrimativeValue;
 typedef void(*MethodCallback)(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue);
@@ -18,15 +19,15 @@ typedef void(*MethodCallback)(std::shared_ptr<std::vector<PrimativeValue*> > con
 class FunctionInfo {
 public:
 	FunctionDefinetionAst* FunctionAst { nullptr };
-	std::function<void(std::unordered_map<std::wstring, PrimativeValue*> const &, PrimativeValue *, Scope & scope)> Callback;
+	std::function<void(std::unordered_map<string_type, PrimativeValue*> const &, PrimativeValue *, Scope & scope)> Callback;
 };
 
 class System {
 public:
-	static std::unordered_map<std::wstring, FunctionInfo*> UserMethods;
+	static std::unordered_map<string_type, FunctionInfo*> UserMethods;
 
-	static std::unordered_map<std::wstring, std::unordered_map<std::wstring, MethodCallback>> SystemPackages;
-	static std::unordered_map<std::wstring, std::unordered_map<std::wstring, FunctionInfo*>> UserPackages;
+	static std::unordered_map<string_type, std::unordered_map<string_type, MethodCallback>> SystemPackages;
+	static std::unordered_map<string_type, std::unordered_map<string_type, FunctionInfo*>> UserPackages;
 	static void WarmUp();
 };
 

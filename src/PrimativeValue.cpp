@@ -1,4 +1,5 @@
 #include "PrimativeValue.h"
+#include "Definitions.h"
 #include <iostream>
 #include <sstream>
 
@@ -49,7 +50,7 @@ PrimativeValue* operator + (PrimativeValue const & lhs, PrimativeValue const & r
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
-                    returnValue->SetString(std::to_wstring(lhs.Double) + *rhs.String);
+                    returnValue->SetString(AS_STRING(lhs.Double) + *rhs.String);
                     break;
             }
         }
@@ -72,7 +73,7 @@ PrimativeValue* operator + (PrimativeValue const & lhs, PrimativeValue const & r
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
-                    returnValue->SetString(std::to_wstring(lhs.Integer) + *rhs.String);
+                    returnValue->SetString(AS_STRING(lhs.Integer) + *rhs.String);
                     break;
             }
         }
@@ -87,11 +88,11 @@ PrimativeValue* operator + (PrimativeValue const & lhs, PrimativeValue const & r
                     break;
 
                 case PrimativeValue::Type::PRI_INTEGER:
-                    returnValue->SetString(*lhs.String + std::to_wstring(rhs.Integer));
+                    returnValue->SetString(*lhs.String + AS_STRING(rhs.Integer));
                     break;
 
                 case PrimativeValue::Type::PRI_DOUBLE:
-                    returnValue->SetString(*lhs.String + std::to_wstring(rhs.Double));
+                    returnValue->SetString(*lhs.String + AS_STRING(rhs.Double));
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
@@ -152,7 +153,7 @@ PrimativeValue* operator * (PrimativeValue const & lhs, PrimativeValue const & r
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
-                    std::wstringstream stream;
+                    string_stream stream;
 
                     for (double i = 0.0; i < lhs.Double; ++i)
                         stream << *rhs.String;
@@ -180,7 +181,8 @@ PrimativeValue* operator * (PrimativeValue const & lhs, PrimativeValue const & r
                     break;
 
                 case PrimativeValue::Type::PRI_STRING:
-                {std::wstringstream stream;
+                {
+					string_stream stream;
 
                     for (size_t i = 0; i < lhs.Integer; ++i)
                         stream << *rhs.String;
@@ -202,7 +204,7 @@ PrimativeValue* operator * (PrimativeValue const & lhs, PrimativeValue const & r
 
                 case PrimativeValue::Type::PRI_INTEGER:
                 {
-                    std::wstringstream stream;
+                    string_stream stream;
 
                     for (size_t i = 0; i < rhs.Integer; ++i)
                         stream << *lhs.String;
@@ -213,7 +215,7 @@ PrimativeValue* operator * (PrimativeValue const & lhs, PrimativeValue const & r
 
                 case PrimativeValue::Type::PRI_DOUBLE:
                 {
-                    std::wstringstream stream;
+                    string_stream stream;
 
                     for (double i = 0.0; i < rhs.Double; ++i)
                         stream << *lhs.String;

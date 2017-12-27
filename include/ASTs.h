@@ -42,16 +42,16 @@ protected:
 
 class AssignmentAst : public Ast {
 public:
-	std::wstring Name;
+	string_type Name;
 	Ast* Data{ nullptr };
 	AssignmentAst() { Type = EASY_AST_TYPE::ASSIGNMENT; }
 };
 
 class VariableAst : public Ast {
 public:
-	std::wstring Value;
+	string_type Value;
 	VariableAst() { Type = EASY_AST_TYPE::VARIABLE; }
-	VariableAst(std::wstring value) { Type = EASY_AST_TYPE::VARIABLE; Value = value; }
+	VariableAst(string_type value) { Type = EASY_AST_TYPE::VARIABLE; Value = value; }
 };
 
 class PrimativeAst : public Ast {
@@ -61,10 +61,10 @@ public:
 	PrimativeAst() { Type = EASY_AST_TYPE::PRIMATIVE;  Value = new PrimativeValue(); }
 	PrimativeAst(int value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
 	PrimativeAst(double value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
-	PrimativeAst(std::wstring value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
+	PrimativeAst(string_type value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
 	PrimativeAst(bool value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
 	PrimativeAst(std::vector<PrimativeValue*>* value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
-	PrimativeAst(std::unordered_map<std::wstring, PrimativeValue*>* value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
+	PrimativeAst(std::unordered_map<string_type, PrimativeValue*>* value) : Ast() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
 };
 
 class ControlAst : public Ast
@@ -114,8 +114,8 @@ public:
 class FunctionDefinetionAst : public Ast
 {
 public:
-	std::wstring Name;
-	std::vector<std::wstring> Args;
+	string_type Name;
+	std::vector<string_type> Args;
 	Ast* Body {nullptr};
 	FunctionDefinetionAst() { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; }
 };
@@ -135,7 +135,7 @@ public:
 class ForStatementAst : public Ast
 {
 public:
-    std::wstring Variable;
+    string_type Variable;
     Ast* Start{nullptr};
     Ast* End{nullptr};
     Ast* Repeat{nullptr};
@@ -145,8 +145,8 @@ public:
 class FunctionCallAst : public Ast
 {
 public:
-    std::wstring Function;
-	std::wstring Package;
+    string_type Function;
+	string_type Package;
     std::vector<Ast*> Args;
     FunctionCallAst() { Type = EASY_AST_TYPE::FUNCTION_CALL; }
 };

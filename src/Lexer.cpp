@@ -8,17 +8,17 @@ public:
     size_t index{};
 
     size_t contentLength{};
-    std::wstring content;
+    string_type content;
     std::shared_ptr<std::vector<Token*>> TokenList;
     bool hasError{};
-    std::wstring errorMessage;
+    string_type errorMessage;
 
     void startParse()
     {
         while (contentLength > index)
         {
-            wchar_t ch = getChar();
-            wchar_t chNext = getNextChar();
+            char_type ch = getChar();
+            char_type chNext = getNextChar();
 
             if (isWhitespace(ch))
             {
@@ -61,16 +61,16 @@ public:
         }
     }
 
-    bool isWhitespace(wchar_t ch)
+    bool isWhitespace(char_type ch)
     {
         return (ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t');
     }
 
     void getSymbol()
     {
-        std::wstringstream stream;
+        string_stream stream;
 
-        wchar_t ch;
+        char_type ch;
 
         while (contentLength > index)
         {
@@ -103,9 +103,9 @@ public:
 
     void getVariable()
     {
-        std::wstringstream stream;
+        string_stream stream;
         ++index;
-        wchar_t ch;
+        char_type ch;
 
         while (contentLength > index)
         {
@@ -128,11 +128,11 @@ public:
 
     void getText()
     {
-        std::wstringstream stream;
+        string_stream stream;
 
         ++index;
-        wchar_t ch = getChar();
-        wchar_t chNext;
+        char_type ch = getChar();
+        char_type chNext;
 
         while (contentLength > index && ch != '"')
         {
@@ -158,19 +158,19 @@ public:
         }
 
 		if (ch != '"')
-			throw ParseError("Text has ends with '\"'");
+			throw ParseError(_T("Text has ends with '\"'"));
 
         auto *token = new TextToken;
         token->Value = stream.str();
         TokenList->push_back(reinterpret_cast<Token*>(token));
     }
 
-    inline bool isInteger(wchar_t ch)
+    inline bool isInteger(char_type ch)
     {
         return (ch >= '0' && ch <= '9');
     }
 
-    inline bool isSymbol(wchar_t ch)
+    inline bool isSymbol(char_type ch)
     {
         return ((ch >= 'a' && ch <= 'z') ||
                 (ch >= 'A' && ch <= 'Z'));
@@ -178,8 +178,8 @@ public:
 
     void getOperator()
     {
-        wchar_t ch = getChar();
-        wchar_t chNext = getNextChar();
+        char_type ch = getChar();
+        char_type chNext = getNextChar();
 
         if (ch == '-' && chNext == '>')
         {
@@ -295,7 +295,7 @@ public:
 						++index;
 					}
 					else
-						throw ParseError("Unknown char '&'");
+						throw ParseError(_T("Unknown char '&'"));
 					break;
 
                 case '|':
@@ -305,7 +305,7 @@ public:
                         ++index;
                     }
                     else
-                        throw ParseError("Unknown char '|'");
+                        throw ParseError(_T("Unknown char '|'"));
                     break;
 
                 case ':':
@@ -320,7 +320,7 @@ public:
 
 
                 default:
-					throw ParseError("Unknown char");
+					throw ParseError(_T("Unknown char"));
                     break;
             }
 
@@ -337,8 +337,8 @@ public:
         int afterTheComma = 0;
 
         bool isDouble = false;
-        wchar_t ch = getChar();
-        wchar_t chNext = getNextChar();
+        char_type ch = getChar();
+        char_type chNext = getNextChar();
         while (contentLength > index)
         {
             if (ch == '-')
@@ -355,7 +355,7 @@ public:
                 
                 if (isDouble)
                 {
-                    error(L"Number problem");
+                    error(_T("Number problem"));
                     break;
                 }
 
@@ -404,13 +404,13 @@ public:
         }
     }
 
-    void error(std::wstring && message)
+    void error(string_type && message)
     {
         hasError = true;
         errorMessage = message;
     }
 
-    wchar_t getChar()
+	char_type getChar()
     {
         if (contentLength > index)
             return content[index];
@@ -418,7 +418,7 @@ public:
         return '\0';
     }
 
-    wchar_t getNextChar()
+    char_type getNextChar()
     {
         if (contentLength > (index + 1))
             return content[index + 1];
@@ -432,7 +432,7 @@ StandartTokinizer::StandartTokinizer()
     impl = new StandartTokinizerImpl;
 }
 
-void StandartTokinizer::Parse(std::wstring const & data, std::shared_ptr<std::vector<Token*>>Tokens)
+void StandartTokinizer::Parse(string_type const & data, std::shared_ptr<std::vector<Token*>>Tokens)
 {
     impl->content = data;
     impl->contentLength = impl->content.length();
@@ -452,31 +452,31 @@ void StandartTokinizer::Dump(std::shared_ptr <std::vector<Token *>> Tokens)
 		switch ((*it)->GetType())
 		{
 		case EASY_TOKEN_TYPE::DOUBLE:
-			std::wcout << L"DOUBLE : " << reinterpret_cast<DoubleToken*>(*it)->Value << std::endl;
+			console_out << _T("DOUBLE : ") << reinterpret_cast<DoubleToken*>(*it)->Value << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::INTEGER:
-			std::wcout << L"INTEGER : " << reinterpret_cast<IntegerToken*>(*it)->Value << std::endl;
+			console_out << _T("INTEGER : ") << reinterpret_cast<IntegerToken*>(*it)->Value << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::OPERATOR:
-			std::wcout << L"OPERATOR : " << EASY_OPERATOR_TYPEToString (reinterpret_cast<OperatorToken*>(*it)->Value) << std::endl;
+			console_out << _T("OPERATOR : ") << EASY_OPERATOR_TYPEToString (reinterpret_cast<OperatorToken*>(*it)->Value) << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::SYMBOL:
-			std::wcout << L"SYMBOL : " << reinterpret_cast<SymbolToken*>(*it)->Value << std::endl;
+			console_out << _T("SYMBOL : ") << reinterpret_cast<SymbolToken*>(*it)->Value << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::TEXT:
-			std::wcout << L"TEXT : " << reinterpret_cast<TextToken*>(*it)->Value << std::endl;
+			console_out << _T("TEXT : ") << reinterpret_cast<TextToken*>(*it)->Value << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::VARIABLE:
-			std::wcout << L"VARIABLE : " << reinterpret_cast<VariableToken*>(*it)->Value << std::endl;
+			console_out << _T("VARIABLE : ") << reinterpret_cast<VariableToken*>(*it)->Value << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::KEYWORD:
-			std::wcout << L"KEYWORD : " << EASY_KEYWORD_TYPEToString(reinterpret_cast<KeywordToken*>(*it)->Value) << std::endl;
+			console_out << _T("KEYWORD : ") << EASY_KEYWORD_TYPEToString(reinterpret_cast<KeywordToken*>(*it)->Value) << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::TOKEN_NONE:
@@ -490,7 +490,7 @@ bool StandartTokinizer::HasError()
     return impl->hasError;
 }
 
-std::wstring StandartTokinizer::ErrorMessage()
+string_type StandartTokinizer::ErrorMessage()
 {
     return impl->errorMessage;
 }

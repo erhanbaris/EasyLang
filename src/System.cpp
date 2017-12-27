@@ -3,10 +3,10 @@
 #include "lib/iolib.h"
 #include "lib/arraylib.h"
 
-std::unordered_map<std::wstring, FunctionInfo*> System::UserMethods;
+std::unordered_map<string_type, FunctionInfo*> System::UserMethods;
 
-std::unordered_map<std::wstring, std::unordered_map<std::wstring, MethodCallback >> System::SystemPackages;
-std::unordered_map<std::wstring, std::unordered_map<std::wstring, FunctionInfo*>> System::UserPackages;
+std::unordered_map<string_type, std::unordered_map<string_type, MethodCallback >> System::SystemPackages;
+std::unordered_map<string_type, std::unordered_map<string_type, FunctionInfo*>> System::UserPackages;
 
 void System::WarmUp()
 {

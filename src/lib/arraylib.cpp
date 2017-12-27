@@ -6,10 +6,10 @@
 void addTo(FunctionArgs const & args, PrimativeValue & returnValue)
 {
     if (args->size() < 2)
-        throw ParameterError("Method require a parameter");
+        throw ParameterError(_T("Method require a parameter"));
 
     if (!args->at(0)->IsArray())
-        throw ParameterError("First parameter must be array");
+        throw ParameterError(_T("First parameter must be array"));
 
     if (args->size() == 3)
     {
@@ -25,6 +25,6 @@ void addTo(FunctionArgs const & args, PrimativeValue & returnValue)
 
 ArrayLibInit::ArrayLibInit()
 {
-    System::SystemPackages[L"array"] = std::unordered_map<std::wstring, MethodCallback>();
-    System::SystemPackages[L"array"][L"addTo"] = &addTo;
+    System::SystemPackages[_T("array")] = std::unordered_map<string_type, MethodCallback>();
+    System::SystemPackages[_T("array")][_T("addTo")] = &addTo;
 }

@@ -2,15 +2,12 @@
 #define EASYLANG_EXCEPTIONS_H
 
 #include <stdexcept>
+#include "Definitions.h"
 
 class ParseError : public std::runtime_error
 {
 public:
-    ParseError(char const * message): std::runtime_error(message)
-    {
-    }
-
-	ParseError(std::string const & message) : std::runtime_error(message)
+	ParseError(string_type const & message) : std::runtime_error(message.c_str())
 	{
 	}
 };
@@ -18,7 +15,7 @@ public:
 class ConvertError : public std::runtime_error
 {
 public:
-    ConvertError(char const * message): std::runtime_error(message)
+    ConvertError(string_type  const & message): std::runtime_error(message.c_str())
     {
     }
 };
@@ -26,7 +23,7 @@ public:
 class ParameterError : public std::runtime_error
 {
 public:
-    ParameterError(std::string const & message): std::runtime_error(message)
+    ParameterError(string_type const & message): std::runtime_error(message.c_str())
     {
     }
 };
@@ -34,7 +31,7 @@ public:
 class NullException : public std::runtime_error
 {
 public:
-	NullException(char const * message) : std::runtime_error(message)
+	NullException(string_type const & message) : std::runtime_error(message.c_str())
 	{
 	}
 };

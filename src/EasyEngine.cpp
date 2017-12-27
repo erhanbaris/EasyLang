@@ -25,7 +25,7 @@ public:
 		asts = std::make_shared<std::vector<Ast*>>();
 	}
 
-	PrimativeValue* Execute(std::wstring const & code)
+	PrimativeValue* Execute(string_type const & code)
 	{
 		tokinizer->Parse(code, tokens);
 		astParser->Parse(tokens, asts);
@@ -57,7 +57,7 @@ EasyEngine::~EasyEngine()
 	delete impl;
 }
 
-PrimativeValue* EasyEngine::Execute(std::wstring const & code)
+PrimativeValue* EasyEngine::Execute(string_type const & code)
 {
 	return impl->Execute(code);
 }
