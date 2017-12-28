@@ -34,4 +34,5 @@ add_executable(EasyLang
         include/EasyEngine.h
         include/Catch.h
 		include/Definitions.h
+		include/FunctionDispatch.h
         )

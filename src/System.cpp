@@ -5,7 +5,7 @@
 
 std::unordered_map<string_type, FunctionInfo*> System::UserMethods;
 
-std::unordered_map<string_type, std::unordered_map<string_type, MethodCallback >> System::SystemPackages;
+std::unordered_map<string_type, std::unordered_map<string_type, Caller*>> System::SystemPackages;
 std::unordered_map<string_type, std::unordered_map<string_type, FunctionInfo*>> System::UserPackages;
 
 void System::WarmUp()

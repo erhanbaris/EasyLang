@@ -7,7 +7,7 @@
 #include <iostream>
 #include "PrimativeValue.h"
 
-void addTo(FunctionArgs const & args, PrimativeValue & returnValue);
+Void addTo(std::vector<Any> & args, Any & item);
 
 class ArrayLibInit {
 public:

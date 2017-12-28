@@ -12,6 +12,7 @@
 #include "Scope.h"
 #include "ASTs.h"
 #include "Definitions.h"
+#include "FunctionDispatch.h"
 
 struct PrimativeValue;
 typedef void(*MethodCallback)(std::shared_ptr<std::vector<PrimativeValue*> > const & args, PrimativeValue & returnValue);
@@ -26,7 +27,7 @@ class System {
 public:
 	static std::unordered_map<string_type, FunctionInfo*> UserMethods;
 
-	static std::unordered_map<string_type, std::unordered_map<string_type, MethodCallback>> SystemPackages;
+	static std::unordered_map<string_type, std::unordered_map<string_type, Caller*>> SystemPackages;
 	static std::unordered_map<string_type, std::unordered_map<string_type, FunctionInfo*>> UserPackages;
 	static void WarmUp();
 };

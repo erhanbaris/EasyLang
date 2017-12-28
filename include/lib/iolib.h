@@ -7,8 +7,8 @@
 #include <iostream>
 #include "PrimativeValue.h"
 
-void print(FunctionArgs const & args, PrimativeValue & returnValue);
-void readline(FunctionArgs const & args, PrimativeValue & returnValue);
+Void print_(string_type message);
+string_type readline_();
 
 class IOLibInit {
 public:

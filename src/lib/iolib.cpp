@@ -3,35 +3,23 @@
 #include "System.h"
 #include "Exceptions.h"
 
-void print(FunctionArgs const & args, PrimativeValue & returnValue)
+Void print_(string_type message)
 {
-	if (args->size() > 0)
-	{
-		auto argsEnd = args->end();
-		for (auto it = args->begin(); it != argsEnd; ++it)
-		{
-			if ((*it) == nullptr)
-			{
-				console_out << _T("#ERROR Argument not found\n");
-				return;
-			}
-
-			console_out << (*it)->Describe() << '\n';
-		}
-	}
+	console_out << message;
+	return Void();
 }
 
-void readline(FunctionArgs const & args, PrimativeValue & returnValue)
+string_type readline_()
 {
 	string_type text;
 	std::getline(console_in, text);
-	returnValue.SetString(text);
+	return text;
 }
 
 IOLibInit::IOLibInit()
 {
-    System::SystemPackages[_T("io")] = std::unordered_map<string_type, MethodCallback>();
+    System::SystemPackages[_T("io")] = std::unordered_map<string_type, Caller*>();
 
-    System::SystemPackages[_T("io")][_T("print")] = &print;
-    System::SystemPackages[_T("io")][_T("readline")] = &readline;
+	System::SystemPackages[_T("io")][_T("print")] = def_function(print_);
+    System::SystemPackages[_T("io")][_T("readline")] = def_function(readline_);
 }

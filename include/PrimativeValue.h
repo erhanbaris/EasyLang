@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include "Definitions.h"
+#include "FunctionDispatch.h"
 
 struct PrimativeValue {
     enum class Type {
@@ -216,6 +217,57 @@ struct PrimativeValue {
                 break;
         }
     }
+
+	Any* AsAny()
+	{
+		switch (this->Type)
+		{
+		case PrimativeValue::Type::PRI_BOOL:
+			return new Any(this->Bool);
+			break;
+
+		case PrimativeValue::Type::PRI_DOUBLE:
+			return new Any(this->Double);
+			break;
+
+		case PrimativeValue::Type::PRI_INTEGER:
+			return new Any(this->Integer);
+			break;
+
+		case PrimativeValue::Type::PRI_STRING:
+			return new Any(*this->String);
+                break;
+                
+            case PrimativeValue::Type::PRI_ARRAY:
+            {
+                std::vector<Any> vec;
+                size_t count = this->Array->size();
+                for (size_t i = 0; i < count; ++i)
+                    vec.push_back(this->Array->at(i)->AsAny());
+                
+                return new Any(vec);
+            }
+                break;
+                
+            case PrimativeValue::Type::PRI_DICTIONARY:
+                return new Any(*this->Dictionary);
+                break;
+		}
+
+		return new Any();
+	}
+
+	void FromAny(Any& any)
+	{
+		if (any.is<int>())
+			this->SetInteger(any.cast<int>());
+		else if (any.is<bool>())
+			this->SetBool(any.cast<bool>());
+		else if (any.is<string_type>())
+			this->SetString(any.cast<string_type>());
+		else if (any.is<double>())
+			this->SetDouble(any.cast<double>());
+	}
 
     PrimativeValue & operator=(const PrimativeValue &rhs)
     {

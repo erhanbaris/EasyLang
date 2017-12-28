@@ -7,19 +7,19 @@
 #include <iostream>
 #include "PrimativeValue.h"
 
-void toInt(FunctionArgs const & args, PrimativeValue & returnValue);
-void toDouble(FunctionArgs const & args, PrimativeValue & returnValue);
-void toString(FunctionArgs const & args, PrimativeValue & returnValue);
-void toBool(FunctionArgs const & args, PrimativeValue & returnValue);
-void isEmpty(FunctionArgs const & args, PrimativeValue & returnValue);
+int toInt(Any & type);
+double toDouble(Any & type);
+string_type toString(Any & type);
+bool toBool(Any & type);
+bool isEmpty(Any & type);
 
-void isInt(FunctionArgs const & args, PrimativeValue & returnValue);
-void isDouble(FunctionArgs const & args, PrimativeValue & returnValue);
-void isString(FunctionArgs const & args, PrimativeValue & returnValue);
-void isBool(FunctionArgs const & args, PrimativeValue & returnValue);
-void isArray(FunctionArgs const & args, PrimativeValue & returnValue);
-void isDictionary(FunctionArgs const & args, PrimativeValue & returnValue);
-void length(FunctionArgs const & args, PrimativeValue & returnValue);
+bool isInt(Any & type);
+bool isDouble(Any & type);
+bool isString(Any & type);
+bool isBool(Any & type);
+bool isArray(Any & type);
+bool isDictionary(Any & type);
+int length(Any & type);
 
 class CoreLibInit {
 public:

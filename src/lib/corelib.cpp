@@ -3,216 +3,133 @@
 #include "System.h"
 #include "Exceptions.h"
 
-void toInt(FunctionArgs const & args, PrimativeValue & returnValue)
+int toInt(Any & type)
 {
-	REQUIRED_ARGUMENT_COUNT(1);
-    auto* item = args->at(0);
-    switch (args->at(0)->Type)
-    {
-        case PrimativeValue::Type::PRI_BOOL:
-            returnValue.SetInteger(item->Bool ? 1 : 0);
-            break;
-            
-        case PrimativeValue::Type::PRI_DOUBLE:
-            returnValue.SetInteger(item->Double);
-            break;
-            
-        case PrimativeValue::Type::PRI_INTEGER:
-            returnValue.SetInteger(item->Integer);
-            break;
-            
-        case PrimativeValue::Type::PRI_STRING:
-            returnValue.SetInteger(std::stoi(*item->String));
-            break;
-    }
+	if (type.is<int>())
+		return type.cast<int>();
+	else if (type.is<bool>())
+		return type.cast<bool>() ? 1 : 0;
+	else if (type.is<double>())
+		return (int)type.cast<double>();
+	else if (type.is<string_type>())
+		return std::stoi(type.cast<string_type>());
+	return 0;
 }
 
-void toDouble(FunctionArgs const & args, PrimativeValue & returnValue)
+double toDouble(Any & type)
 {
-	REQUIRED_ARGUMENT_COUNT(1);
-    auto* item = args->at(0);
-    switch (args->at(0)->Type)
-    {
-        case PrimativeValue::Type::PRI_BOOL:
-            returnValue.SetDouble(item->Bool ? 1.0 : 0.0);
-            break;
-            
-        case PrimativeValue::Type::PRI_DOUBLE:
-            returnValue.SetDouble(item->Double);
-            break;
-            
-        case PrimativeValue::Type::PRI_INTEGER:
-            returnValue.SetDouble(item->Integer);
-            break;
-            
-        case PrimativeValue::Type::PRI_STRING:
-            returnValue.SetDouble(std::stod(*item->String));
-            break;
-    }
+	if (type.is<int>())
+		return type.cast<int>();
+	else if (type.is<bool>())
+		return type.cast<bool>() ? 1 : 0;
+	else if (type.is<double>())
+		return (int)type.cast<double>();
+	else if (type.is<string_type>())
+		return std::stod(type.cast<string_type>());
+	return 0.0;
 }
 
-void toString(FunctionArgs const & args, PrimativeValue & returnValue)
+string_type toString(Any & type)
 {
-	REQUIRED_ARGUMENT_COUNT(1);
-    auto* item = args->at(0);
-    switch (args->at(0)->Type)
-    {
-        case PrimativeValue::Type::PRI_BOOL:
-            returnValue.SetString(item->Bool ? _T("true"): _T("false"));
-            break;
-            
-        case PrimativeValue::Type::PRI_DOUBLE:
-            returnValue.SetString(AS_STRING(item->Double));
-            break;
-            
-        case PrimativeValue::Type::PRI_INTEGER:
-            returnValue.SetString(AS_STRING(item->Integer));
-            break;
-            
-        case PrimativeValue::Type::PRI_STRING:
-            returnValue.SetString(*item->String);
-            break;
-    }
+	if (type.is<int>())
+		return AS_STRING(type.cast<int>());
+	else if (type.is<bool>())
+		return type.cast<bool>() ? "true" : "false";
+	else if (type.is<double>())
+		return AS_STRING(type.cast<double>());
+	else if (type.is<string_type>())
+		return type.cast<string_type>();
+	return _T("");
+}
+bool toBool(Any & type)
+{
+	if (type.is<bool>())
+		return type.cast<bool>();
+	else if (type.is<int>())
+		return type.cast<int>() > 0;
+	else if (type.is<double>())
+		return type.cast<double>() > 0;
+	else if (type.is<string_type>())
+		return type.cast<string_type>() > 0;
+	else if (type.is<std::vector<Any>>())
+		return type.cast<std::vector<Any>>().size() > 0;
+	else if (type.is<std::unordered_map<string_type, Any>>())
+		return type.cast<std::unordered_map<string_type, Any>>().size() > 0;
+
+	return false;
 }
 
-void toBool(FunctionArgs const & args, PrimativeValue & returnValue)
+bool isEmpty(Any & type)
 {
-	REQUIRED_ARGUMENT_COUNT(1);
-    auto* item = args->at(0);
-    switch (args->at(0)->Type)
-    {
-        case PrimativeValue::Type::PRI_BOOL:
-            returnValue.SetBool(item->Bool);
-            break;
-            
-        case PrimativeValue::Type::PRI_DOUBLE:
-            returnValue.SetBool(item->Double >= 1.0);
-            break;
-            
-        case PrimativeValue::Type::PRI_INTEGER:
-            returnValue.SetBool(item->Integer >= 1.0);
-            break;
-            
-        case PrimativeValue::Type::PRI_STRING:
-            returnValue.SetBool(item->String->size() > 0);
-            break;
-    }
+	if (type.is<string_type>())
+		return type.cast<string_type>().size() == 0;
+	else if (type.is<std::vector<Any>>())
+		return type.cast<std::vector<Any>>().size() == 0;
+	else if (type.is<std::unordered_map<string_type, Any>>())
+		return type.cast<std::unordered_map<string_type, Any>>().size() == 0;
+	else if (type.is<int>() || type.is<double>() || type.is<bool>())
+		return false;
+
+	return true;
 }
 
-void isEmpty(FunctionArgs const & args, PrimativeValue & returnValue)
+bool isInt(Any & type)
 {
-	REQUIRED_ARGUMENT_COUNT(1);
-    auto* item = args->at(0);
-    switch (args->at(0)->Type)
-    {
-        case PrimativeValue::Type::PRI_BOOL:
-            returnValue.SetBool(false);
-            break;
-            
-        case PrimativeValue::Type::PRI_DOUBLE:
-            returnValue.SetBool(false);
-            break;
-            
-        case PrimativeValue::Type::PRI_INTEGER:
-            returnValue.SetBool(false);
-            break;
-            
-        case PrimativeValue::Type::PRI_STRING:
-            returnValue.SetBool(item->String->size() > 0);
-            break;
-
-        case PrimativeValue::Type::PRI_ARRAY:
-            returnValue.SetBool(item->Array->size() > 0);
-            break;
-
-        case PrimativeValue::Type::PRI_DICTIONARY:
-            returnValue.SetBool(item->Dictionary->size() > 0);
-            break;
-            
-        case PrimativeValue::Type::PRI_NULL:
-            returnValue.SetNull();
-            break;
-    }
+	return type.is<int>();
 }
 
-
-void isInt(FunctionArgs const & args, PrimativeValue & returnValue)
+bool isDouble(Any & type)
 {
-	REQUIRED_ARGUMENT_COUNT(1);
-	returnValue.SetBool(args->at(0)->IsInteger());
+	return type.is<double>();
 }
 
-void isDouble(FunctionArgs const & args, PrimativeValue & returnValue)
+bool isString(Any & type)
 {
-	REQUIRED_ARGUMENT_COUNT(1);
-	returnValue.SetBool(args->at(0)->IsDouble());
+	return type.is<string_type>();
 }
 
-void isString(FunctionArgs const & args, PrimativeValue & returnValue)
+bool isBool(Any & type)
 {
-	REQUIRED_ARGUMENT_COUNT(1);
-	returnValue.SetBool(args->at(0)->IsString());
+	return type.is<bool>();
 }
 
-void isBool(FunctionArgs const & args, PrimativeValue & returnValue)
+bool isArray(Any & type)
 {
-
-    REQUIRED_ARGUMENT_COUNT(1);
-    returnValue.SetBool(args->at(0)->IsBool());
+	return type.is<std::vector<Any>>();
 }
 
-void isArray(FunctionArgs const & args, PrimativeValue & returnValue)
+bool isDictionary(Any& type)
 {
-
-    REQUIRED_ARGUMENT_COUNT(1);
-    returnValue.SetBool(args->at(0)->IsArray());
+	return type.is<std::unordered_map<string_type, Any>>();
 }
 
-void isDictionary(FunctionArgs const & args, PrimativeValue & returnValue)
+int length(Any& type)
 {
-    REQUIRED_ARGUMENT_COUNT(1);
-    returnValue.SetBool(args->at(0)->IsDictionary());
-}
+	if (type.is<string_type>())
+		return type.cast<string_type>().size();
+	else if (type.is<std::vector<Any>>())
+		return type.cast<std::vector<Any>>().size();
+	else if (type.is<std::unordered_map<string_type, Any>>())
+		return type.cast<std::unordered_map<string_type, Any>>().size();
 
-void length(FunctionArgs const & args, PrimativeValue & returnValue)
-{
-	REQUIRED_ARGUMENT_COUNT(1);
-	auto* item = args->at(0);
-	switch (args->at(0)->Type)
-	{
-	case PrimativeValue::Type::PRI_STRING:
-		returnValue.SetInteger(item->String->size());
-		break;
-
-	case PrimativeValue::Type::PRI_ARRAY:
-		returnValue.SetInteger(item->Array->size());
-		break;
-
-	case PrimativeValue::Type::PRI_DICTIONARY:
-		returnValue.SetInteger(item->Dictionary->size());
-		break;
-
-	default:
-		returnValue.SetNull();
-		break;
-	}
+	return 0;
 }
 
 CoreLibInit::CoreLibInit()
 {
-    System::SystemPackages[_T("core")] = std::unordered_map<string_type, MethodCallback>();
+    System::SystemPackages[_T("core")] = std::unordered_map<string_type, Caller*>();
 
-    System::SystemPackages[_T("core")][_T("toInt")] = &toInt;
-    System::SystemPackages[_T("core")][_T("toDouble")] = &toDouble;
-    System::SystemPackages[_T("core")][_T("toString")] = &toString;
-    System::SystemPackages[_T("core")][_T("toBool")] = &toBool;
-    System::SystemPackages[_T("core")][_T("isEmpty")] = &isEmpty;
+    System::SystemPackages[_T("core")][_T("toInt")] = def_function(toInt);
+    System::SystemPackages[_T("core")][_T("toDouble")] = def_function(toDouble);
+    System::SystemPackages[_T("core")][_T("toString")] = def_function(toString);
+    System::SystemPackages[_T("core")][_T("toBool")] = def_function(toBool);
+    System::SystemPackages[_T("core")][_T("isEmpty")] = def_function(isEmpty);
 
-    System::SystemPackages[_T("core")][_T("isInt")] = &isInt;
-    System::SystemPackages[_T("core")][_T("isDouble")] = &isDouble;
-    System::SystemPackages[_T("core")][_T("isString")] = &isString;
-    System::SystemPackages[_T("core")][_T("isBool")] = &isBool;
-    System::SystemPackages[_T("core")][_T("isArray")] = &isArray;
-    System::SystemPackages[_T("core")][_T("isDictionary")] = &isDictionary;
-	System::SystemPackages[_T("core")][_T("length")] = &length;
+    System::SystemPackages[_T("core")][_T("isInt")] = def_function(isInt);
+    System::SystemPackages[_T("core")][_T("isDouble")] = def_function(isDouble);
+    System::SystemPackages[_T("core")][_T("isString")] = def_function(isString);
+    System::SystemPackages[_T("core")][_T("isBool")] = def_function(isBool);
+    System::SystemPackages[_T("core")][_T("isArray")] = def_function(isArray);
+    System::SystemPackages[_T("core")][_T("isDictionary")] = def_function(isDictionary);
+	System::SystemPackages[_T("core")][_T("length")] = def_function(length);
 }

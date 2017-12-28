@@ -54,4 +54,5 @@ throw ParameterError("Method require a parameter");\
 if (args->size() > count)\
 throw ParameterError("Method handle only ##count parameter");\
 
+#define def_function(func) new CallerImpl<decltype( & func )>( & func )
 #endif //EASYLANG_MACROS_H
