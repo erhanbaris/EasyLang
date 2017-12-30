@@ -1,5 +1,4 @@
-//https://github.com/catchorg/Catch2
-//https://github.com/DeadMG/Wide/blob/master/Wide/Lexer/Lexer.cpp
+//#define LLVM_ACTIVE
 
 #include <string>
 #include <vector>
@@ -18,65 +17,133 @@
 #include "../Tests/AstTests.h"
 #include "../Tests/InterpreterTests.h"
 
-
 using namespace std;
 
+#ifdef LLVM_ACTIVE
+#include "llvm/ADT/APInt.h"
+#include "llvm/IR/Verifier.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/ExecutionEngine/GenericValue.h"
+#include "llvm/ExecutionEngine/MCJIT.h"
+#include "llvm/IR/Argument.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/InstrTypes.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Type.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/raw_ostream.h"
 
-static int test(int a, int b, float c)
-{
-    return a + b * (int)c;
+using namespace llvm;
+
+
+static Function *CreateFibFunction(Module *M, LLVMContext &Context) {
+    // Create the fib function and insert it into module M. This function is said
+    // to return an int and take an int parameter.
+    Function *FibF =
+            cast<Function>(M->getOrInsertFunction("fib", Type::getInt32Ty(Context),
+                                                  Type::getInt32Ty(Context)));
+
+    // Add a basic block to the function.
+    BasicBlock *BB = BasicBlock::Create(Context, "EntryBlock", FibF);
+
+    // Get pointers to the constants.
+    Value *One = ConstantInt::get(Type::getInt32Ty(Context), 1);
+    Value *Two = ConstantInt::get(Type::getInt32Ty(Context), 2);
+
+    // Get pointer to the integer argument of the add1 function...
+    Argument *ArgX = &*FibF->arg_begin(); // Get the arg.
+    ArgX->setName("AnArg");            // Give it a nice symbolic name for fun.
+
+    // Create the true_block.
+    BasicBlock *RetBB = BasicBlock::Create(Context, "return", FibF);
+    // Create an exit block.
+    BasicBlock* RecurseBB = BasicBlock::Create(Context, "recurse", FibF);
+
+    // Create the "if (arg <= 2) goto exitbb"
+    Value *CondInst = new ICmpInst(*BB, ICmpInst::ICMP_SLE, ArgX, Two, "cond");
+    BranchInst::Create(RetBB, RecurseBB, CondInst, BB);
+
+    // Create: ret int 1
+    ReturnInst::Create(Context, One, RetBB);
+
+    // create fib(x-1)
+    Value *Sub = BinaryOperator::CreateSub(ArgX, One, "arg", RecurseBB);
+    CallInst *CallFibX1 = CallInst::Create(FibF, Sub, "fibx1", RecurseBB);
+    CallFibX1->setTailCall();
+
+    // create fib(x-2)
+    Sub = BinaryOperator::CreateSub(ArgX, Two, "arg", RecurseBB);
+    CallInst *CallFibX2 = CallInst::Create(FibF, Sub, "fibx2", RecurseBB);
+    CallFibX2->setTailCall();
+
+    // fib(x-1)+fib(x-2)
+    Value *Sum = BinaryOperator::CreateAdd(CallFibX1, CallFibX2,
+                                           "addresult", RecurseBB);
+
+    // Create the return instruction and add it to the basic block
+    ReturnInst::Create(Context, Sum, RecurseBB);
+
+    return FibF;
 }
-
-static bool ErhanTest(std::string mesaj)
-{
-    std::cout << mesaj << '\n';
-	return true;
-}
-
-std::unordered_map<string_type, Caller*> asd;
-
-template <typename Ret, typename... Args>
-static void AddFunc(string_type const& funcName, Ret(*func)(Args...))
-{
-    auto funcCaller = Func_Caller<Ret, Args...>(func);
-    asd[funcName] = new CallerImpl<decltype(func)>(func);
-}
+#endif
 
 int main(int argc, char* argv[]) {
-    
-    AddFunc("erhantest", &ErhanTest);
-	AddFunc("test", &test);
-    
-    int a = 3, b = 4;
-    float c = 5;
-	Any sa = a;
-	Any sb = b;
-	Any sc = c;
+#ifdef LLVM_ACTIVE
+    int n = argc > 1 ? atol(argv[1]) : 27;
 
-	std::vector<Any> vec;
-	string_type mesaj = _T("merhaba dünya");
-	vec.push_back(mesaj);
+    InitializeNativeTarget();
+    InitializeNativeTargetAsmPrinter();
+    LLVMContext Context;
 
+    std::unique_ptr<Module> Owner(new Module("test", Context));
+    Module *M = Owner.get();
 
-	Any result2 = asd[_T("erhantest")]->Call(&vec[0]);
+    Function *FibF = CreateFibFunction(M, Context);
 
-	vec[0].clear();
-	vec.clear();
+    std::string errStr;
+    ExecutionEngine *EE =
+            EngineBuilder(std::move(Owner))
+                    .setErrorStr(&errStr)
+                    .create();
 
-	vec.push_back(1);
-	vec.push_back(999);
-	vec.push_back(5.0001f);
-	Any result1 = asd[_T("test")]->Call(&vec[0]);
-	
-	if (result1.is<int>())
-		console_out << result1.cast<int>();
+    if (!EE) {
+        errs() << argv[0] << ": Failed to construct ExecutionEngine: " << errStr
+               << "\n";
+        return 1;
+    }
 
-	System::WarmUp();
+    errs() << "verifying... ";
+    if (verifyModule(*M)) {
+        errs() << argv[0] << ": Error constructing function!\n";
+        return 1;
+    }
+
+    errs() << "OK\n";
+    errs() << "We just constructed this LLVM module:\n\n---------\n" << *M;
+    errs() << "---------\nstarting fibonacci(" << n << ") with JIT...\n";
+
+    // Call the Fibonacci function with argument n:
+    std::vector<GenericValue> Args(1);
+    Args[0].IntVal = APInt(32, n);
+    GenericValue GV = EE->runFunction(FibF, Args);
+
+    // import result of execution
+    outs() << "Result: " << GV.IntVal << "\n";
+
+#endif
+
+    System::WarmUp();
 	// Unit tests
-	Catch::Session().run(argc, argv);
+	//Catch::Session().run(argc, argv);
 
     auto* engine = EasyEngine::Interpreter();
-
+    
 	string_type line;
 	console_out << _T("EasyLang Interpreter\n\n");
 	console_out << _T("easy > ");

@@ -28,6 +28,7 @@ public:
 	PrimativeValue* Execute(string_type const & code)
 	{
 		tokinizer->Parse(code, tokens);
+        //tokinizer->Dump(tokens);
 		astParser->Parse(tokens, asts);
         //astParser->Dump(asts);
 		backend->Prepare(asts);

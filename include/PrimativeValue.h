@@ -137,6 +137,23 @@ struct PrimativeValue {
 
 		return _T("(NULL)");
 	}
+    
+    operator string_type ()
+    {
+        switch (Type)
+        {
+            case PrimativeValue::Type::PRI_BOOL:
+                return Bool ? _T("true") : _T("false");
+            case PrimativeValue::Type::PRI_DOUBLE:
+                return AS_STRING(Double);
+            case PrimativeValue::Type::PRI_INTEGER:
+                return AS_STRING(Integer);
+            case PrimativeValue::Type::PRI_STRING:
+                return *String;
+            default:
+                return _T("");
+        }
+    }
 
 	PrimativeValue* Clone()
 	{

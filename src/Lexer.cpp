@@ -3,8 +3,8 @@
 
 class StandartTokinizerImpl {
 public:
-    size_t line{};
-    size_t column{};
+    size_t line{1};
+    size_t column{0};
     size_t index{};
 
     size_t contentLength{};
@@ -15,27 +15,48 @@ public:
 
     void startParse()
     {
-        while (contentLength > index)
+        while (!isEnd())
         {
             char_type ch = getChar();
             char_type chNext = getNextChar();
 
             if (isWhitespace(ch))
             {
-                while (contentLength > index && isWhitespace(ch))
+                while (!isEnd() && isWhitespace(ch))
                 {
-                    ++index;
+                    increase();
+                    
+                    if (isNewLine(ch))
+                    {
+                        column = 0;
+                        ++line;
+                    }
+                    
                     ch = getChar();
                 }
                 
+                continue;
+            }
+            else if (ch == '/' && chNext == '/')
+            {
+                while (!isEnd() && !isNewLine(ch))
+                {
+                    increase();
+                    ch = getChar();
+                }
+                
+                column = 0;
+                ++line;
                 continue;
             }
 			else if (ch == '_' && (chNext == '\0' || (isSymbol(ch) == false && ch >= '0' && ch <= '9')))
 			{
 				auto* opt = new OperatorToken;
 				opt->Value = EASY_OPERATOR_TYPE ::UNDERLINE;
+                opt->Line = line;
+                opt->Current = column;
 				TokenList->push_back(reinterpret_cast<Token*>(opt));
-				++index;
+				increase();
 				continue;
 			}
             else if (isSymbol(ch))
@@ -60,10 +81,26 @@ public:
             }
         }
     }
-
-    bool isWhitespace(char_type ch)
+    
+    inline bool isEnd()
     {
-        return (ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t');
+        return contentLength <= index;
+    }
+    
+    inline void increase()
+    {
+        ++index;
+        ++column;
+    }
+
+    inline bool isNewLine(char_type ch)
+    {
+        return ch == '\n';
+    }
+    
+    inline bool isWhitespace(char_type ch)
+    {
+        return (ch == ' ' || ch == '\r' || isNewLine(ch) || ch == '\t');
     }
 
     void getSymbol()
@@ -72,7 +109,7 @@ public:
 
         char_type ch;
 
-        while (contentLength > index)
+        while (!isEnd())
         {
             ch = getChar();
 
@@ -83,7 +120,7 @@ public:
                 break;
 
             stream << ch;
-            ++index;
+            increase();
         }
 
 		auto data = stream.str();
@@ -91,12 +128,16 @@ public:
 		{
 			auto *token = new KeywordToken;
 			token->Value = Keywords.find(data)->second;
+            token->Line = line;
+            token->Current = column - data.size();
 			TokenList->push_back(reinterpret_cast<Token*>(token));
 		}
 		else
 		{
 			auto *token = new SymbolToken;
 			token->Value = stream.str();
+            token->Line = line;
+            token->Current = column - data.size();
 			TokenList->push_back(reinterpret_cast<Token*>(token));
 		}
     }
@@ -104,25 +145,30 @@ public:
     void getVariable()
     {
         string_stream stream;
-        ++index;
+        increase();
         char_type ch;
 
-        while (contentLength > index)
+        while (!isEnd())
         {
             ch = getChar();
 
-            if (isWhitespace(ch) || ch == '\'' || ch == '"')
+            if (isWhitespace(ch))
+                break;
+            
+            if (ch == '\'' || ch == '"')
             {
-                ++index;
+                increase();
                 break;
             }
 
             stream << ch;
-            ++index;
+            increase();
         }
 
         auto *token = new VariableToken;
         token->Value = stream.str();
+        token->Line = line;
+        token->Current = column;
         TokenList->push_back(reinterpret_cast<Token*>(token));
     }
 
@@ -130,11 +176,11 @@ public:
     {
         string_stream stream;
 
-        ++index;
+        increase();
         char_type ch = getChar();
         char_type chNext;
 
-        while (contentLength > index && ch != '"')
+        while (!isEnd() && ch != '"')
         {
             ch = getChar();
             chNext = getNextChar();
@@ -144,17 +190,17 @@ public:
             else if (ch == '\\' && chNext == '"')
             {
                 stream << '"';
-                ++index;
+                increase();
             }
             else if (ch == '"')
             {
-                ++index;
+                increase();
                 break;
             }
             else
                 stream << ch;
 
-            ++index;
+            increase();
         }
 
 		if (ch != '"')
@@ -162,6 +208,8 @@ public:
 
         auto *token = new TextToken;
         token->Value = stream.str();
+        token->Line = line;
+        token->Current = column;
         TokenList->push_back(reinterpret_cast<Token*>(token));
     }
 
@@ -184,9 +232,12 @@ public:
         if (ch == '-' && chNext == '>')
         {
             index += 2;
+            column += 2;
             
             auto* opt = new OperatorToken;
             opt->Value = EASY_OPERATOR_TYPE::OPERATION;
+            opt->Line = line;
+            opt->Current = column;
             TokenList->push_back(reinterpret_cast<Token*>(opt));
         }
         else if (ch == '-' && (isInteger(getNextChar()) || getNextChar() == '.'))
@@ -195,6 +246,8 @@ public:
         {
             auto chNext = getNextChar();
             auto* opt = new OperatorToken;
+            opt->Line = line;
+            opt->Current = column;
             switch (ch)
             {
                 case '-':
@@ -217,7 +270,7 @@ public:
 					if (chNext == '=')
 					{
 						opt->Value = EASY_OPERATOR_TYPE::EQUAL;
-						++index;
+						increase();
 					}
 					else 
 						opt->Value = EASY_OPERATOR_TYPE::ASSIGN;
@@ -227,7 +280,7 @@ public:
                     if (chNext == '=')
                     {
                         opt->Value = EASY_OPERATOR_TYPE::GREATOR_EQUAL;
-                        ++index;
+                        increase();
                     }
                     else
                         opt->Value = EASY_OPERATOR_TYPE::GREATOR;
@@ -237,12 +290,12 @@ public:
                     if (chNext == '=')
                     {
                         opt->Value = EASY_OPERATOR_TYPE::LOWER_EQUAL;
-                        ++index;
+                        increase();
                     }
                     else if (chNext == '+')
                     {
                         opt->Value = EASY_OPERATOR_TYPE::APPEND;
-                        ++index;
+                        increase();
                     }
                     else
                         opt->Value = EASY_OPERATOR_TYPE::LOWER;
@@ -281,6 +334,12 @@ public:
 					break;   
 				
 				case '!':
+                    if (chNext == '=')
+                    {
+                        opt->Value = EASY_OPERATOR_TYPE::NOT_EQUAL;
+                        increase();
+                    }
+                    else
 						opt->Value = EASY_OPERATOR_TYPE::INDEXER;
 						break;
 
@@ -292,7 +351,7 @@ public:
 					if (chNext == '&')
 					{
 						opt->Value = EASY_OPERATOR_TYPE::AND;
-						++index;
+						increase();
 					}
 					else
 						throw ParseError(_T("Unknown char '&'"));
@@ -302,7 +361,7 @@ public:
                     if (chNext == '|')
                     {
                         opt->Value = EASY_OPERATOR_TYPE::OR;
-                        ++index;
+                        increase();
                     }
                     else
                         throw ParseError(_T("Unknown char '|'"));
@@ -312,7 +371,7 @@ public:
                     if (chNext == ':')
                     {
                         opt->Value = EASY_OPERATOR_TYPE::DOUBLE_COLON;
-                        ++index;
+                        increase();
                     }
                     else
                         opt->Value = EASY_OPERATOR_TYPE::SINGLE_COLON;
@@ -324,7 +383,7 @@ public:
                     break;
             }
 
-            ++index;
+            increase();
             TokenList->push_back(reinterpret_cast<Token*>(opt));
         }
     }
@@ -335,11 +394,12 @@ public:
         int dotPlace = 0;
         int beforeTheComma = 0;
         int afterTheComma = 0;
+        size_t start = column;
 
         bool isDouble = false;
         char_type ch = getChar();
         char_type chNext = getNextChar();
-        while (contentLength > index)
+        while (!isEnd())
         {
             if (ch == '-')
             {
@@ -378,7 +438,7 @@ public:
             else
                 break;
 
-            ++index;
+            increase();
             ch = getChar();
             chNext = getNextChar();
         }
@@ -387,18 +447,22 @@ public:
         {
             auto* token = new DoubleToken;
             token->Value = beforeTheComma + (afterTheComma * pow(10, -1 * dotPlace));
+            token->Line = line;
+            token->Current = start;
 
             if (isMinus)
-                TokenList->push_back(reinterpret_cast<Token*>(new OperatorToken(EASY_OPERATOR_TYPE::MINUS)));
+                TokenList->push_back(reinterpret_cast<Token*>(new OperatorToken(EASY_OPERATOR_TYPE::MINUS, line, column)));
 
             TokenList->push_back(reinterpret_cast<Token*>(token));
         }
         else {
             auto* token = new IntegerToken;
             token->Value = beforeTheComma;
+            token->Line = line;
+            token->Current = start;
 
             if (isMinus)
-                TokenList->push_back(reinterpret_cast<Token*>(new OperatorToken(EASY_OPERATOR_TYPE::MINUS)));
+                TokenList->push_back(reinterpret_cast<Token*>(new OperatorToken(EASY_OPERATOR_TYPE::MINUS, line, column)));
 
             TokenList->push_back(reinterpret_cast<Token*>(token));
         }
@@ -412,7 +476,7 @@ public:
 
 	char_type getChar()
     {
-        if (contentLength > index)
+        if (!isEnd())
             return content[index];
 
         return '\0';
@@ -438,6 +502,8 @@ void StandartTokinizer::Parse(string_type const & data, std::shared_ptr<std::vec
     impl->contentLength = impl->content.length();
     impl->TokenList = Tokens;
     impl->index = 0;
+    impl->line = 0;
+    impl->column = 0;
     impl->TokenList->clear();
 
     impl->startParse();
@@ -452,31 +518,31 @@ void StandartTokinizer::Dump(std::shared_ptr <std::vector<Token *>> Tokens)
 		switch ((*it)->GetType())
 		{
 		case EASY_TOKEN_TYPE::DOUBLE:
-			console_out << _T("DOUBLE : ") << reinterpret_cast<DoubleToken*>(*it)->Value << std::endl;
+			console_out << _T("DOUBLE : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<DoubleToken*>(*it)->Value << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::INTEGER:
-			console_out << _T("INTEGER : ") << reinterpret_cast<IntegerToken*>(*it)->Value << std::endl;
+			console_out << _T("INTEGER : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<IntegerToken*>(*it)->Value << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::OPERATOR:
-			console_out << _T("OPERATOR : ") << EASY_OPERATOR_TYPEToString (reinterpret_cast<OperatorToken*>(*it)->Value) << std::endl;
+			console_out << _T("OPERATOR : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << EASY_OPERATOR_TYPEToString (reinterpret_cast<OperatorToken*>(*it)->Value) << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::SYMBOL:
-			console_out << _T("SYMBOL : ") << reinterpret_cast<SymbolToken*>(*it)->Value << std::endl;
+			console_out << _T("SYMBOL : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<SymbolToken*>(*it)->Value << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::TEXT:
-			console_out << _T("TEXT : ") << reinterpret_cast<TextToken*>(*it)->Value << std::endl;
+			console_out << _T("TEXT : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<TextToken*>(*it)->Value << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::VARIABLE:
-			console_out << _T("VARIABLE : ") << reinterpret_cast<VariableToken*>(*it)->Value << std::endl;
+			console_out << _T("VARIABLE : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<VariableToken*>(*it)->Value << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::KEYWORD:
-			console_out << _T("KEYWORD : ") << EASY_KEYWORD_TYPEToString(reinterpret_cast<KeywordToken*>(*it)->Value) << std::endl;
+			console_out << _T("KEYWORD : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << EASY_KEYWORD_TYPEToString(reinterpret_cast<KeywordToken*>(*it)->Value) << std::endl;
 			break;
 
 		case EASY_TOKEN_TYPE::TOKEN_NONE:

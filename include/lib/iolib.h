@@ -7,7 +7,7 @@
 #include <iostream>
 #include "PrimativeValue.h"
 
-Void print_(string_type message);
+Void print_(PrimativeValue message);
 string_type readline_();
 
 class IOLibInit {

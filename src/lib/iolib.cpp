@@ -3,9 +3,9 @@
 #include "System.h"
 #include "Exceptions.h"
 
-Void print_(string_type message)
+Void print_(PrimativeValue message)
 {
-	console_out << message;
+	console_out << (string_type)message;
 	return Void();
 }
 

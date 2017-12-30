@@ -128,51 +128,53 @@ class Token
 {
 public:
 	EASY_TOKEN_TYPE GetType() { return Type; }
+    size_t Line;
+    size_t Current;
 
 protected:
 	EASY_TOKEN_TYPE Type;
 };
 
-class IntegerToken : Token {
+class IntegerToken : public Token {
 public:
     int Value;
 	IntegerToken() : Token() { Type = EASY_TOKEN_TYPE::INTEGER; }
 	IntegerToken(int value) : Token() { Type = EASY_TOKEN_TYPE::INTEGER; Value = value; }
 };
 
-class DoubleToken : Token {
+class DoubleToken : public Token {
 public:
     double Value;
     DoubleToken() : Token() { Type = EASY_TOKEN_TYPE::DOUBLE; }
 	DoubleToken(int value) : Token() { Type = EASY_TOKEN_TYPE::DOUBLE; Value = value; }
 };
 
-class OperatorToken : Token {
+class OperatorToken : public Token {
 public:
     EASY_OPERATOR_TYPE Value;
 	OperatorToken() : Token() { Type = EASY_TOKEN_TYPE::OPERATOR; }
-	OperatorToken(EASY_OPERATOR_TYPE value) : Token() { Type = EASY_TOKEN_TYPE::OPERATOR; Value = value; }
+    OperatorToken(EASY_OPERATOR_TYPE value, size_t line = 0, size_t current = 0) : Token() { Type = EASY_TOKEN_TYPE::OPERATOR; Value = value; Line = line; Current = current; }
 };
 
-class SymbolToken : Token {
+class SymbolToken : public Token {
 public:
     string_type Value;
     SymbolToken() : Token() { Type = EASY_TOKEN_TYPE::SYMBOL; }
 };
 
-class TextToken : Token {
+class TextToken : public Token {
 public:
     string_type Value;
     TextToken() : Token() { Type = EASY_TOKEN_TYPE::TEXT; }
 };
 
-class VariableToken : Token {
+class VariableToken : public Token {
 public:
     string_type Value;
     VariableToken() : Token() { Type = EASY_TOKEN_TYPE::VARIABLE; }
 };
 
-class KeywordToken : Token {
+class KeywordToken : public Token {
 public:
 	EASY_KEYWORD_TYPE Value;
 	KeywordToken() : Token() { Type = EASY_TOKEN_TYPE::KEYWORD; }
