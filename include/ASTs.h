@@ -71,7 +71,6 @@ class ExprVisitor : public BaseVisitor,
 					public Visitor<StructAst, R>,
 					public Visitor<ReturnAst, R>,
 					public Visitor<ParenthesesGroupAst, R>,
-					public Visitor<FunctionCallAst, R>,
                     public Visitor<UnaryAst, R>
 {
 public:
@@ -82,7 +81,6 @@ public:
 	virtual R visit(StructAst* ast) = 0;
 	virtual R visit(ReturnAst* ast) = 0;
     virtual R visit(ParenthesesGroupAst* ast) = 0;
-    virtual R visit(FunctionCallAst* ast) = 0;
     virtual R visit(UnaryAst* ast) = 0;
 };
 
@@ -93,7 +91,8 @@ class StmtVisitor : public BaseVisitor,
                     public Visitor<IfStatementAst, R>,
                     public Visitor<FunctionDefinetionAst, R>,
                     public Visitor<ForStatementAst, R>,
-					public Visitor<ExprStatementAst, R>
+					public Visitor<ExprStatementAst, R>,
+                    public Visitor<FunctionCallAst, R>
 {
 public:
     virtual R visit(AssignmentAst* ast) = 0;
@@ -102,6 +101,7 @@ public:
     virtual R visit(FunctionDefinetionAst* ast) = 0;
 	virtual R visit(ForStatementAst* ast) = 0;
 	virtual R visit(ExprStatementAst* ast) = 0;
+    virtual R visit(FunctionCallAst* ast) = 0;
 };
 
 class Ast
@@ -173,8 +173,8 @@ public:
 class ControlAst : public ExprAst
 {
 public:
-	Ast* Left{nullptr};
-	Ast* Right{nullptr};
+	ExprAst* Left{nullptr};
+	ExprAst* Right{nullptr};
 	EASY_OPERATOR_TYPE Op;
     ControlAst() : Left(nullptr), Right(nullptr) { Type = EASY_AST_TYPE::CONTROL_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
@@ -193,8 +193,8 @@ public:
 class BinaryAst : public ExprAst
 {
 public:
-	Ast* Left{ nullptr };
-	Ast* Right{ nullptr };
+	ExprAst* Left{ nullptr };
+	ExprAst* Right{ nullptr };
 	EASY_OPERATOR_TYPE Op;
     BinaryAst() : Left(nullptr), Right(nullptr) { Type = EASY_AST_TYPE::BINARY_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
@@ -204,9 +204,9 @@ public:
 class StructAst : public ExprAst
 {
 public:
-	Ast* Target{ nullptr };
-	Ast* Source1{ nullptr };
-	Ast* Source2{ nullptr };
+	ExprAst* Target{ nullptr };
+	ExprAst* Source1{ nullptr };
+	ExprAst* Source2{ nullptr };
 	EASY_OPERATOR_TYPE Op;
     StructAst() : Target(nullptr), Source1(nullptr), Source2(nullptr) { Type = EASY_AST_TYPE::STRUCT_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
@@ -238,7 +238,7 @@ public:
 class ReturnAst : public ExprAst
 {
 public:
-    Ast* Data {nullptr};
+	ExprAst* Data {nullptr};
     ReturnAst() { Type = EASY_AST_TYPE::RETURN; }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
@@ -246,7 +246,7 @@ public:
 
 class ParenthesesGroupAst : public ExprAst {
 public:
-	Ast* Data{ nullptr };
+	ExprAst* Data{ nullptr };
     ParenthesesGroupAst() { Type = EASY_AST_TYPE::PARENTHESES_BLOCK; }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
@@ -274,15 +274,15 @@ public:
 };
 
 
-class FunctionCallAst : public ExprAst
+class FunctionCallAst : public StmtAst
 {
 public:
     string_type Function;
 	string_type Package;
-    std::vector<Ast*> Args;
+    std::vector<ExprAst*> Args;
     FunctionCallAst() { Type = EASY_AST_TYPE::FUNCTION_CALL; }
-    string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
-	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
+    string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
+	void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
 };
 
 class PrintVisitor : public StmtVisitor<string_type>,

@@ -297,7 +297,7 @@ TEST_CASE("Interpreter tests") {
 		astParser->Parse(tokens, asts);
 		backend->Prepare(asts);
 		PrimativeValue* result = backend->Execute();
-		REQUIRE(result->Integer == 0);
+		REQUIRE(result->Integer == 1);
 	}
 
 	SECTION("data = [] core::length(data)") {

@@ -230,12 +230,12 @@ public:
 			throw ParseError(_T("Syntax error. '") + string_type(EASY_KEYWORD_TYPEToString(type)) + _T("' required"));
 	}
 
-	inline Ast* parsePrimative()
+	inline ExprAst* parsePrimative()
 	{
 		return parsePrimative(getToken());
 	}
 
-	Ast* parsePrimative(Token* token)
+	ExprAst* parsePrimative(Token* token)
 	{
 		PrimativeAst* ast = nullptr;
 
@@ -273,24 +273,24 @@ public:
 		}
 
 		increase();
-		return AS_AST(ast);
+		return ast;
 	}
 
-	Ast* parseReturn()
+	ExprAst* parseReturn()
 	{
 		auto* ast = new ReturnAst;
 		increase();
-		ast->Data = parseAst();
-		return AS_AST(ast);
+		ast->Data = AS_EXPR(parseAst());
+		return ast;
 	}
 
-	Ast* parseParenthesesGroup()
+	ExprAst* parseParenthesesGroup()
 	{
-		Ast* ast = expr();
-		return AS_AST(ast);
+		ExprAst* ast = expr();
+		return ast;
 	}
 
-	Ast* parseAssignment()
+	StmtAst* parseAssignment()
 	{
 		auto* token = getToken();
 		checkToken(_T("Parse error"));
@@ -306,10 +306,10 @@ public:
 			throw ParseError(_T("Value required"));
 
 		ast->Data = parseAst();
-		return AS_AST(ast);
+		return ast;
 	}
 
-	Ast* parseIfStatement()
+	StmtAst* parseIfStatement()
 	{
 		auto* ast = new IfStatementAst;
 
@@ -326,10 +326,10 @@ public:
 			ast->False = parseAst();
 		}
 
-		return AS_AST(ast);
+		return ast;
 	}
 
-	Ast* parseFunctionCall()
+	StmtAst* parseFunctionCall()
 	{
 		auto* ast = new FunctionCallAst;
 		auto* token = getToken();
@@ -363,7 +363,7 @@ public:
 				if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::RIGHT_PARENTHESES)
 					break;
 
-				ast->Args.push_back(parseAst());
+				ast->Args.push_back(AS_EXPR(parseAst()));
 				
 				token = getToken();
 				checkToken(_T("Parse error"));
@@ -382,17 +382,17 @@ public:
 		else if (isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE ::UNDERLINE)
             increase();
 		else
-			ast->Args.push_back(parseAst());
+			ast->Args.push_back(AS_EXPR(parseAst()));
 
-		return AS_AST(ast);
+		return ast;
 	}
 
-	Ast* parseBinaryOperationStatement(Ast* left = nullptr)
+	ExprAst* parseBinaryOperationStatement(Ast* left = nullptr)
 	{
 		return expr();
 	}
 
-	Ast* parseBlock()
+	StmtAst* parseBlock()
 	{
 		BlockAst* block = new BlockAst();
 		
@@ -411,10 +411,10 @@ public:
 			block->Blocks->push_back(parseAst());
 		}
 
-		return AS_AST(block);
+		return block;
 	}
 
-	Ast* parseControlOperationStatement(Ast* left = nullptr)
+	ExprAst* parseControlOperationStatement(ExprAst* left = nullptr)
 	{
 		auto* ast = new ControlAst;
 		ast->print(new PrintVisitor);
@@ -424,7 +424,7 @@ public:
 		if (left == nullptr)
 		{
 			if (isPrimative(token))
-				ast->Left = parsePrimative(token);
+				ast->Left = AS_EXPR(parsePrimative(token));
 			else if (token->GetType() == EASY_TOKEN_TYPE::SYMBOL)
 			{
 				ast->Left = new VariableAst(getSymbol(token));
@@ -463,10 +463,10 @@ public:
 		if (ast->Right == nullptr)
 			throw ParseError(_T("Binary operation right argument is empty."));
 
-		return AS_AST(ast);
+		return ast;
 	}
 
-	Ast* parseStructOperationStatement(Ast* left = nullptr)
+	ExprAst* parseStructOperationStatement(ExprAst* left = nullptr)
 	{
 		auto* ast = new StructAst;
 
@@ -518,10 +518,10 @@ public:
 		if (token != nullptr && isOperator(token) && getOperator(token) == EASY_OPERATOR_TYPE::SINGLE_COLON)
 		{
 			increase();
-			ast->Source2 = parseAst();
+			ast->Source2 = AS_EXPR(parseAst());
 		}
 
-		return AS_AST(ast);
+		return ast;
 	}
 
 	/*
@@ -530,7 +530,7 @@ public:
 	 func test (value) { return 1 }
 	 func test (value) { return value }
 	 */
-	Ast* parseFunctionDecleration()
+	StmtAst* parseFunctionDecleration()
 	{
 		auto* ast = new FunctionDefinetionAst;
 		increase();
@@ -572,10 +572,10 @@ public:
 
 		ast->Body = parseAst();
 
-		return AS_AST(ast);
+		return ast;
 	}
 
-	Ast* parseForStatement()
+	StmtAst* parseForStatement()
 	{
 		auto* ast = new ForStatementAst;
 		consumeKeyword(EASY_KEYWORD_TYPE::FOR);
@@ -620,13 +620,13 @@ public:
 		ast->Repeat = parseAst();
 
 
-		return AS_AST(ast);
+		return ast;
 	}
 
 	/*
 	 * (10 * 1 + (data - 10 / 8) - 11)
 	 * */
-	Ast* parseTerm()
+	ExprAst* parseTerm()
 	{
 		//auto* token = parseFactor();
 		
@@ -927,7 +927,7 @@ public:
 	}
 
 	/* TEMPORARY */
-	Ast* asPrimative(Token* token)
+	ExprAst* asPrimative(Token* token)
 	{
 		PrimativeAst* ast = nullptr;
 
@@ -953,7 +953,7 @@ public:
 			break;
 		}
 
-		return AS_AST(ast);
+		return ast;
 	}
 
 	Token* eat(EASY_OPERATOR_TYPE opt)
@@ -978,7 +978,7 @@ public:
 			getOperator(token) == EASY_OPERATOR_TYPE::MINUS;
 	}
 
-    Ast* factor()
+    ExprAst* factor()
     {
         auto* token = getToken();
 
@@ -1007,7 +1007,7 @@ public:
 
         if (isOperator(token) && getOperator() == EASY_OPERATOR_TYPE::LEFT_PARENTHESES) {
 			increase();
-            Ast* ast = expr();
+            ExprAst* ast = expr();
             eat(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
             return ast;
         }
@@ -1015,9 +1015,9 @@ public:
         throw ParseError(_T("Problem with parse"));
     }
 
-    Ast* term()
+    ExprAst* term()
     {
-        Ast* ast = factor();
+        ExprAst* ast = factor();
 
         while (current_token != nullptr && next_token != nullptr)
         {
@@ -1028,7 +1028,7 @@ public:
                 eat(getOperator(next_token));
                 binary->Op = getOperator(current_token);
                 binary->Right = factor();
-                ast = AS_AST(binary);
+                ast = binary;
             }
             else if (isOperator(current_token) && isTerm(current_token))
             {
@@ -1036,7 +1036,7 @@ public:
                 binary->Left = ast;
                 binary->Op = getOperator(current_token);
                 binary->Right = factor();
-                ast = AS_AST(binary);
+                ast = binary;
             }
             else
                 break;
@@ -1045,7 +1045,7 @@ public:
         return ast;
     }
 
-	Ast* expr()
+	ExprAst* expr()
 	{
 		auto* ast = term();
 
@@ -1059,14 +1059,14 @@ public:
 				eat(getOperator(next_token));
 				binary->Op = getOperator(current_token);
 				binary->Right = term();
-				ast = AS_AST(binary);
+				ast = binary;
 			} 
 			else if (isOperator(current_token) && isExpr(current_token)) {
 				auto *binary = new BinaryAst();
 				binary->Left = ast;
 				binary->Op = getOperator(current_token);
 				binary->Right = term();
-				ast = AS_AST(binary);
+				ast = binary;
 			} else
 				break;
 		}

@@ -103,14 +103,27 @@ bool isDictionary(Any& type)
 	return type.is<std::unordered_map<string_type, Any>>();
 }
 
-int length(Any& type)
+int length(PrimativeValue data)
 {
-	if (type.is<string_type>())
-		return type.cast<string_type>().size();
-	else if (type.is<std::vector<Any>>())
-		return type.cast<std::vector<Any>>().size();
-	else if (type.is<std::unordered_map<string_type, Any>>())
-		return type.cast<std::unordered_map<string_type, Any>>().size();
+    switch (data.Type) {
+        case PrimativeValue::Type::PRI_BOOL:
+            return 1;
+            
+        case PrimativeValue::Type::PRI_ARRAY:
+            return data.Array->size();
+            
+        case PrimativeValue::Type::PRI_DOUBLE:
+            return 1;
+            
+        case PrimativeValue::Type::PRI_STRING:
+            return data.String->size();
+            
+        case PrimativeValue::Type::PRI_INTEGER:
+            return 1;
+            
+        case PrimativeValue::Type::PRI_DICTIONARY:
+            return data.Dictionary->size();
+    }
 
 	return 0;
 }

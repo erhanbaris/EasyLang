@@ -19,7 +19,7 @@ bool isString(Any & type);
 bool isBool(Any & type);
 bool isArray(Any & type);
 bool isDictionary(Any & type);
-int length(Any & type);
+int length(PrimativeValue data);
 
 class CoreLibInit {
 public:

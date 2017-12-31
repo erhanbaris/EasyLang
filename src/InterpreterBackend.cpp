@@ -110,7 +110,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 				auto argsEnd = call->Args.cend();
 				for (auto it = call->Args.cbegin(); it != argsEnd; ++it)
 				{
-					Ast* argAst = *it;
+					ExprAst* argAst = *it;
 					auto* argItem = getData(argAst, scope);
 					if (argItem != nullptr)
 					{
