@@ -4,11 +4,11 @@
 
 #define GET_ITEM(NAME, TYPE, IN, OUT) inline OUT get##NAME (Token* token)\
 	{\
-	return reinterpret_cast<IN*>(token)->Value;\
+	return static_cast<IN*>(token)->Value;\
 	}\
 	inline OUT get##NAME ()\
 	{\
-		return reinterpret_cast<IN*>(getToken())->Value;\
+		return static_cast<IN*>(getToken())->Value;\
 	}\
 	inline bool is##NAME (Token* token)\
 	{\
@@ -18,8 +18,10 @@
 	{\
 		return getToken() != nullptr && getToken()->GetType() == TYPE ;\
 	}
-#define AS_AST(ast) reinterpret_cast<Ast*>(ast)
-#define AS_TOKEN(token) reinterpret_cast<Token*>(token)
+#define AS_EXPR(ast) static_cast<ExprAst*>(ast)
+#define AS_STMT(ast) static_cast<StmtAst*>(ast)
+#define AS_AST(ast) static_cast<Ast*>(ast)
+#define AS_TOKEN(token) static_cast<Token*>(token)
 
 class AstParserImpl
 {
@@ -41,14 +43,22 @@ public:
 	GET_ITEM(Text, EASY_TOKEN_TYPE::TEXT, TextToken, string_type);
 	GET_ITEM(Symbol, EASY_TOKEN_TYPE::SYMBOL, SymbolToken, string_type);
 	GET_ITEM(Variable, EASY_TOKEN_TYPE::VARIABLE, VariableToken, string_type);
-
-	Token* getToken()
-	{
-		if (index < tokensCount)
-			return tokens->at(index);
-
-		return nullptr;
-	}
+    
+    Token* getToken()
+    {
+        if (index < tokensCount)
+            return tokens->at(index);
+        
+        return nullptr;
+    }
+    
+    Token* getPreviousToken()
+    {
+        if ((index - 1) < tokensCount)
+            return tokens->at(index - 1);
+        
+        return nullptr;
+    }
 
 	void checkToken(string_type const & message)
 	{
@@ -129,9 +139,9 @@ public:
 			--tokensCount;
 
 			if (isInteger(tokenNext))
-				reinterpret_cast<IntegerToken*>(tokenNext)->Value *= -1;
+				static_cast<IntegerToken*>(tokenNext)->Value *= -1;
 			else
-				reinterpret_cast<DoubleToken*>(tokenNext)->Value *= -1;
+				static_cast<DoubleToken*>(tokenNext)->Value *= -1;
 
 			return detectType();
 		}
@@ -407,6 +417,7 @@ public:
 	Ast* parseControlOperationStatement(Ast* left = nullptr)
 	{
 		auto* ast = new ControlAst;
+		ast->print(new PrintVisitor);
 		
 		auto* token = getToken();
 
@@ -804,7 +815,7 @@ public:
 		{
 		case EASY_AST_TYPE::IF_STATEMENT:
 		{
-			auto* ifStatement = reinterpret_cast<IfStatementAst*>(ast);
+			auto* ifStatement = static_cast<IfStatementAst*>(ast);
             name = getDumpIndex();
             
             buffer << _T("subgraph ") << getDumpIndex() << _T(" {\n");
@@ -820,7 +831,7 @@ public:
 		break;
 
 		case EASY_AST_TYPE::ASSIGNMENT: {
-			auto *assignment = reinterpret_cast<AssignmentAst *>(ast);
+			auto *assignment = static_cast<AssignmentAst *>(ast);
             name = getDumpIndex();
             buffer << name << _T("[label=\"") << assignment->Name << _T("\"]\n");
             buffer << main << _T(" -> ") << name << _T(";\n");
@@ -830,14 +841,14 @@ public:
                 break;
 
 		case EASY_AST_TYPE::VARIABLE: {
-			auto *variable = reinterpret_cast<VariableAst *>(ast);
+			auto *variable = static_cast<VariableAst *>(ast);
             name = getDumpIndex();
             buffer << main << _T(" -> ") << name << _T(";\n");
 		}
 									  break;
 
 		case EASY_AST_TYPE::PRIMATIVE: {
-			auto *primative = reinterpret_cast<PrimativeAst *>(ast);
+			auto *primative = static_cast<PrimativeAst *>(ast);
             name = getDumpIndex();
             
 			switch (primative->Value->Type) {
@@ -865,7 +876,7 @@ public:
 									   break;
 
 		case EASY_AST_TYPE::BINARY_OPERATION: {
-			auto *binary = reinterpret_cast<BinaryAst *>(ast);
+			auto *binary = static_cast<BinaryAst *>(ast);
             auto op = getDumpIndex();
             
             buffer << op << _T("[label=\"") << EASY_OPERATOR_TYPEToString(binary->Op) << _T("\"]\n");
@@ -877,7 +888,7 @@ public:
 											  break;
 
 		case EASY_AST_TYPE::CONTROL_OPERATION: {
-			auto *binary = reinterpret_cast<ControlAst *>(ast);
+			auto *binary = static_cast<ControlAst *>(ast);
             auto op = getDumpIndex();
             
             buffer << op << _T("[label=\"") << EASY_OPERATOR_TYPEToString(binary->Op) << _T("\"]\n");
@@ -890,7 +901,7 @@ public:
 
 		case EASY_AST_TYPE::FUNCTION_CALL:
 		{
-			auto* functionCall = reinterpret_cast<FunctionCallAst*>(ast);
+			auto* functionCall = static_cast<FunctionCallAst*>(ast);
 			console_out << _T("#METHOD CALL : ") << functionCall->Function << _T(" ");
 			auto astsEnd = functionCall->Args.end();
 			for (auto it = functionCall->Args.begin(); it != astsEnd; ++it)
@@ -903,7 +914,7 @@ public:
 
 		case EASY_AST_TYPE::BLOCK:
 		{
-			auto* block = reinterpret_cast<BlockAst*>(ast);
+			auto* block = static_cast<BlockAst*>(ast);
 			auto blockEnd = block->Blocks->cend();
 
 			for (auto it = block->Blocks->cbegin(); it != blockEnd; ++it)
@@ -986,9 +997,9 @@ public:
 			increase();
 			token = getToken();
 			if (isDouble(token))
-				reinterpret_cast<DoubleToken*>(token)->Value *= -1;
+				static_cast<DoubleToken*>(token)->Value *= -1;
 			else
-				reinterpret_cast<IntegerToken*>(token)->Value *= -1;
+				static_cast<IntegerToken*>(token)->Value *= -1;
 
 			increase();
 			return asPrimative(token);

@@ -16,7 +16,7 @@ void InterpreterBackend::Prepare(std::shared_ptr<std::vector<Ast*>> pAsts)
 
 PrimativeValue* InterpreterBackend::getPrimative(Ast* ast)
 {
-    auto* primative = reinterpret_cast<PrimativeAst*>(ast)->Value;
+    auto* primative = static_cast<PrimativeAst*>(ast)->Value;
     return primative;
 }
 
@@ -28,27 +28,27 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
     switch (ast->GetType())
     {
         case EASY_AST_TYPE::PRIMATIVE:
-            return reinterpret_cast<PrimativeAst*>(ast)->Value;
+            return static_cast<PrimativeAst*>(ast)->Value;
             break;
             
         case EASY_AST_TYPE::RETURN:
-            return getData(reinterpret_cast<ReturnAst*>(ast)->Data, scope);
+            return getData(static_cast<ReturnAst*>(ast)->Data, scope);
             break;
 
 		case EASY_AST_TYPE::PARENTHESES_BLOCK:
-			return getData(reinterpret_cast<ParenthesesGroupAst*>(ast)->Data, scope);
+			return getData(static_cast<ParenthesesGroupAst*>(ast)->Data, scope);
 			break;
             
         case EASY_AST_TYPE::VARIABLE:
         {
-            VariableAst* variable = reinterpret_cast<VariableAst*>(ast);
+            VariableAst* variable = static_cast<VariableAst*>(ast);
 			return scope.GetVariable(variable->Value);
         }
             break;
             
         case EASY_AST_TYPE::ASSIGNMENT:
         {
-            AssignmentAst* assignment = reinterpret_cast<AssignmentAst*>(ast);
+            AssignmentAst* assignment = static_cast<AssignmentAst*>(ast);
             auto* value = getData(assignment->Data, scope);
 			if (value == nullptr)
 				throw NullException(_T("Value not found"));
@@ -61,7 +61,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
         {
             Scope blockScope(&scope);
 
-            BlockAst* block = reinterpret_cast<BlockAst*>(ast);
+            BlockAst* block = static_cast<BlockAst*>(ast);
             std::vector<Ast*>::const_iterator blocksEnd = block->Blocks->cend();
             for (std::vector<Ast*>::const_iterator it = block->Blocks->cbegin(); it != blocksEnd; ++it)
             {
@@ -76,7 +76,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             
         case EASY_AST_TYPE::FUNCTION_DECLERATION:
         {
-            FunctionDefinetionAst* func = reinterpret_cast<FunctionDefinetionAst*>(ast);
+            FunctionDefinetionAst* func = static_cast<FunctionDefinetionAst*>(ast);
 			FunctionInfo* info = new FunctionInfo;
 			info->FunctionAst = func;
 			info->Callback = [=](std::unordered_map<string_type, PrimativeValue*> const & args, PrimativeValue * returnValue, Scope & functionScope)
@@ -99,7 +99,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             // func fibonacci(num) { if num <= 1 then return 1 left = fibonacci(num - 1) right = fibonacci(num - 2) return left + right }
         case EASY_AST_TYPE::FUNCTION_CALL:
         {
-            auto * call = reinterpret_cast<FunctionCallAst*>(ast);
+            auto * call = static_cast<FunctionCallAst*>(ast);
             auto * returnValue = new PrimativeValue;
 
 			if (System::SystemPackages.find(call->Package) != System::SystemPackages.end() && System::SystemPackages[call->Package].find(call->Function) != System::SystemPackages[call->Package].end())
@@ -160,7 +160,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             
         case EASY_AST_TYPE::IF_STATEMENT:
         {
-            IfStatementAst* ifStatement = reinterpret_cast<IfStatementAst*>(ast);
+            IfStatementAst* ifStatement = static_cast<IfStatementAst*>(ast);
             auto* control = getData(ifStatement->ControlOpt, scope);
             if (control != nullptr)
             {
@@ -175,7 +175,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             
         case EASY_AST_TYPE::FOR:
         {
-            ForStatementAst* forStatement = reinterpret_cast<ForStatementAst*>(ast);
+            ForStatementAst* forStatement = static_cast<ForStatementAst*>(ast);
             
             auto* startValue = getData(forStatement->Start, scope);
             auto* endValue = getData(forStatement->End, scope);
@@ -196,7 +196,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             
         case EASY_AST_TYPE::BINARY_OPERATION:
         {
-            BinaryAst* callAst = reinterpret_cast<BinaryAst*>(ast);
+            BinaryAst* callAst = static_cast<BinaryAst*>(ast);
             
             PrimativeValue* lhs = getData(callAst->Left, scope);
             PrimativeValue* rhs = getData(callAst->Right, scope);
@@ -234,7 +234,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 
 		case EASY_AST_TYPE::STRUCT_OPERATION:
 		{
-			StructAst* callAst = reinterpret_cast<StructAst*>(ast);
+			StructAst* callAst = static_cast<StructAst*>(ast);
 
 			PrimativeValue* target = getData(callAst->Target, scope);
 			PrimativeValue* source1 = getData(callAst->Source1, scope);
@@ -323,7 +323,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             
         case EASY_AST_TYPE::CONTROL_OPERATION:
         {
-            ControlAst* callAst = reinterpret_cast<ControlAst*>(ast);
+            ControlAst* callAst = static_cast<ControlAst*>(ast);
             
             PrimativeValue* lhs = getData(callAst->Left, scope);
             PrimativeValue* rhs = getData(callAst->Right, scope);
