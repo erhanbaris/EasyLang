@@ -477,11 +477,11 @@ TEST_CASE( "Function asd test" ) {
         REQUIRE(decl->Name == _T("test"));
         REQUIRE(decl->Args.size() == 0);
         REQUIRE(decl->Body != nullptr);
-        REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::RETURN);
+        REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
         
-        auto* ret = static_cast<ReturnAst*>(decl->Body);
-        REQUIRE(ret->Data != nullptr);
-        REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
+        auto* ret = static_cast<ExprStatementAst*>(decl->Body);
+        REQUIRE(ret->Expr != nullptr);
+        REQUIRE(ret->Expr->GetType() == EASY_AST_TYPE::RETURN);
     }
 
 	SECTION( "func test ( ) return 1" ) {
@@ -495,11 +495,11 @@ TEST_CASE( "Function asd test" ) {
 		REQUIRE(decl->Name == _T("test"));
 		REQUIRE(decl->Args.size() == 0);
 		REQUIRE(decl->Body != nullptr);
-		REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::RETURN);
+		REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
 
-		auto* ret = static_cast<ReturnAst*>(decl->Body);
-		REQUIRE(ret->Data != nullptr);
-		REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
+		auto* ret = static_cast<ExprStatementAst*>(decl->Body);
+		REQUIRE(ret->Expr != nullptr);
+		REQUIRE(ret->Expr->GetType() == EASY_AST_TYPE::RETURN);
 	}
     
     SECTION( "func test () { return 1 }" ) {

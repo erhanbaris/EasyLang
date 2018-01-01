@@ -80,6 +80,8 @@ public:
                 continue;
             }
         }
+        
+        TokenList->push_back(reinterpret_cast<Token*>(new EofToken()));
     }
     
     inline bool isEnd()

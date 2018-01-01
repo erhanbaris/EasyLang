@@ -22,7 +22,8 @@ DECLARE_ENUM(EASY_TOKEN_TYPE, TOKEN_NONE,
 			 OPERATOR,
 			 TEXT,
 			 VARIABLE,
-			 KEYWORD)
+			 KEYWORD,
+             END_OF_FILE)
 
 DECLARE_ENUM(EASY_OPERATOR_TYPE,
 	OPERATOR_NONE,
@@ -135,6 +136,12 @@ protected:
 	EASY_TOKEN_TYPE Type;
 };
 
+class EofToken : public Token {
+public:
+    int Value;
+    EofToken() : Token() { Type = EASY_TOKEN_TYPE::END_OF_FILE; }
+};
+
 class IntegerToken : public Token {
 public:
     int Value;
@@ -160,6 +167,7 @@ class SymbolToken : public Token {
 public:
     string_type Value;
     SymbolToken() : Token() { Type = EASY_TOKEN_TYPE::SYMBOL; }
+    SymbolToken(string_type symbol) : Token() { Type = EASY_TOKEN_TYPE::SYMBOL; Value = symbol; }
 };
 
 class TextToken : public Token {

@@ -39,6 +39,10 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 			return getData(static_cast<ParenthesesGroupAst*>(ast)->Data, scope);
 			break;
             
+        case EASY_AST_TYPE::EXPR_STATEMENT:
+            return getData(static_cast<ExprStatementAst*>(ast)->Expr, scope);
+            break;
+            
         case EASY_AST_TYPE::VARIABLE:
         {
             VariableAst* variable = static_cast<VariableAst*>(ast);

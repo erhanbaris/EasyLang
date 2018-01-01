@@ -159,7 +159,6 @@ public:
 
     inline bool isPrimative(Token * token)
     {
-        checkToken(_T("Parse error"));
         return token != nullptr && (isInteger(token) ||
                                     isText(token) ||
                                     isDouble(token) ||
@@ -181,6 +180,25 @@ public:
 		++index;
 		return current_token;
 	}
+    
+    inline Token* advance() {
+        if (!isAtEnd())
+            ++index;
+        
+        return previous();
+    }
+    
+    inline bool isAtEnd() {
+        return peek()->GetType() == EASY_TOKEN_TYPE::END_OF_FILE;
+    }
+    
+    inline Token* peek() {
+        return tokens->at(index);
+    }
+    
+    inline Token* previous() {
+        return tokens->at(index - 1);
+    }
 
 	inline void consumeToken(EASY_TOKEN_TYPE type)
 	{
@@ -286,7 +304,7 @@ public:
 
 	ExprAst* parseParenthesesGroup()
 	{
-		ExprAst* ast = expr();
+		ExprAst* ast = expressionExpr();
 		return ast;
 	}
 
@@ -305,7 +323,7 @@ public:
 		if (token == nullptr)
 			throw ParseError(_T("Value required"));
 
-		ast->Data = parseAst();
+		ast->Data = AS_EXPR(parseAst());
 		return ast;
 	}
 
@@ -316,20 +334,20 @@ public:
 		increase();
 		ast->ControlOpt = parseControlOperationStatement();
 		consumeKeyword(EASY_KEYWORD_TYPE::THEN);
-		ast->True = parseAst();
+		ast->True = AS_STMT(parseAst());
 		
 		auto* token = getToken();
 
 		if (token != nullptr && isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::ELSE)
 		{
 			increase();
-			ast->False = parseAst();
+			ast->False = AS_STMT(parseAst());
 		}
 
 		return ast;
 	}
 
-	StmtAst* parseFunctionCall()
+	ExprAst* parseFunctionCall()
 	{
 		auto* ast = new FunctionCallAst;
 		auto* token = getToken();
@@ -389,7 +407,7 @@ public:
 
 	ExprAst* parseBinaryOperationStatement(Ast* left = nullptr)
 	{
-		return expr();
+		return expressionExpr();
 	}
 
 	StmtAst* parseBlock()
@@ -570,7 +588,11 @@ public:
 		token = getToken();
 		checkToken(_T("Parse error"));
 
-		ast->Body = parseAst();
+        Ast* bodyAst = parseAst();
+        if (bodyAst->GetType() == EASY_AST_TYPE::BLOCK)
+            ast->Body = AS_STMT(bodyAst);
+        else
+            ast->Body = new ExprStatementAst(AS_EXPR(bodyAst));
 
 		return ast;
 	}
@@ -617,7 +639,7 @@ public:
 			throw ParseError(_T("Repeat block missing"));
 
 		increase();
-		ast->Repeat = parseAst();
+		ast->Repeat = AS_STMT(parseAst());
 
 
 		return ast;
@@ -1007,7 +1029,7 @@ public:
 
         if (isOperator(token) && getOperator() == EASY_OPERATOR_TYPE::LEFT_PARENTHESES) {
 			increase();
-            ExprAst* ast = expr();
+            ExprAst* ast = expressionExpr();
             eat(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
             return ast;
         }
@@ -1045,7 +1067,148 @@ public:
         return ast;
     }
 
-	ExprAst* expr()
+	ExprAst* primaryExpr()
+	{
+        if (isPrimative(peek()))
+        {
+            advance();
+            return asPrimative(previous());
+        }
+        
+        if (match({EASY_OPERATOR_TYPE::LEFT_PARENTHESES}))
+		{
+			ExprAst* expr = expression();
+			consumeOperator(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
+			return expr;
+		}
+
+        if (isSymbol(peek()))
+        {
+            advance();
+            return new VariableAst(getSymbol(previous()));
+        }
+		
+        if (isVariable(peek()))
+        {
+            advance();
+            return new VariableAst(getVariable(previous()));
+        }
+        
+        Token* token = peek();
+        throw ParseError(_T("Expect expression."));
+	}
+
+    ExprAst* finishCallExpr(string_type const & package, string_type const & function) {
+        std::vector<ExprAst*> arguments;
+        if (!check(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES) && !check(EASY_OPERATOR_TYPE::LEFT_PARENTHESES)) {
+            do {
+                if (arguments.size() >= 8) {
+                    throw ParseError (_T("Cannot have more than 8 arguments."));
+                }
+
+                arguments.push_back(expression());
+            } while (match({EASY_OPERATOR_TYPE::COMMA}));
+        }
+
+        consume(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES, _T("Expect ')' after arguments."));
+        return new FunctionCallAst(package, function, arguments);
+    }
+
+
+	ExprAst* call()
+	{
+		ExprAst* expr = primaryExpr();
+        
+        while(true)
+        {
+            if (match({EASY_OPERATOR_TYPE::LEFT_PARENTHESES}))
+            {
+                string_type function = getSymbol(previous());
+                expr = finishCallExpr(_T(""), function);
+            }
+            else if (match({EASY_OPERATOR_TYPE::DOUBLE_COLON}))
+            {
+                string_type package = static_cast<VariableAst*>(expr)->Value;
+                string_type function = getSymbol(advance());
+                advance();
+                
+                expr = finishCallExpr(package, function);
+            }
+            else
+                break;
+        }
+        
+        return expr;
+	}
+
+	ExprAst* unaryExpr()
+	{
+		if (match({ EASY_OPERATOR_TYPE ::MINUS})){
+            EASY_OPERATOR_TYPE opt = getOperator(peek());
+			ExprAst* right = unaryExpr();
+            return new UnaryAst(opt, right);
+		}
+
+		return call();
+	}
+
+	ExprAst* multiplicationExpr()
+	{
+		ExprAst* expr = unaryExpr();
+        
+        while (match({ EASY_OPERATOR_TYPE ::DIVISION, EASY_OPERATOR_TYPE::MULTIPLICATION })) {
+            EASY_OPERATOR_TYPE opt = getOperator(previous());
+            ExprAst* right = unaryExpr();
+            expr = new BinaryAst(expr, opt, right);
+        }
+        
+        return expr;
+	}
+
+	ExprAst* additionExpr()
+	{
+		ExprAst* expr = multiplicationExpr();
+        
+        while (match({ EASY_OPERATOR_TYPE::PLUS, EASY_OPERATOR_TYPE::MINUS })) {
+            EASY_OPERATOR_TYPE opt = getOperator(previous());
+            ExprAst* right = multiplicationExpr();
+            expr = new BinaryAst(expr, opt, right);
+        }
+        
+		return expr;
+	}
+
+	ExprAst* comparisonExpr()
+	{
+		ExprAst* expr = additionExpr();
+		return expr;
+	}
+
+	ExprAst* equalityExpr()
+	{
+		ExprAst* expr = comparisonExpr();
+		return expr;
+	}
+
+	ExprAst* andExpr()
+	{
+		ExprAst* expr = equalityExpr();
+		return expr;
+	}
+
+	ExprAst* orExpr()
+	{
+		ExprAst* expr = andExpr();
+		return expr;
+	}
+
+	ExprAst* assignmentExpr()
+	{
+		ExprAst* expr = orExpr();
+		return expr;
+	}
+
+	ExprAst* expressionExpr()
 	{
 		auto* ast = term();
 
@@ -1074,16 +1237,75 @@ public:
 		return ast;
 	}
 
+	ExprAst* expression()
+	{
+		return assignmentExpr();
+	}
+
+	StmtAst* expressionStmt()
+	{
+		ExprAst* expr = expression();
+		return new ExprStatementAst(expr);
+	}
+
+	StmtAst* declarationStmt()
+	{
+
+		return expressionStmt();
+	}
+
+
 	void tempParse()
 	{
 		tokensCount = tokens->size();
 		index = 0;
 
-        current_token = getToken();
-        next_token = getNextToken();
+		current_token = getToken();
+		next_token = getNextToken();
 
-		asts->push_back(expr());
+		while (!isAtEnd())
+			asts->push_back(declarationStmt());
 	}
+
+	inline bool check(EASY_TOKEN_TYPE type)
+	{
+		Token* token = getToken();
+		return token != nullptr && token->GetType() == type;
+	}
+
+	inline bool check(EASY_OPERATOR_TYPE type)
+	{
+		Token* token = peek();
+		return token != nullptr && token->GetType() == EASY_TOKEN_TYPE::OPERATOR && static_cast<OperatorToken*>(token)->Value == type;
+	}
+
+	bool match(std::initializer_list<EASY_TOKEN_TYPE> types)
+	{
+		for (EASY_TOKEN_TYPE type : types) {
+			if (check(type)) {
+				advance();
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool match(std::initializer_list<EASY_OPERATOR_TYPE> types)
+	{
+		for (EASY_OPERATOR_TYPE type : types) {
+			if (check(type)) {
+				advance();
+				return true;
+			}
+		}
+		return false;
+	}
+
+    Token* consume(EASY_OPERATOR_TYPE type, string_type const & message) {
+        if (check(type)) return advance();
+
+        throw ParseError(message);
+    }
 };
 
 AstParser::AstParser()
