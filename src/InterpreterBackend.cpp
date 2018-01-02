@@ -336,6 +336,12 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
             PrimativeValue* rhs = getData(callAst->Right, scope);
             PrimativeValue* value = nullptr;
             
+            if (lhs == nullptr)
+                throw ParseError(_T("lhs is empty"));
+            
+            if (rhs == nullptr)
+                throw ParseError(_T("rhs is empty"));
+            
             switch (callAst->Op)
             {
                 case EASY_OPERATOR_TYPE::GREATOR:

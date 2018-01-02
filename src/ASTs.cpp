@@ -1094,7 +1094,6 @@ public:
             return new VariableAst(getVariable(previous()));
         }
         
-        Token* token = peek();
         throw ParseError(_T("Expect expression."));
 	}
 
@@ -1103,7 +1102,7 @@ public:
 		if (previous()->GetType() == EASY_TOKEN_TYPE::OPERATOR && static_cast<OperatorToken*>(previous())->Value == EASY_OPERATOR_TYPE::UNDERLINE)
 			return new FunctionCallAst(package, function, arguments);
 
-        if (!check(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES) && !check(EASY_OPERATOR_TYPE::LEFT_PARENTHESES)) {
+        if (!check(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES)) {
             do {
                 if (arguments.size() >= 8) {
                     throw ParseError (_T("Cannot have more than 8 arguments."));
@@ -1294,17 +1293,76 @@ public:
 		return new ReturnAst(returnData);
 	}
 
+    StmtAst* ifStmt()
+    {
+        ExprAst* condition = orExpr();
+        if (condition == nullptr)
+            throw ParseError(_T("If condition required"));
+        
+        consume(EASY_KEYWORD_TYPE::THEN, _T("'then' keyword required"));
+        
+        StmtAst* trueStmt = nullptr;
+        StmtAst* falseStmt = nullptr;
+        
+        if (check(EASY_OPERATOR_TYPE::BLOCK_START))
+            trueStmt = block();
+        else
+            trueStmt = expressionStmt();
+        
+        if (check(EASY_KEYWORD_TYPE::ELSE))
+        {
+            advance();
+            if (check(EASY_OPERATOR_TYPE::BLOCK_START))
+                falseStmt = block();
+            else
+                falseStmt = expressionStmt();
+        }
+        
+        return new IfStatementAst(condition, trueStmt, falseStmt);
+    }
+    
+	StmtAst* forStmt()
+	{
+		ExprAst* parameter = primaryExpr();
+		if (parameter == nullptr || parameter->GetType() != EASY_AST_TYPE::VARIABLE)
+			throw ParseError(_T("For iterator variable required"));
+
+		consume(EASY_KEYWORD_TYPE::IN_KEYWORD, _T("'in' keyword required"));
+
+		ExprAst* startExpr = orExpr();
+		if (startExpr == nullptr)
+			throw ParseError(_T("For start item required"));
+
+		consume(EASY_KEYWORD_TYPE::TO_KEYWORD, _T("'to' keyword required"));
+
+		ExprAst* endExpr = orExpr();
+		if (startExpr == nullptr)
+			throw ParseError(_T("For to item required"));
+
+		consume(EASY_KEYWORD_TYPE::THEN, _T("'then' keyword required"));
+
+		StmtAst* body = nullptr;
+		if (check(EASY_OPERATOR_TYPE::BLOCK_START))
+			body = block();
+		else
+			body = expressionStmt();
+
+        return new ForStatementAst(static_cast<VariableAst*>(parameter)->Value, startExpr, endExpr, body);
+	}
+                                 
+                                 
+                                 
 	StmtAst* functionStmt()
 	{
 		Token* funcName = consume(EASY_TOKEN_TYPE::SYMBOL, _T("Function name required"));
 		consume(EASY_OPERATOR_TYPE::LEFT_PARENTHESES, _T("'(' required"));
 
 		std::vector<string_type> args;
-		if (!check({EASY_OPERATOR_TYPE::RIGHT_PARENTHESES}))
+		if (!check(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES))
 			do {
 				Token* arg = consume(EASY_TOKEN_TYPE::SYMBOL, _T("Only string variable name allowed"));
 				args.push_back(static_cast<SymbolToken*>(arg)->Value);
-			} while (check({ EASY_OPERATOR_TYPE::COMMA }));
+			} while (match({ EASY_OPERATOR_TYPE::COMMA }));
 
 			StmtAst* body = nullptr;
 			consume(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES, _T("')' required"));
@@ -1337,6 +1395,12 @@ public:
 			return functionStmt();
 		else if (match({ EASY_KEYWORD_TYPE::RETURN }))
 			return returnStmt();
+        else if (match({EASY_OPERATOR_TYPE::BLOCK_START}))
+            return block();
+        else if (match({EASY_KEYWORD_TYPE::FOR}))
+            return forStmt();
+        else if (match({EASY_KEYWORD_TYPE::IF}))
+            return ifStmt();
 
 		return expressionStmt();
 	}

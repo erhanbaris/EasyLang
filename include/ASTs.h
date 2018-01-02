@@ -225,6 +225,7 @@ public:
     StmtAst* True{nullptr};
     StmtAst* False{nullptr};
     IfStatementAst() { Type = EASY_AST_TYPE::IF_STATEMENT; }
+    IfStatementAst(ExprAst* controlOpt, StmtAst* trueAst, StmtAst* falseAst) { Type = EASY_AST_TYPE::IF_STATEMENT; ControlOpt = controlOpt; True = trueAst; False = falseAst; }
 	string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
 };
@@ -267,6 +268,7 @@ public:
     ExprAst* End{nullptr};
     StmtAst* Repeat{nullptr};
     ForStatementAst() { Type = EASY_AST_TYPE::FOR; }
+    ForStatementAst(string_type const& variable, ExprAst* start, ExprAst* end, StmtAst* repeat) { Type = EASY_AST_TYPE::FOR; Variable = variable; Start = start; End = end; Repeat = repeat; }
 	string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
 };
