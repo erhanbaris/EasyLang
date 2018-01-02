@@ -127,12 +127,7 @@ HelloWorld()
 With parameter
 ```
 SumAndPrint(10, 20)
-io::print (data1, data2, data3, data4, data5)
-```
-
-Also single parameter can call without parentheses
-```
-io::print data1
+io::print (data1)
 ```
 
 You can call function with '_' for parameterless function.
@@ -140,25 +135,25 @@ You can call function with '_' for parameterless function.
 ### If statement
 ```
 if data1 > 1 then
-    io::print "bigger"
+    io::print ("bigger")
 else
-    io::print "opssss"
+    io::print ("opssss")
 
 if data1 == 1 then
-    io::print "equal"
+    io::print ("equal")
 else
-    io::print "not equal"
+    io::print ("not equal")
 ```
 
 ### Loop
 ```
 for i in 0 to 10 then
-    io::print i + data5
+    io::print (i + data5)
 
 for i in data1 to data5 then
 {
-    io::print i
-    io::print (i, data1)
+    io::print (i)
+    io::print (i + data1)
 }
 ```
 

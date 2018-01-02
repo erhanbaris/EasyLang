@@ -50,3 +50,14 @@ void Scope::SetVariable(string_type const & key, PrimativeValue* value)
         variablesEnd = variables.end();
     }
 }
+
+Scope::~Scope()
+{
+    auto varEnd = variables.end();
+    for (auto it = variables.begin(); it != varEnd; ++it)
+        delete it->second;
+    
+    variables.clear();
+    
+    //console_out << _T("SCOPE CLEARED") << '\n';
+}

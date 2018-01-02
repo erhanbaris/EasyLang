@@ -9,6 +9,7 @@
 class Scope {
 public:
     Scope();
+    ~Scope();
     Scope(Scope* pBaseScope);
     PrimativeValue* GetVariable(string_type const & key);
     void SetVariable(string_type const & key, PrimativeValue* value);

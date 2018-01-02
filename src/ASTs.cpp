@@ -1,6 +1,7 @@
 #include "ASTs.h"
 #include "Exceptions.h"
 #include "System.h"
+#include "PrimativeValue.h"
 
 #define GET_ITEM(NAME, TYPE, IN, OUT) inline OUT get##NAME (Token* token)\
 	{\
@@ -1081,6 +1082,25 @@ public:
 			consumeOperator(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES);
 			return expr;
 		}
+        
+        if (match({EASY_OPERATOR_TYPE::SQUARE_BRACKET_START}))
+        {
+            std::vector<PrimativeValue*>* args = new std::vector<PrimativeValue*>;
+            if (!check(EASY_OPERATOR_TYPE::SQUARE_BRACKET_END)) {
+                do {
+                    ExprAst* item = primaryExpr();
+                    
+                    if (item->GetType() != EASY_AST_TYPE::PRIMATIVE)
+                        throw ParseError(_T("Array init must be contain primative value"));
+                    
+                    args->push_back(static_cast<PrimativeAst*>(item)->Value);
+                    
+                } while (match({EASY_OPERATOR_TYPE::COMMA}));
+            }
+            
+            consumeOperator(EASY_OPERATOR_TYPE::SQUARE_BRACKET_END);
+            return new PrimativeAst(args);
+        }
 
         if (isSymbol(peek()))
         {
@@ -1094,6 +1114,7 @@ public:
             return new VariableAst(getVariable(previous()));
         }
         
+        Token* token = peek();
         throw ParseError(_T("Expect expression."));
 	}
 
@@ -1243,6 +1264,17 @@ public:
 
 			throw ParseError(_T("Invalid assignment"));
 		}
+        
+        if (match({ EASY_OPERATOR_TYPE::APPEND }))
+        {
+            EASY_OPERATOR_TYPE opt = static_cast<OperatorToken*>(previous())->Value;
+            ExprAst* value = orExpr();
+            if (expr->GetType() == EASY_AST_TYPE::VARIABLE)
+                return new BinaryAst(expr, opt, value);
+            
+            throw ParseError(_T("Invalid append"));
+        }
+        
 
 		return expr;
 	}
@@ -1306,6 +1338,11 @@ public:
         
         if (check(EASY_OPERATOR_TYPE::BLOCK_START))
             trueStmt = block();
+        else if (check(EASY_KEYWORD_TYPE::RETURN))
+        {
+            advance();
+            trueStmt = returnStmt();
+        }
         else
             trueStmt = expressionStmt();
         
@@ -1314,6 +1351,11 @@ public:
             advance();
             if (check(EASY_OPERATOR_TYPE::BLOCK_START))
                 falseStmt = block();
+            else if (check(EASY_KEYWORD_TYPE::RETURN))
+            {
+                advance();
+                falseStmt = returnStmt();
+            }
             else
                 falseStmt = expressionStmt();
         }
