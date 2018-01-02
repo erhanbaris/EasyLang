@@ -3,9 +3,20 @@
 #include "System.h"
 #include "Exceptions.h"
 
-Void print_(PrimativeValue message)
+Void print_(Any& data)
 {
-	console_out << (string_type)message;
+	if (data.is<bool>())
+		console_out << data.cast<bool>();
+	else if (data.is<int>())
+		console_out << data.cast<int>();
+	else if (data.is<double>())
+		console_out << data.cast<double>();
+	else if (data.is<string_type>())
+		console_out << data.cast<string_type>();
+	else if (data.is<std::vector<Any>>())
+		console_out << data.cast<bool>();
+	else if (data.is<std::unordered_map<string_type, Any>>())
+		console_out << data.cast<bool>();
 	return Void();
 }
 

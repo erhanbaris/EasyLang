@@ -294,7 +294,7 @@ public:
 		return ast;
 	}
 
-	ExprAst* parseReturn()
+	StmtAst* parseReturn()
 	{
 		auto* ast = new ReturnAst;
 		increase();
@@ -308,7 +308,7 @@ public:
 		return ast;
 	}
 
-	StmtAst* parseAssignment()
+	ExprAst* parseAssignment()
 	{
 		auto* token = getToken();
 		checkToken(_T("Parse error"));
@@ -1100,6 +1100,9 @@ public:
 
     ExprAst* finishCallExpr(string_type const & package, string_type const & function) {
         std::vector<ExprAst*> arguments;
+		if (previous()->GetType() == EASY_TOKEN_TYPE::OPERATOR && static_cast<OperatorToken*>(previous())->Value == EASY_OPERATOR_TYPE::UNDERLINE)
+			return new FunctionCallAst(package, function, arguments);
+
         if (!check(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES) && !check(EASY_OPERATOR_TYPE::LEFT_PARENTHESES)) {
             do {
                 if (arguments.size() >= 8) {
@@ -1121,9 +1124,9 @@ public:
         
         while(true)
         {
-            if (match({EASY_OPERATOR_TYPE::LEFT_PARENTHESES}))
+            if (match({EASY_OPERATOR_TYPE::LEFT_PARENTHESES, EASY_OPERATOR_TYPE::UNDERLINE }))
             {
-                string_type function = getSymbol(previous());
+				string_type function = static_cast<VariableAst*>(expr)->Value;
                 expr = finishCallExpr(_T(""), function);
             }
             else if (match({EASY_OPERATOR_TYPE::DOUBLE_COLON}))
@@ -1181,30 +1184,67 @@ public:
 	ExprAst* comparisonExpr()
 	{
 		ExprAst* expr = additionExpr();
+
+		while (match({ EASY_OPERATOR_TYPE::GREATOR, EASY_OPERATOR_TYPE::GREATOR_EQUAL, EASY_OPERATOR_TYPE::LOWER , EASY_OPERATOR_TYPE::LOWER_EQUAL })) {
+			EASY_OPERATOR_TYPE opt = getOperator(previous());
+			ExprAst* right = additionExpr();
+			expr = new ControlAst(expr, opt, right);
+		}
+
 		return expr;
 	}
 
 	ExprAst* equalityExpr()
 	{
 		ExprAst* expr = comparisonExpr();
+
+		while (match({ EASY_OPERATOR_TYPE::EQUAL, EASY_OPERATOR_TYPE::NOT_EQUAL })) {
+			EASY_OPERATOR_TYPE opt = getOperator(previous());
+			ExprAst* right = comparisonExpr();
+			expr = new ControlAst(expr, opt, right);
+		}
+
 		return expr;
 	}
 
 	ExprAst* andExpr()
 	{
 		ExprAst* expr = equalityExpr();
+
+		while (match({ EASY_OPERATOR_TYPE::AND })) {
+			EASY_OPERATOR_TYPE opt = getOperator(previous());
+			ExprAst* right = equalityExpr();
+			expr = new ControlAst(expr, opt, right);
+		}
+
 		return expr;
 	}
 
 	ExprAst* orExpr()
 	{
 		ExprAst* expr = andExpr();
+
+		while (match({ EASY_OPERATOR_TYPE::OR })) {
+			EASY_OPERATOR_TYPE opt = getOperator(previous());
+			ExprAst* right = andExpr();
+			expr = new ControlAst(expr, opt, right);
+		}
+
 		return expr;
 	}
 
 	ExprAst* assignmentExpr()
 	{
 		ExprAst* expr = orExpr();
+		if (match({ EASY_OPERATOR_TYPE::ASSIGN }))
+		{
+			ExprAst* value = orExpr();
+			if (expr->GetType() == EASY_AST_TYPE::VARIABLE)
+				return new AssignmentAst(static_cast<VariableAst*>(expr)->Value, value);
+
+			throw ParseError(_T("Invalid assignment"));
+		}
+
 		return expr;
 	}
 
@@ -1248,8 +1288,55 @@ public:
 		return new ExprStatementAst(expr);
 	}
 
+	StmtAst* returnStmt()
+	{
+		ExprAst* returnData = expression();
+		return new ReturnAst(returnData);
+	}
+
+	StmtAst* functionStmt()
+	{
+		Token* funcName = consume(EASY_TOKEN_TYPE::SYMBOL, _T("Function name required"));
+		consume(EASY_OPERATOR_TYPE::LEFT_PARENTHESES, _T("'(' required"));
+
+		std::vector<string_type> args;
+		if (!check({EASY_OPERATOR_TYPE::RIGHT_PARENTHESES}))
+			do {
+				Token* arg = consume(EASY_TOKEN_TYPE::SYMBOL, _T("Only string variable name allowed"));
+				args.push_back(static_cast<SymbolToken*>(arg)->Value);
+			} while (check({ EASY_OPERATOR_TYPE::COMMA }));
+
+			StmtAst* body = nullptr;
+			consume(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES, _T("')' required"));
+			if (check(EASY_OPERATOR_TYPE::BLOCK_START))
+				body = block();
+			else {
+				consume(EASY_KEYWORD_TYPE::RETURN, _T("'return' keyword required"));
+				body = returnStmt();
+			}
+
+		return new FunctionDefinetionAst(static_cast<SymbolToken*>(funcName)->Value, args, body);
+	}
+
+	StmtAst* block() {
+		BlockAst* block = new BlockAst;
+		std::vector<StmtAst*> statements;
+		consume(EASY_OPERATOR_TYPE::BLOCK_START, _T("'{' required"));
+
+		while (!check(EASY_OPERATOR_TYPE::BLOCK_END) && !isAtEnd()) {
+			block->Blocks->push_back(declarationStmt());
+		}
+
+		consume(EASY_OPERATOR_TYPE::BLOCK_END, _T("'}' required"));
+		return block;
+	}
+
 	StmtAst* declarationStmt()
 	{
+		if (match({ EASY_KEYWORD_TYPE::FUNC }))
+			return functionStmt();
+		else if (match({ EASY_KEYWORD_TYPE::RETURN }))
+			return returnStmt();
 
 		return expressionStmt();
 	}
@@ -1279,6 +1366,12 @@ public:
 		return token != nullptr && token->GetType() == EASY_TOKEN_TYPE::OPERATOR && static_cast<OperatorToken*>(token)->Value == type;
 	}
 
+	inline bool check(EASY_KEYWORD_TYPE type)
+	{
+		Token* token = peek();
+		return token != nullptr && token->GetType() == EASY_TOKEN_TYPE::KEYWORD && static_cast<KeywordToken*>(token)->Value == type;
+	}
+
 	bool match(std::initializer_list<EASY_TOKEN_TYPE> types)
 	{
 		for (EASY_TOKEN_TYPE type : types) {
@@ -1301,11 +1394,34 @@ public:
 		return false;
 	}
 
+	bool match(std::initializer_list<EASY_KEYWORD_TYPE> types)
+	{
+		for (EASY_KEYWORD_TYPE type : types) {
+			if (check(type)) {
+				advance();
+				return true;
+			}
+		}
+		return false;
+	}
+
     Token* consume(EASY_OPERATOR_TYPE type, string_type const & message) {
         if (check(type)) return advance();
 
         throw ParseError(message);
     }
+
+	Token* consume(EASY_TOKEN_TYPE type, string_type const & message) {
+		if (check(type)) return advance();
+
+		throw ParseError(message);
+	}
+
+	Token* consume(EASY_KEYWORD_TYPE type, string_type const & message) {
+		if (check(type)) return advance();
+
+		throw ParseError(message);
+	}
 };
 
 AstParser::AstParser()

@@ -115,11 +115,11 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 				for (auto it = call->Args.cbegin(); it != argsEnd; ++it)
 				{
 					ExprAst* argAst = *it;
-					auto* argItem = getData(argAst, scope);
+					PrimativeValue* argItem = getData(argAst, scope);
 					if (argItem != nullptr)
 					{
-						Any* anyType = new Any(*argItem);
-						args.push_back(*anyType);
+						//Any* anyType = new Any(*argItem);
+						args.push_back(*argItem->AsAny());
 					}
 				}
 
@@ -130,7 +130,10 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 					returnValue->FromAny(result);
 				}
 				else
-					returnValue->SetInteger(0);
+				{
+					Any result = function->Call(nullptr);
+					returnValue->FromAny(result);
+				}
 			}
 			else if (System::UserMethods.find(call->Function) != System::UserMethods.end())
 			{

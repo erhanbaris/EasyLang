@@ -70,10 +70,10 @@ class ExprVisitor : public BaseVisitor,
 					public Visitor<ControlAst, R>,
 					public Visitor<BinaryAst, R>,
 					public Visitor<StructAst, R>,
-					public Visitor<ReturnAst, R>,
 					public Visitor<ParenthesesGroupAst, R>,
                     public Visitor<UnaryAst, R>,
-                    public Visitor<FunctionCallAst, R>
+                    public Visitor<FunctionCallAst, R>,
+					public Visitor<AssignmentAst, R>
 {
 public:
 	virtual R visit(VariableAst* ast) = 0;
@@ -81,28 +81,28 @@ public:
 	virtual R visit(ControlAst* ast) = 0;
 	virtual R visit(BinaryAst* ast) = 0;
 	virtual R visit(StructAst* ast) = 0;
-	virtual R visit(ReturnAst* ast) = 0;
     virtual R visit(ParenthesesGroupAst* ast) = 0;
     virtual R visit(UnaryAst* ast) = 0;
     virtual R visit(FunctionCallAst* ast) = 0;
+	virtual R visit(AssignmentAst* ast) = 0;
 };
 
 template <typename R = void>
 class StmtVisitor : public BaseVisitor,
-                    public Visitor<AssignmentAst, R>,
                     public Visitor<BlockAst, R>,
                     public Visitor<IfStatementAst, R>,
                     public Visitor<FunctionDefinetionAst, R>,
                     public Visitor<ForStatementAst, R>,
-					public Visitor<ExprStatementAst, R>
+					public Visitor<ExprStatementAst, R>,
+					public Visitor<ReturnAst, R>
 {
 public:
-    virtual R visit(AssignmentAst* ast) = 0;
     virtual R visit(BlockAst* ast) = 0;
     virtual R visit(IfStatementAst* ast) = 0;
     virtual R visit(FunctionDefinetionAst* ast) = 0;
 	virtual R visit(ForStatementAst* ast) = 0;
 	virtual R visit(ExprStatementAst* ast) = 0;
+	virtual R visit(ReturnAst* ast) = 0;
 };
 
 class Ast
@@ -128,13 +128,14 @@ public:
 	virtual void accept(ExprVisitor<void>*) = 0;
 };
 
-class AssignmentAst : public StmtAst {
+class AssignmentAst : public ExprAst {
 public:
 	string_type Name;
     ExprAst* Data{ nullptr };
     AssignmentAst() { Type = EASY_AST_TYPE::ASSIGNMENT; }
-	string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
-	void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
+	AssignmentAst(string_type name, ExprAst* data) { Type = EASY_AST_TYPE::ASSIGNMENT; Name = name; Data = data; }
+	string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
+	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
 };
 
 class UnaryAst : public ExprAst
@@ -179,6 +180,7 @@ public:
 	ExprAst* Right{nullptr};
 	EASY_OPERATOR_TYPE Op;
     ControlAst() : Left(nullptr), Right(nullptr) { Type = EASY_AST_TYPE::CONTROL_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
+	ControlAst(ExprAst* left, EASY_OPERATOR_TYPE opt, ExprAst* right) { Type = EASY_AST_TYPE::CONTROL_OPERATION; Op = opt; Left = left; Right = right; }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
 };
@@ -234,17 +236,19 @@ public:
 	std::vector<string_type> Args;
 	StmtAst* Body {nullptr};
     FunctionDefinetionAst() { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; }
+	FunctionDefinetionAst(string_type const & name, std::vector<string_type> args, StmtAst* body) { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; Name = name; Args = args; Body = body; }
 	string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
 };
 
-class ReturnAst : public ExprAst
+class ReturnAst : public StmtAst
 {
 public:
 	ExprAst* Data {nullptr};
     ReturnAst() { Type = EASY_AST_TYPE::RETURN; }
-    string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
-	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
+	ReturnAst(ExprAst* data) { Type = EASY_AST_TYPE::RETURN; Data = data; }
+    string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
+	void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
 };
 
 class ParenthesesGroupAst : public ExprAst {
@@ -325,4 +329,5 @@ public:
 private:
     AstParserImpl* impl{nullptr};
 };
+
 #endif //EASYLANG_ASTS_H
