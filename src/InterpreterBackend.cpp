@@ -27,6 +27,19 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
     
     switch (ast->GetType())
     {
+		case EASY_AST_TYPE::UNARY:
+		{
+			auto* unary = static_cast<UnaryAst*>(ast);
+			if (unary->Opt == EASY_OPERATOR_TYPE::MINUS)
+			{
+				auto* unaryData = getData(unary->Data, scope);
+				return (*unaryData) * (-1);
+			}
+
+			return nullptr;
+		}
+		break;
+
         case EASY_AST_TYPE::PRIMATIVE:
             return static_cast<PrimativeAst*>(ast)->Value;
             break;

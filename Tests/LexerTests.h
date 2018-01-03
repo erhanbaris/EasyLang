@@ -78,9 +78,9 @@ TEST_CASE( "String test" ) {
     REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::TEXT);
     REQUIRE(reinterpret_cast<TextToken*>(tokens->at(0))->Value == _T("\"erhan\""));
     
-    SECTION( "Sembo_T(" ) {
+    SECTION( "17 <= 40(" ) {
         parser->Parse(_T("17 <= 40"), tokens);
-        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->size() == 4);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 17);
         
@@ -93,7 +93,7 @@ TEST_CASE( "String test" ) {
     
     SECTION( "17 > 40" ) {
         parser->Parse(_T("17 > 40"), tokens);
-        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->size() == 4);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 17);
         
@@ -111,7 +111,7 @@ TEST_CASE( "Operator lexer test" ) {
     
     SECTION( "10 / 10" ) {
         parser->Parse(_T("10 / 10"), tokens);
-        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->size() == 4);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 10);
         
@@ -124,7 +124,7 @@ TEST_CASE( "Operator lexer test" ) {
     
     SECTION( "10 - 10" ) {
         parser->Parse(_T("10 - 10"), tokens);
-        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->size() == 4);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 10);
         
@@ -137,7 +137,7 @@ TEST_CASE( "Operator lexer test" ) {
     
     SECTION( "10 + 10" ) {
         parser->Parse(_T("10 + 10"), tokens);
-        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->size() == 4);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 10);
         
@@ -150,7 +150,7 @@ TEST_CASE( "Operator lexer test" ) {
 
     SECTION( "10 * 10" ) {
         parser->Parse(_T("10 * 10"), tokens);
-        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->size() == 4);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::INTEGER);
         REQUIRE(reinterpret_cast<IntegerToken*>(tokens->at(0))->Value == 10);
 
@@ -168,7 +168,7 @@ TEST_CASE( "Function lexer test" ) {
     
     SECTION( "func test () return 1" ) {
         parser->Parse(_T("func test () return 1"), tokens);
-        REQUIRE(tokens->size() == 6);
+        REQUIRE(tokens->size() == 7);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::KEYWORD);
         REQUIRE(reinterpret_cast<KeywordToken*>(tokens->at(0))->Value == EASY_KEYWORD_TYPE::FUNC);
         
@@ -190,7 +190,7 @@ TEST_CASE( "Package lexer test" ) {
 
     SECTION( "package test" ) {
         parser->Parse(_T("package test"), tokens);
-        REQUIRE(tokens->size() == 2);
+        REQUIRE(tokens->size() == 3);
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::KEYWORD);
         REQUIRE(reinterpret_cast<KeywordToken*>(tokens->at(0))->Value == EASY_KEYWORD_TYPE::PACKAGE);
 
@@ -200,7 +200,7 @@ TEST_CASE( "Package lexer test" ) {
 
     SECTION( "core::isBool" ) {
         parser->Parse(_T("core::isBool"), tokens);
-        REQUIRE(tokens->size() == 3);
+        REQUIRE(tokens->size() == 4);
 
         REQUIRE(tokens->at(0)->GetType() == EASY_TOKEN_TYPE::SYMBOL);
         REQUIRE(reinterpret_cast<SymbolToken*>(tokens->at(0))->Value == _T("core"));
@@ -217,7 +217,7 @@ TEST_CASE("for i to 1 to 10 then core::print i") {
 	Tokinizer* parser = new StandartTokinizer();
 	auto tokens = make_shared<std::vector<Token*>>();
 	parser->Parse(_T("for i to 1 to 10 then core::print i"), tokens);
-	REQUIRE(tokens->size() == 11);
+	REQUIRE(tokens->size() == 12);
 }
 
 #endif

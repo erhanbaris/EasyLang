@@ -27,7 +27,9 @@ TEST_CASE("Base test") {
 
 		REQUIRE(asts.get()->size() == 1);
 
-		BinaryAst* binary = static_cast<BinaryAst*>(asts.get()->at(0));
+		REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
+		BinaryAst* binary = static_cast<BinaryAst*>(stmt->Expr);
 		REQUIRE(binary->Left != nullptr);
 		REQUIRE(binary->Right != nullptr);
 		REQUIRE(binary->Op == EASY_OPERATOR_TYPE::PLUS);
@@ -53,8 +55,10 @@ TEST_CASE("Base test") {
 		astParser->Parse(tokens, asts);
 
 		REQUIRE(asts.get()->size() == 1);
+		REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
 
-		BinaryAst* binary = static_cast<BinaryAst*>(asts.get()->at(0));
+		BinaryAst* binary = static_cast<BinaryAst*>(stmt->Expr);
 		REQUIRE(binary->Left != nullptr);
 		REQUIRE(binary->Right != nullptr);
 		REQUIRE(binary->Op == EASY_OPERATOR_TYPE::MINUS);
@@ -69,8 +73,10 @@ TEST_CASE("Base test") {
 		astParser->Parse(tokens, asts);
 
 		REQUIRE(asts.get()->size() == 1);
+		REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
 
-		BinaryAst* binary = static_cast<BinaryAst*>(asts.get()->at(0));
+		BinaryAst* binary = static_cast<BinaryAst*>(stmt->Expr);
 		REQUIRE(binary->Left != nullptr);
 		REQUIRE(binary->Right != nullptr);
 		REQUIRE(binary->Op == EASY_OPERATOR_TYPE::MINUS);
@@ -85,8 +91,10 @@ TEST_CASE("Base test") {
 		astParser->Parse(tokens, asts);
 
 		REQUIRE(asts.get()->size() == 1);
+		REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
 
-		BinaryAst* binary = static_cast<BinaryAst*>(asts.get()->at(0));
+		BinaryAst* binary = static_cast<BinaryAst*>(stmt->Expr);
 		REQUIRE(binary->Left != nullptr);
 		REQUIRE(binary->Right != nullptr);
 		REQUIRE(binary->Op == EASY_OPERATOR_TYPE::MINUS);
@@ -100,8 +108,10 @@ TEST_CASE("Base test") {
 		astParser->Parse(tokens, asts);
 
 		REQUIRE(asts.get()->size() == 1);
+		REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
 
-		BinaryAst* binary = static_cast<BinaryAst*>(asts.get()->at(0));
+		BinaryAst* binary = static_cast<BinaryAst*>(stmt->Expr);
 		REQUIRE(binary->Left != nullptr);
 		REQUIRE(binary->Right != nullptr);
 		REQUIRE(binary->Op == EASY_OPERATOR_TYPE::MINUS);
@@ -114,8 +124,10 @@ TEST_CASE("Base test") {
 		astParser->Parse(tokens, asts);
 
 		REQUIRE(asts.get()->size() == 1);
+		REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
 
-		BinaryAst* binary = static_cast<BinaryAst*>(asts.get()->at(0));
+		BinaryAst* binary = static_cast<BinaryAst*>(stmt->Expr);
 		REQUIRE(binary->Left != nullptr);
 		REQUIRE(binary->Right != nullptr);
 		REQUIRE(binary->Op == EASY_OPERATOR_TYPE::MINUS);
@@ -133,8 +145,10 @@ TEST_CASE( "Assignment test" ) {
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
+	REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+	ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
 
-	AssignmentAst* assignment = static_cast<AssignmentAst*>(asts.get()->at(0));
+	AssignmentAst* assignment = static_cast<AssignmentAst*>(stmt->Expr);
 	REQUIRE(assignment->Name == _T("erhan"));
 	REQUIRE(assignment->Data != nullptr);
 	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
@@ -147,7 +161,10 @@ TEST_CASE( "Assignment test" ) {
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
-	assignment = static_cast<AssignmentAst*>(asts.get()->at(0));
+	REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+	stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
+
+	assignment = static_cast<AssignmentAst*>(stmt->Expr);
 	REQUIRE(assignment->Name == _T("erhan"));
 	REQUIRE(assignment->Data != nullptr);
 	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
@@ -158,7 +175,10 @@ TEST_CASE( "Assignment test" ) {
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
-	assignment = static_cast<AssignmentAst*>(asts.get()->at(0));
+	REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+	stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
+
+	assignment = static_cast<AssignmentAst*>(stmt->Expr);
 	REQUIRE(assignment->Name == _T("erhan"));
 	REQUIRE(assignment->Data != nullptr);
 	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
@@ -169,7 +189,10 @@ TEST_CASE( "Assignment test" ) {
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
-	assignment = static_cast<AssignmentAst*>(asts.get()->at(0));
+	REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+	stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
+
+	assignment = static_cast<AssignmentAst*>(stmt->Expr);
 	REQUIRE(assignment->Name == _T("erhan"));
 	REQUIRE(assignment->Data != nullptr);
 	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
@@ -181,7 +204,10 @@ TEST_CASE( "Assignment test" ) {
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
-	assignment = static_cast<AssignmentAst*>(asts.get()->at(0));
+	REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+	stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
+
+	assignment = static_cast<AssignmentAst*>(stmt->Expr);
 	REQUIRE(assignment->Name == _T("erhan"));
 	REQUIRE(assignment->Data != nullptr);
 	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
@@ -192,7 +218,10 @@ TEST_CASE( "Assignment test" ) {
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
-	assignment = static_cast<AssignmentAst*>(asts.get()->at(0));
+	REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+	stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
+
+	assignment = static_cast<AssignmentAst*>(stmt->Expr);
 	REQUIRE(assignment->Name == _T("erhan"));
 	REQUIRE(assignment->Data != nullptr);
 	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
@@ -204,8 +233,10 @@ TEST_CASE( "Assignment test" ) {
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
+	REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+	stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
 
-	assignment = static_cast<AssignmentAst*>(asts.get()->at(0));
+	assignment = static_cast<AssignmentAst*>(stmt->Expr);
 	REQUIRE(assignment->Name == _T("erhan"));
 	REQUIRE(assignment->Data != nullptr);
 	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::BINARY_OPERATION);
@@ -218,8 +249,10 @@ TEST_CASE( "Assignment test" ) {
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
+	REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+	stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
 
-	assignment = static_cast<AssignmentAst*>(asts.get()->at(0));
+	assignment = static_cast<AssignmentAst*>(stmt->Expr);
 	REQUIRE(assignment->Name == _T("erhan"));
 	REQUIRE(assignment->Data != nullptr);
 	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::BINARY_OPERATION);
@@ -236,8 +269,10 @@ TEST_CASE( "Assignment test" ) {
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
+	REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+	stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
 
-	assignment = static_cast<AssignmentAst*>(asts.get()->at(0));
+	assignment = static_cast<AssignmentAst*>(stmt->Expr);
 	REQUIRE(assignment->Name == _T("erhan"));
 	REQUIRE(assignment->Data != nullptr);
 	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::BINARY_OPERATION);
@@ -261,8 +296,11 @@ TEST_CASE("Block test") {
 
 	auto* block = static_cast<BlockAst*>(asts.get()->at(0));
 	REQUIRE(block->Blocks->size() == 1);
+	
+	REQUIRE(block->Blocks->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+	auto* stmt = static_cast<ExprStatementAst*>(block->Blocks->at(0));
 
-	AssignmentAst* assignment = static_cast<AssignmentAst*>(block->Blocks->at(0));
+	AssignmentAst* assignment = static_cast<AssignmentAst*>(stmt->Expr);
 	REQUIRE(assignment->Name == _T("erhan"));
 	REQUIRE(assignment->Data != nullptr);
 	REQUIRE(assignment->Data->GetType() == EASY_AST_TYPE::BINARY_OPERATION);
@@ -274,7 +312,7 @@ TEST_CASE("Block test") {
 	REQUIRE(static_cast<PrimativeAst*>(static_cast<BinaryAst*>(assignment->Data)->Right)->Value->Type == PrimativeValue::Type::PRI_INTEGER);
 	REQUIRE(static_cast<PrimativeAst*>(static_cast<BinaryAst*>(assignment->Data)->Right)->Value->Integer == 5);
 
-	tokinizer->Parse(_T("{ } { } { io::print 123 }"), tokens);
+	tokinizer->Parse(_T("{ } { } { io::print (123) }"), tokens);
 	astParser->Parse(tokens, asts);
 	REQUIRE(asts.get()->size() == 3);
 
@@ -290,7 +328,7 @@ TEST_CASE("loop test 1") {
 	std::shared_ptr<std::vector<Token* > > tokens = make_shared<std::vector<Token* > >();
 	std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
 
-	tokinizer->Parse(_T("for i in 1 to 10 then core::print i"), tokens);
+	tokinizer->Parse(_T("for i in 1 to 10 then core::print (i)"), tokens);
 	astParser->Parse(tokens, asts);
 	REQUIRE(asts.get()->size() == 1);
 }
@@ -302,8 +340,8 @@ TEST_CASE("If test") {
 	std::shared_ptr<std::vector<Token* > > tokens = make_shared<std::vector<Token* > >();
 	std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
 
-	SECTION("if erhan > 15 then io::print 123") {
-		tokinizer->Parse(_T("if erhan > 15 then io::print 123"), tokens);
+	SECTION("if erhan > 15 then io::print (123)") {
+		tokinizer->Parse(_T("if erhan > 15 then io::print (123)"), tokens);
 		astParser->Parse(tokens, asts);
 		REQUIRE(asts.get()->size() == 1);
 
@@ -319,8 +357,8 @@ TEST_CASE("If test") {
 		REQUIRE(controlOpt->Op == EASY_OPERATOR_TYPE::GREATOR);
 	}
 
-	SECTION("if erhan > 15 then io::print 123 else io::print 321") {
-		tokinizer->Parse(_T("if erhan > 15 then io::print 123 else io::print 321"), tokens);
+	SECTION("if erhan > 15 then io::print (123) else io::print (321)") {
+		tokinizer->Parse(_T("if erhan > 15 then io::print (123) else io::print (321)"), tokens);
 		astParser->Parse(tokens, asts);
 		REQUIRE(asts.get()->size() == 1);
 
@@ -346,12 +384,14 @@ TEST_CASE("Function call test") {
 	std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
 
 
-	SECTION("io::print \"test\"") {
-		tokinizer->Parse(_T("io::print \"test\""), tokens);
+	SECTION("io::print (\"test\")") {
+		tokinizer->Parse(_T("io::print (\"test\")"), tokens);
 		astParser->Parse(tokens, asts);
 		REQUIRE(asts.get()->size() == 1);
 
-		auto* functionCall = static_cast<FunctionCallAst*>(asts.get()->at(0));
+		REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
+		auto* functionCall = static_cast<FunctionCallAst*>(stmt->Expr);
 
 		REQUIRE(functionCall->Function == _T("print"));
 		REQUIRE(functionCall->Package == _T("io"));
@@ -361,12 +401,14 @@ TEST_CASE("Function call test") {
 		REQUIRE(*static_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->String == _T("test"));
 	}
 
-	SECTION("io::print 5.5") {
-		tokinizer->Parse(_T("io::print 5.5"), tokens);
+	SECTION("io::print (5.5)") {
+		tokinizer->Parse(_T("io::print (5.5)"), tokens);
 		astParser->Parse(tokens, asts);
 		REQUIRE(asts.get()->size() == 1);
+		REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
 
-		auto* functionCall = static_cast<FunctionCallAst*>(asts.get()->at(0));
+		auto* functionCall = static_cast<FunctionCallAst*>(stmt->Expr);
 
 		REQUIRE(functionCall->Function == _T("print"));
 		REQUIRE(functionCall->Package == _T("io"));
@@ -376,12 +418,13 @@ TEST_CASE("Function call test") {
 		REQUIRE(static_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Double == 5.5);
 	}
 
-	SECTION("io::print 123") {
-		tokinizer->Parse(_T("io::print 123"), tokens);
+	SECTION("io::print (123)") {
+		tokinizer->Parse(_T("io::print (123)"), tokens);
 		astParser->Parse(tokens, asts);
 		REQUIRE(asts.get()->size() == 1);
-
-		auto* functionCall = static_cast<FunctionCallAst*>(asts.get()->at(0));
+		REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
+		auto* functionCall = static_cast<FunctionCallAst*>(stmt->Expr);
 
 		REQUIRE(functionCall->Function == _T("print"));
 		REQUIRE(functionCall->Args.size() == 1);
@@ -390,24 +433,26 @@ TEST_CASE("Function call test") {
 		REQUIRE(static_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Integer == 123);
 	}
 
-	SECTION("io::print 10 + 20") {
-		tokinizer->Parse(_T("io::print 10 + 20"), tokens);
+	SECTION("io::print (10 + 20)") {
+		tokinizer->Parse(_T("io::print (10 + 20)"), tokens);
 		astParser->Parse(tokens, asts);
 		REQUIRE(asts.get()->size() == 1);
-
-		auto* functionCall = static_cast<FunctionCallAst*>(asts.get()->at(0));
+		REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
+		auto* functionCall = static_cast<FunctionCallAst*>(stmt->Expr);
 
 		REQUIRE(functionCall->Function == _T("print"));
 		REQUIRE(functionCall->Args.size() == 1);
 		REQUIRE(functionCall->Args.at(0)->GetType() == EASY_AST_TYPE::BINARY_OPERATION);
 	}
 
-	SECTION("core::isDouble 5.5") {
-		tokinizer->Parse(_T("core::isDouble 5.5"), tokens);
+	SECTION("core::isDouble (5.5)") {
+		tokinizer->Parse(_T("core::isDouble (5.5)"), tokens);
 		astParser->Parse(tokens, asts);
 		REQUIRE(asts.get()->size() == 1);
-
-		auto* functionCall = static_cast<FunctionCallAst*>(asts.get()->at(0));
+		REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
+		auto* functionCall = static_cast<FunctionCallAst*>(stmt->Expr);
 
 		REQUIRE(functionCall->Function == _T("isDouble"));
 		REQUIRE(functionCall->Package == _T("core"));
@@ -428,12 +473,13 @@ TEST_CASE("Bool ast test") {
     std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
 
 
-    SECTION("io::print true") {
-        tokinizer->Parse(_T("io::print true"), tokens);
+    SECTION("io::print (true)") {
+        tokinizer->Parse(_T("io::print (true)"), tokens);
         astParser->Parse(tokens, asts);
         REQUIRE(asts.get()->size() == 1);
-
-        auto* functionCall = static_cast<FunctionCallAst*>(asts.get()->at(0));
+		REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
+        auto* functionCall = static_cast<FunctionCallAst*>(stmt->Expr);
 
         REQUIRE(functionCall->Function == _T("print"));
 		REQUIRE(functionCall->Package == _T("io"));
@@ -443,12 +489,13 @@ TEST_CASE("Bool ast test") {
         REQUIRE(static_cast<PrimativeAst*>(functionCall->Args.at(0))->Value->Bool == true);
     }
     
-    SECTION("io::print false") {
-        tokinizer->Parse(_T("io::print false"), tokens);
+    SECTION("io::print (false)") {
+        tokinizer->Parse(_T("io::print (false)"), tokens);
         astParser->Parse(tokens, asts);
         REQUIRE(asts.get()->size() == 1);
-        
-        auto* functionCall = static_cast<FunctionCallAst*>(asts.get()->at(0));
+		REQUIRE(asts.get()->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		ExprStatementAst* stmt = static_cast<ExprStatementAst*>(asts.get()->at(0));
+        auto* functionCall = static_cast<FunctionCallAst*>(stmt->Expr);
         
         REQUIRE(functionCall->Function == _T("print"));
 		REQUIRE(functionCall->Package == _T("io"));
@@ -477,11 +524,11 @@ TEST_CASE( "Function asd test" ) {
         REQUIRE(decl->Name == _T("test"));
         REQUIRE(decl->Args.size() == 0);
         REQUIRE(decl->Body != nullptr);
-        REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+        REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::RETURN);
         
-        auto* ret = static_cast<ExprStatementAst*>(decl->Body);
-        REQUIRE(ret->Expr != nullptr);
-        REQUIRE(ret->Expr->GetType() == EASY_AST_TYPE::RETURN);
+        auto* ret = static_cast<ReturnAst*>(decl->Body);
+        REQUIRE(ret->Data != nullptr);
+        REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
     }
 
 	SECTION( "func test ( ) return 1" ) {
@@ -495,11 +542,11 @@ TEST_CASE( "Function asd test" ) {
 		REQUIRE(decl->Name == _T("test"));
 		REQUIRE(decl->Args.size() == 0);
 		REQUIRE(decl->Body != nullptr);
-		REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+		REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::RETURN);
 
-		auto* ret = static_cast<ExprStatementAst*>(decl->Body);
-		REQUIRE(ret->Expr != nullptr);
-		REQUIRE(ret->Expr->GetType() == EASY_AST_TYPE::RETURN);
+		auto* ret = static_cast<ReturnAst*>(decl->Body);
+		REQUIRE(ret->Data != nullptr);
+		REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	}
     
     SECTION( "func test () { return 1 }" ) {

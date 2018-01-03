@@ -62,7 +62,7 @@ TEST_CASE("Interpreter tests") {
 		REQUIRE(result->IsInteger());
 		REQUIRE(result->Integer == 3);
 
-		tokinizer->Parse(_T("test 2"), tokens);
+		tokinizer->Parse(_T("test (2)"), tokens);
 		astParser->Parse(tokens, asts);
 		backend->Prepare(asts);
 		result = backend->Execute();
