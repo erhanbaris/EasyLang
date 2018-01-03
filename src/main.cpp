@@ -12,6 +12,7 @@
 #include "EasyEngine.h"
 #include "Definitions.h"
 #include "FunctionDispatch.h"
+#include "Vm.h"
 
 #include "../Tests/LexerTests.h"
 #include "../Tests/AstTests.h"
@@ -138,6 +139,27 @@ int main(int argc, char* argv[]) {
 
 #endif
 
+	std::vector<size_t> codes {
+			vm_inst::iPUSH, 6,
+			vm_inst::iPUSH, 44,
+			vm_inst::iCALL, 7,
+			vm_inst::iHALT,
+			vm_inst::iSTORE, 1,
+			vm_inst::iSTORE, 0,
+			vm_inst::iLOAD, 0,
+			vm_inst ::iLOAD, 1,
+			vm_inst ::iGT,
+			vm_inst ::iJIF, 21,
+			vm_inst ::iLOAD, 1,
+			vm_inst ::iRETURN,
+			vm_inst ::iLOAD, 0,
+			vm_inst ::iRETURN
+	};
+
+	vm_system vm;
+	vm.execute(codes);
+
+	//return 0;
     System::WarmUp();
 	// Unit tests
 	Catch::Session().run(argc, argv);
