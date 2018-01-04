@@ -60,7 +60,11 @@ add_executable(EasyLang
 		include/Definitions.h
 		include/FunctionDispatch.h
         src/Vm.cpp 
-		include/Vm.h)
+		include/Vm.h
+		Tests/VmTests.h
+		src/CodeGenerator.cpp
+		include/CodeGenerator.h
+		)
 
 
 

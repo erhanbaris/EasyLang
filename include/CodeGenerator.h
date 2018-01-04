@@ -22,6 +22,7 @@ class CodeGenerator :
 public:
 	CodeGenerator();
 	~CodeGenerator();
+    void Generate(std::vector<size_t>&);
 
 	void visit(AssignmentAst* ast);
 	void visit(BlockAst* ast);

@@ -1,5 +1,6 @@
 #include "Backend.h"
 #include "Scope.h"
+#include "CodeGenerator.h"
 
 #ifndef EASYLANG_INTERPRETERBACKEND_H
 #define EASYLANG_INTERPRETERBACKEND_H
@@ -19,6 +20,7 @@ private:
     std::vector<Ast*> asts;
 	std::vector<Ast*> temporaryAsts;
     std::unordered_map<string_type, PrimativeValue*> variables;
+	CodeGenerator* generator {nullptr};
 };
 
 #endif //EASYLANG_INTERPRETERBACKEND_H
