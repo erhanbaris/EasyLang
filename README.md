@@ -260,26 +260,26 @@ size_t result = test(100);
 */
 
 vm.execute({
-    vm_inst::iPUSH, 100, // total
-    vm_inst::iCALL, 5, // jump and create new stack
-    vm_inst::iHALT,
+    iPUSH, 100, // total
+    iCALL, 5, // jump and create new stack
+    iHALT,
     
     // Init variables
-    vm_inst::iSTORE, 0, // save total
-    vm_inst::iLOAD, 0, // get total to stack
-    vm_inst::iPUSH, 0, // i = 0
-    vm_inst::iSTORE, 1, // save i
-    vm_inst::iLOAD, 1,
-    vm_inst::iGT,
-    vm_inst::iJIF, 29,
-    vm_inst::iLOAD, 0,
-    vm_inst::iLOAD, 1,
-    vm_inst::iINC, // ++i
-    vm_inst::iSTORE, 1,
-    vm_inst::iLOAD, 1,
-    vm_inst::iJMP, 15, // loop
-    vm_inst::iLOAD, 1, // return i value
-    vm_inst::iRETURN // clear stack
+    iSTORE, 0, // save total
+    iLOAD, 0, // get total to stack
+    iPUSH, 0, // i = 0
+    iSTORE, 1, // save i
+    iLOAD, 1,
+    iGT,
+    iJIF, 29,
+    iLOAD, 0,
+    iLOAD, 1,
+    iINC, // ++i
+    iSTORE, 1,
+    iLOAD, 1,
+    iJMP, 15, // loop
+    iLOAD, 1, // return i value
+    iRETURN // clear stack
 });
 
 size_t i = vm.getUInt(); // 100

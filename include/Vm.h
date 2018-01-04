@@ -55,7 +55,7 @@ class vm_system
 {
 public:
 	vm_system();
-	void execute(std::vector<size_t> code);
+	void execute(size_t* code, size_t len);
 	size_t getUInt();
 
 private:

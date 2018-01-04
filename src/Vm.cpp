@@ -1,11 +1,15 @@
 #include "Vm.h"
 
+#define BYTES_TO_INT(one,two) (one + ( 256 * two ))
+
 class vm_object
 {
 	enum class vm_object_type {
 		INT,
 		DOUBLE,
-		STR
+		STR,
+		NATIVE_CALL,
+		CALL
 	};
 
 	vm_object_type Type;
@@ -14,7 +18,7 @@ class vm_object
 		size_t Int;
 		double Double;
 		void * Ptr;
-	};
+	} Data;
 };
 
 template <typename T>
@@ -124,9 +128,12 @@ vm_system::vm_system()
 	this->impl = new vm_system_impl();
 }
 
-void vm_system::execute(std::vector<size_t> code)
+void vm_system::execute(size_t* code, size_t len)
 {
-	for (size_t i = 0; i < code.size(); ++i) {
+	size_t i = 0;
+	bool isHalted = false;
+	
+	while(!isHalted || len < i) {
 		switch (code[i])
 		{
 		case vm_inst::iADD:
@@ -292,9 +299,11 @@ void vm_system::execute(std::vector<size_t> code)
 			break;
 
 		case vm_inst::iHALT:
-			i = code.size();
+			isHalted = true;
 			break;
 		}
+
+		++i;
 	}
 }
 
