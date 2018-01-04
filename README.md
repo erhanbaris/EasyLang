@@ -1,5 +1,5 @@
 # EasyLang
-It is a programming language that has begun to be developed for testing purposes. It is still in development and it is not stable at this time.
+It is a programming language that has begun to be developed for testing purposes. It is still in development and it is not stable at this time. It contains tiny stack based virtual machine for fast code execution.
 
 ![EasyLang](EasyLang.gif)
 

@@ -59,7 +59,8 @@ add_executable(EasyLang
         include/Catch.h
 		include/Definitions.h
 		include/FunctionDispatch.h
-        src/Vm.cpp include/Vm.h)
+        src/Vm.cpp 
+		include/Vm.h)
 
 
 
