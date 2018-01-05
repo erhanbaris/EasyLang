@@ -10,7 +10,7 @@ std::unordered_map<string_type, std::unordered_map<string_type, FunctionInfo*>> 
 
 void System::WarmUp()
 {
-	new IOLibInit();
-	new CoreLibInit();
-	new ArrayLibInit();
+	IOLibInit();
+	CoreLibInit();
+	ArrayLibInit();
 }

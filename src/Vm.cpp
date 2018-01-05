@@ -1,21 +1,14 @@
 #include "Vm.h"
-
-
 #define BYTES_TO_INT(one,two) (one + ( 256 * two ))
 
-#define STORE(index, obj) currentStore->variables[index] = obj
-#define LOAD(index) currentStore->variables[index]
+#define STORE(index, obj) *(currentStore->variables + index) = obj
+#define LOAD(index) (*currentStore->variables + index)
 
 
-#define PEEK() currentStack.Data[currentStack.Current - 1]
-#define POP() currentStack.Data[--currentStack.Current]
-#define PUSH(obj)\
-if (currentStack.Current + 1 >= currentStack.Max)\
-{\
-	/*increase stack*/\
-}\
-currentStack.Data[currentStack.Current++] = obj;
-#define SET(obj) currentStack.Data[currentStack.Current - 1] = obj
+#define PEEK() *(currentStack.Data - 1)
+#define POP() (*(--currentStack.Data))
+#define PUSH(obj) (*(currentStack.Data++)) = obj
+#define SET(obj) (*(currentStack.Data - 1)) = obj
 
 #define TO_INT(code) code ? 1 : 0;
 #define TO_BOOL(code) code != 0
@@ -48,35 +41,9 @@ public:
 		variables = new T[64];
 	}
 
-	inline T GetVariable(size_t const & index)
-	{
-		return variables[index];
-	}
-
-	inline void SetVariable(size_t const & index, T const & obj)
-	{
-		variables[index] = obj;
-	}
-
-	inline void SetStartAddress(size_t const & StartAddress)
-	{
-		startAddress = StartAddress;
-	}
-
-	inline size_t GetStartAddress()
-	{
-		return startAddress;
-	}
-
-	inline void Clear()
-	{
-		//delete[] variables;
-		//variables = new T[64];
-	}
-
 	~vm_store()
 	{
-		delete[] variables;
+		// delete[] variables;
 	}
 
 	size_t startAddress;
@@ -90,41 +57,24 @@ public:
 	void init(size_t max)
 	{
 		Max = max;
-		Current = 0;
 		Data = new T[max];
-	}
+        StartData = Data;
 
-	inline void Push(T const & obj)
-	{
-		if (Current + 1 >= Max)
-		{
-			// increase stack
-		}
-
-		Data[Current++] = obj;
-	}
-
-	inline void Set(T const & obj)
-	{
-		Data[Current - 1] = obj;
+        for (size_t i = 0; i < max; ++i)
+            Data[i] = T();
 	}
 
 	inline T Pop()
 	{
-		return Data[--Current];
-	}
-
-	inline T Peek()
-	{
-		return Data[Current - 1];
+		return *Data;
 	}
 
 	~vm_stack()
 	{
-		delete[] Data;
+		// delete[] Data;
 	}
 
-	size_t Current;
+    T* StartData;
 	T* Data;
 	size_t Max;
 };
@@ -144,6 +94,14 @@ public:
 
 		stores[0] = currentStore;
 		storesCount = 0;
+	}
+
+	~vm_system_impl()
+	{
+		for (int i = 0; i < 1024; ++i)
+			delete stores[i];
+
+		delete[] stores;
 	}
 
 	size_t storesCount;
@@ -278,27 +236,27 @@ public:
 				break;
 
 			case vm_inst::iSTORE:
-				STORE(code[++i], POP());
+				STORE(code[++i], PEEK());
 				break;
 
 			case vm_inst::iSTORE_0:
-				STORE(0, POP());
+				STORE(0, PEEK());
 				break;
 
 			case vm_inst::iSTORE_1:
-				STORE(1, POP());
+				STORE(1, PEEK());
 				break;
 
 			case vm_inst::iSTORE_2:
-				STORE(2, POP());
+				STORE(2, PEEK());
 				break;
 
 			case vm_inst::iSTORE_3:
-				STORE(3, POP());
+				STORE(3, PEEK());
 				break;
 
 			case vm_inst::iSTORE_4:
-				STORE(4, POP());
+				STORE(4, PEEK());
 				break;
 
 			case vm_inst::iCALL:
@@ -329,8 +287,8 @@ public:
 				break;
 
 			case vm_inst::iHALT:
+				--currentStack.Data;
 				return;
-				break;
 			}
 
 			++i;
@@ -341,6 +299,11 @@ public:
 vm_system::vm_system()
 {
 	this->impl = new vm_system_impl();
+}
+
+vm_system::~vm_system()
+{
+	delete impl;
 }
 
 void vm_system::execute(size_t* code, size_t len)

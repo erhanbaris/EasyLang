@@ -68,7 +68,8 @@ DECLARE_ENUM(vm_inst,
 class vm_system
 {
 public:
-	vm_system();
+    vm_system();
+    ~vm_system();
 	void execute(size_t* code, size_t len);
 	size_t getUInt();
 
