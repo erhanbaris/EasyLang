@@ -241,6 +241,7 @@ iPOP    : Remove last item
 // JUMP AND IF
 iJMP    : Jump to address
 iJIF    : If last item true then jump to address
+iIF_EQ  : If last two items are equal then jump to address
 iJNIF   : If last item false then jump to address
 
 iINC    : Increment last item

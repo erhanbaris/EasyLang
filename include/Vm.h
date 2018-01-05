@@ -35,6 +35,9 @@ DECLARE_ENUM(vm_inst,
          iDUP, // dublicate
          iPOP,
          iJMP, // jump
+
+	     iIF_EQ, // if jump
+
          iJIF, // if jump
          iJNIF, // if not jump
          iINC,
