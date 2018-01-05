@@ -40,8 +40,20 @@ DECLARE_ENUM(vm_inst,
              iJNIF, // if not jump
              iINC,
              iDINC,
-             iLOAD, // Load variable
-             iSTORE, // Store variable
+
+			 iLOAD, // Load variable
+			 iLOAD_0, // Load variable 0
+			 iLOAD_1, // Load variable 1
+			 iLOAD_2, // Load variable 2
+			 iLOAD_3, // Load variable 3
+			 iLOAD_4, // Load variable 4
+
+			 iSTORE, // Store variable 
+			 iSTORE_0, // Store variable 0
+		     iSTORE_1, // Store variable 1
+			 iSTORE_2, // Store variable 2
+			 iSTORE_3, // Store variable 3
+			 iSTORE_4, // Store variable 4
 
              iCALL,
              iRETURN,

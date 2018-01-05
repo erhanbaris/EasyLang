@@ -161,7 +161,10 @@ Fibonacci Code Example.
 ```
 func fibonacci(num) 
 { 
-    if num <= 1 then 
+    if num = 0 then 
+        return 0
+
+    if num = 1 then 
         return 1 
         
     left = fibonacci(num - 1)
@@ -174,7 +177,7 @@ fibonacci(10)
 
 Result
 ```
-(INTEGER) 89
+(INTEGER) 55
 ```
 
 ### Internal packages
@@ -221,6 +224,8 @@ iADD    : Sum last 2 item
 iSUB    : Subtract last 2 item
 iMUL    : Multiply the last two item
 iDIV    : Divide the last two item
+
+//LOGIC
 iEQ     : Is the last two item equal
 iLT     : Little control for last two item
 iLTE    : Little or equal control for last two item
@@ -228,59 +233,110 @@ iGT     : Greater control for last two item
 iGTE    : Greater or equal control for last two item
 iAND    : And operator
 iOR     : Or operator
+
 iDUP    : Dublicate last item
+iPUSH   : Push to stack
 iPOP    : Remove last item
+
+// JUMP AND IF
 iJMP    : Jump to address
 iJIF    : If last item true then jump to address
 iJNIF   : If last item false then jump to address
+
 iINC    : Increment last item
 iDEC    : Decrement last item
+
+//FOR LOCAL VARIABLE 
 iLOAD   : Load item from memory and push to stack
+iLOAD_0 : Load item 0 from memory and push to stack
+iLOAD_1 : Load item 1 from memory and push to stack
+iLOAD_2 : Load item 2 from memory and push to stack
+iLOAD_3 : Load item 3 from memory and push to stack
+iLOAD_4 : Load item 4 from memory and push to stack
 iSTORE  : Save item to memory and pop from stack
+iSTORE_0: Save item 0 to memory and pop from stack
+iSTORE_1: Save item 1 to memory and pop from stack
+iSTORE_2: Save item 2 to memory and pop from stack
+iSTORE_3: Save item 3 to memory and pop from stack
+iSTORE_4: Save item 4 to memory and pop from stack
+
 iCALL   : Create new stack and jump to address
 iRETURN : Dispose current stack and jump to last CALL instruction address
-iPUSH   : Push to stack
+
 iPRINT  : Print last item
 iHALT   : Stop system
 ```
 
-##### Vm Usage Example
+##### Vm Usage Example (Fibonacci)
 ```cpp
-vm_system vm;
-
 /*
-//Destination code
-size_t test(size_t total)
-{
-    size_t i = 0;
-    for (; i < total; ++i) { }
-    return i;
+func fibonacci(num) 
+{ 
+    if num = 0 then 
+        return 0
+
+    if num = 1 then 
+        return 1 
+        
+    left = fibonacci(num - 1)
+    right = fibonacci(num - 2) 
+    return left + right 
 }
-size_t result = test(100);
 */
 
-vm.execute({
-    iPUSH, 100, // total
-    iCALL, 5, // jump and create new stack
+vm_system vm;
+std::vector<size_t> codes{
+    iPUSH, 10, // number
+    iCALL, 5,  // jump and create new stack
     iHALT,
-    
-    // Init variables
-    iSTORE, 0, // save total
-    iLOAD, 0, // get total to stack
-    iPUSH, 0, // i = 0
-    iSTORE, 1, // save i
-    iLOAD, 1,
-    iGT,
-    iJIF, 29,
-    iLOAD, 0,
-    iLOAD, 1,
-    iINC, // ++i
-    iSTORE, 1,
-    iLOAD, 1,
-    iJMP, 15, // loop
-    iLOAD, 1, // return i value
-    iRETURN // clear stack
-});
 
-size_t i = vm.getUInt(); // 100
+    // Init variables
+    iSTORE_0, // save number
+
+    /*
+    if num = 0 then 
+        return 0 
+    */
+    iLOAD_0,  // get num
+    iPUSH, 0,
+    iEQ,
+    iJIF, 15,
+    iPUSH, 0,
+    iRETURN,  // return 0
+
+    /*
+    if num = 1 then 
+        return 1 
+    */
+    iLOAD, 0, // get num
+    iPUSH, 1,
+    iEQ,
+    iJIF, 25,
+    iPUSH, 1,
+    iRETURN,  // return 1
+
+    /* 
+    left = fibonacci(num - 1)
+    */
+    iLOAD_0,  // get num
+    iPUSH, 1,
+    iSUB,     // num - 1
+    iCALL, 5, // fibonacci(num - 1)
+    
+    /*
+    right = fibonacci(num - 2) 
+    */
+    iLOAD_0,  // get num
+    iPUSH, 2,
+    iSUB,     // num - 2
+    iCALL, 5, // fibonacci(num - 1)
+    
+    /*
+    return left + right 
+    */
+    iADD,     
+    iRETURN
+};
+vm.execute(&codes[0], codes.size());
+size_t result = vm.getUInt(); // 55
 ```

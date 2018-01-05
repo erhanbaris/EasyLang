@@ -265,8 +265,48 @@ void vm_system::execute(size_t* code, size_t len)
 			impl->currentStack->Push(impl->currentStore->GetVariable(code[++i]));
 			break;
 
+		case vm_inst::iLOAD_0:
+			impl->currentStack->Push(impl->currentStore->GetVariable(0));
+			break;
+
+		case vm_inst::iLOAD_1:
+			impl->currentStack->Push(impl->currentStore->GetVariable(1));
+			break;
+
+		case vm_inst::iLOAD_2:
+			impl->currentStack->Push(impl->currentStore->GetVariable(2));
+			break;
+
+		case vm_inst::iLOAD_3:
+			impl->currentStack->Push(impl->currentStore->GetVariable(3));
+			break;
+
+		case vm_inst::iLOAD_4:
+			impl->currentStack->Push(impl->currentStore->GetVariable(4));
+			break;
+
 		case vm_inst::iSTORE:
 			impl->currentStore->SetVariable(code[++i], impl->currentStack->Pop());
+			break;
+
+		case vm_inst::iSTORE_0:
+			impl->currentStore->SetVariable(0, impl->currentStack->Pop());
+			break;
+
+		case vm_inst::iSTORE_1:
+			impl->currentStore->SetVariable(1, impl->currentStack->Pop());
+			break;
+
+		case vm_inst::iSTORE_2:
+			impl->currentStore->SetVariable(2, impl->currentStack->Pop());
+			break;
+
+		case vm_inst::iSTORE_3:
+			impl->currentStore->SetVariable(3, impl->currentStack->Pop());
+			break;
+
+		case vm_inst::iSTORE_4:
+			impl->currentStore->SetVariable(4, impl->currentStack->Pop());
 			break;
 
 		case vm_inst::iCALL:

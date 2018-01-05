@@ -7,11 +7,15 @@
 #include <iostream>
 #include <sstream>
 #include <cmath>
+#include <ctime>
+#include <ratio>
+#include <chrono>
 
 #include "../include/Catch.h"
 #include "../include/Vm.h"
 
 using namespace std;
+using namespace std::chrono;
 
 TEST_CASE("VM If statement tests") {
 	vm_system vm;
@@ -120,20 +124,22 @@ TEST_CASE("VM Fibonacci tests") {
 
 
 TEST_CASE("VM Fibonacci tests 2") {
+
+	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 	vm_system vm;
 	std::vector<size_t> codes{
-			iPUSH, 30, // number
+			iPUSH, 10, // number
 			iCALL, 5, // jump and create new stack
 			iHALT,
 
 			// Init variables
-			iSTORE, 0, // save number
+			iSTORE_0, // save number
 
 			/* if (n == 0) return 0; */
-			iLOAD, 0, // get total to stack
+			iLOAD_0, // get total to stack
 			iPUSH, 0,
 			iEQ,
-			iJIF, 17,
+			iJIF, 15,
 			iPUSH, 0,
 			iRETURN,
 
@@ -141,26 +147,33 @@ TEST_CASE("VM Fibonacci tests 2") {
 			iLOAD, 0, // get total to stack
 			iPUSH, 1,
 			iEQ,
-			iJIF, 27,
+			iJIF, 25,
 			iPUSH, 1,
 			iRETURN,
 
 			/* return fibonacci(n-1) + fibonacci(n-2); */
-			iLOAD, 0, // get total to stack
+			iLOAD_0, // get total to stack
 			iPUSH, 1,
 			iSUB,
 			iCALL, 5,
 
-			iLOAD, 0, // get total to stack
+			iLOAD_0, // get total to stack
 			iPUSH, 2,
 			iSUB,
 			iCALL, 5,
 			iADD,
 
-			iRETURN };
+			iRETURN 
+	};
 	vm.execute(&codes[0], codes.size());
+
+	high_resolution_clock::time_point t2 = high_resolution_clock::now();
+	duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+	std::cout << "It took me " << time_span.count() << " seconds.";
+	std::cout << std::endl;
+
 	size_t result = vm.getUInt();
-	REQUIRE(result == 832040);
+	REQUIRE(result == 55);
 }
 
 #endif //EASYLANG_VMTESTS_H

@@ -64,6 +64,8 @@ add_executable(EasyLang
 		Tests/VmTests.h
 		src/CodeGenerator.cpp
 		include/CodeGenerator.h
+		src/VmBackend.cpp
+		include/VmBackend.h
 		)
 
 

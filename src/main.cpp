@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
 
     System::WarmUp();
 	// Unit tests
-	// Catch::Session().run(argc, argv);
+	Catch::Session().run(argc, argv);
 
     auto* engine = EasyEngine::Interpreter();
     
