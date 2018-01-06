@@ -23,7 +23,7 @@ TEST_CASE("VM Fibonacci tests 2") {
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 	vm_system vm;
 	std::vector<size_t> codes{
-			iPUSH, 35, // number
+			iPUSH, 25, // number
 			iCALL, 5, // jump and create new stack
 			iHALT,
 
@@ -65,7 +65,7 @@ TEST_CASE("VM Fibonacci tests 2") {
 	std::cout << std::endl;
 
 	size_t result = vm.getUInt();
-	REQUIRE(result == 9227465);
+	REQUIRE(result == 75025);
 }
 
 #endif //EASYLANG_VMTESTS_H

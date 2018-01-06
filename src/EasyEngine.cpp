@@ -1,7 +1,9 @@
 #include "EasyEngine.h"
 #include "InterpreterBackend.h"
+#include "VmBackend.h"
 #include "Lexer.h"
 #include "ASTs.h"
+#include "Backend.h"
 
 #include <memory>
 
@@ -14,13 +16,12 @@ public:
 	std::shared_ptr<std::vector<Token*>> tokens;
 	std::shared_ptr<std::vector<Ast*>> asts;
 
-	EasyEngineImpl(Backend * pBackend)
+	EasyEngineImpl(Tokinizer* pTokinizer, AstParser* pAstParser, Backend* pBackend)
 	{
 		backend = pBackend;
 
-		tokinizer = new StandartTokinizer();
-		astParser = new AstParser;
-		BackendExecuter<InterpreterBackend> executer;
+		tokinizer = pTokinizer;
+		astParser = pAstParser;
 		tokens = std::make_shared<std::vector<Token*>>();
 		asts = std::make_shared<std::vector<Ast*>>();
 	}
@@ -28,9 +29,7 @@ public:
 	PrimativeValue* Execute(string_type const & code)
 	{
 		tokinizer->Parse(code, tokens);
-        //tokinizer->Dump(tokens);
 		astParser->Parse(tokens, asts);
-        //astParser->Dump(asts);
 		backend->Prepare(asts);
 		return backend->Execute();
 	}
@@ -43,22 +42,23 @@ public:
 	}
 };
 
-EasyEngine * EasyEngine::Interpreter()
+template<class TTokinizer, class TAstParser, class TBackend>
+EasyEngine<TTokinizer, TAstParser, TBackend>::EasyEngine()
 {
-	return new EasyEngine(new InterpreterBackend);
+	impl = new EasyEngineImpl(new TTokinizer, new TAstParser, new TBackend);
 }
 
-EasyEngine::EasyEngine(Backend * backend)
-{
-	impl = new EasyEngineImpl(backend);
-}
-
-EasyEngine::~EasyEngine()
+template<class TTokinizer, class TAstParser, class TBackend>
+EasyEngine<TTokinizer, TAstParser, TBackend>::~EasyEngine()
 {
 	delete impl;
 }
 
-PrimativeValue* EasyEngine::Execute(string_type const & code)
+template<class TTokinizer, class TAstParser, class TBackend>
+PrimativeValue* EasyEngine<TTokinizer, TAstParser, TBackend>::Execute(string_type const & code)
 {
 	return impl->Execute(code);
 }
+
+template class EasyEngine<StandartTokinizer, AstParser, VmBackend>;
+template class EasyEngine<StandartTokinizer, AstParser, InterpreterBackend>;

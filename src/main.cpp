@@ -10,8 +10,15 @@
 #include "Catch.h"
 #include "System.h"
 #include "EasyEngine.h"
+#include "VmEasyEngine.h"
+#include "InterpreterEasyEngine.h"
 #include "Definitions.h"
 #include "FunctionDispatch.h"
+
+#include "VmBackend.h"
+#include "InterpreterBackend.h"
+#include "ASTs.h"
+#include "Lexer.h"
 
 #include "../Tests/LexerTests.h"
 #include "../Tests/AstTests.h"
@@ -143,10 +150,10 @@ int main(int argc, char* argv[]) {
 	// Unit tests
 	Catch::Session().run(argc, argv);
 
-    auto* engine = EasyEngine::Interpreter();
+	auto* engine = new InterpreterEasyEngine;
     
 	string_type line;
-	console_out << _T("EasyLang Interpreter\n\n");
+	console_out << _T("EasyLang Virtual Machine\n\n");
 	console_out << _T("easy > ");
 	while (std::getline(console_in, line))
 	{

@@ -10,14 +10,19 @@
 #include "Definitions.h"
 
 class EasyEngineImpl;
+
+template<class TTokinizer, class TAstParser, class TBackend>
 class EasyEngine {
 public:
-	static EasyEngine * Interpreter();
+	static_assert(std::is_base_of<Tokinizer, TTokinizer>::value, "T must be derived from Tokinizer");
+	static_assert(std::is_base_of<AstParser, TAstParser>::value, "T must be derived from AstParser");
+	static_assert(std::is_base_of<Backend, TBackend>::value, "T must be derived from Backend");
+	
+	EasyEngine();
 	PrimativeValue* Execute(string_type const & code);
 	~EasyEngine();
 
 private:
-	EasyEngine(Backend * backend);
 	EasyEngineImpl* impl;
 };
 

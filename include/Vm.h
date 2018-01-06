@@ -21,48 +21,48 @@ template <typename T> class vm_store;
 template <typename T> class vm_stack;
 
 DECLARE_ENUM(vm_inst,
-         iADD = 1,
-         iSUB,
-         iMUL,
-         iDIV,
-         iEQ,
-         iLT,
-         iLTE,
-         iGT,
-         iGTE,
-         iAND,
-         iOR,
-         iDUP, // dublicate
-         iPOP,
-         iJMP, // jump
+iHALT,
+iADD,
+iSUB,
+iMUL,
+iDIV,
+iEQ,
+iLT,
+iLTE,
+iGT,
+iGTE,
+iAND,
+iOR,
+iDUP, // dublicate
+iPOP,
+iJMP, // jump
 
-	     iIF_EQ, // if jump
+iIF_EQ, // if jump
 
-         iJIF, // if jump
-         iJNIF, // if not jump
-         iINC,
-         iDINC,
-         
-         iLOAD, // Load variable
-         iLOAD_0, // Load variable 0
-         iLOAD_1, // Load variable 1
-         iLOAD_2, // Load variable 2
-         iLOAD_3, // Load variable 3
-         iLOAD_4, // Load variable 4
-         
-         iSTORE, // Store variable 
-         iSTORE_0, // Store variable 0
-         iSTORE_1, // Store variable 1
-         iSTORE_2, // Store variable 2
-         iSTORE_3, // Store variable 3
-         iSTORE_4, // Store variable 4
-         
-         iCALL,
-         iRETURN,
-         
-         iPUSH,
-         iPRINT,
-         iHALT)
+iJIF, // if jump
+iJNIF, // if not jump
+iINC,
+iDINC,
+
+iLOAD, // Load variable
+iLOAD_0, // Load variable 0
+iLOAD_1, // Load variable 1
+iLOAD_2, // Load variable 2
+iLOAD_3, // Load variable 3
+iLOAD_4, // Load variable 4
+
+iSTORE, // Store variable 
+iSTORE_0, // Store variable 0
+iSTORE_1, // Store variable 1
+iSTORE_2, // Store variable 2
+iSTORE_3, // Store variable 3
+iSTORE_4, // Store variable 4
+
+iCALL,
+iRETURN,
+
+iPUSH,
+iPRINT)
 
 
 class vm_system
