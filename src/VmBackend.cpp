@@ -245,8 +245,16 @@ void VmBackend::visit(AssignmentAst* ast)
 	this->impl->opCodeIndex += 2;
 }
 
-void VmBackend::visit(BlockAst* ast) { }
-void VmBackend::visit(IfStatementAst* ast) 
+void VmBackend::visit(BlockAst* ast)
+{
+    //if data == 123 then { data = 111 } else {data = 999}
+    size_t totalBlock = ast->Blocks.get()->size();
+    for (size_t i = 0; i < totalBlock; ++i) {
+        getData(ast->Blocks->at(i));
+    }
+}
+
+void VmBackend::visit(IfStatementAst* ast)
 {
 	this->getData(ast->ControlOpt);
 	auto lastOperator = this->impl->opcodes[this->impl->opcodes.size() - 1]->OpCode;
@@ -368,6 +376,7 @@ void VmBackend::visit(BinaryAst* ast)
 
 	++this->impl->opCodeIndex;
 }
+//if data == 123 then { data = 111 } else {data = 999}
 
 void VmBackend::visit(StructAst* ast) { }
 void VmBackend::visit(ReturnAst* ast) 

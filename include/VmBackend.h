@@ -22,21 +22,21 @@ public:
 	PrimativeValue* getData(Ast* ast);
 	PrimativeValue* Execute() override;
 
-	void visit(AssignmentAst* ast);
-	void visit(BlockAst* ast);
-	void visit(IfStatementAst* ast);
-	void visit(FunctionDefinetionAst* ast);
-	void visit(ForStatementAst* ast);
-	void visit(VariableAst* ast);
-	void visit(PrimativeAst* ast);
-	void visit(ControlAst* ast);
-	void visit(BinaryAst* ast);
-	void visit(StructAst* ast);
-	void visit(ReturnAst* ast);
-	void visit(ParenthesesGroupAst* ast);
-	void visit(FunctionCallAst* ast);
-	void visit(UnaryAst* ast);
-	void visit(ExprStatementAst* ast);
+	void visit(AssignmentAst* ast) override;
+	void visit(BlockAst* ast) override;
+	void visit(IfStatementAst* ast) override;
+	void visit(FunctionDefinetionAst* ast) override;
+	void visit(ForStatementAst* ast) override;
+	void visit(VariableAst* ast) override;
+	void visit(PrimativeAst* ast) override;
+	void visit(ControlAst* ast) override;
+	void visit(BinaryAst* ast) override;
+	void visit(StructAst* ast) override;
+	void visit(ReturnAst* ast) override;
+	void visit(ParenthesesGroupAst* ast) override;
+	void visit(FunctionCallAst* ast) override;
+	void visit(UnaryAst* ast) override;
+	void visit(ExprStatementAst* ast) override;
 
 private:
 	std::vector<Ast*> asts;

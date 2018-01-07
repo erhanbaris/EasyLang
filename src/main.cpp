@@ -150,7 +150,7 @@ int main(int argc, char* argv[]) {
 	// Unit tests
 	Catch::Session().run(argc, argv);
 
-	auto* engine = new InterpreterEasyEngine;
+	auto* engine = new VmEasyEngine;
     
 	string_type line;
 	console_out << _T("EasyLang Virtual Machine\n\n");

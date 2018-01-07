@@ -66,7 +66,7 @@ add_executable(EasyLang
 		include/CodeGenerator.h
 		src/VmBackend.cpp
 		include/VmBackend.h
-		)
+        )
 
 
 

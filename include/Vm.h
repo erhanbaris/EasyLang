@@ -51,12 +51,26 @@ iLOAD_2, // Load variable 2
 iLOAD_3, // Load variable 3
 iLOAD_4, // Load variable 4
 
-iSTORE, // Store variable 
+iSTORE, // Store variable
 iSTORE_0, // Store variable 0
 iSTORE_1, // Store variable 1
 iSTORE_2, // Store variable 2
 iSTORE_3, // Store variable 3
 iSTORE_4, // Store variable 4
+
+iGLOAD, // Load variable
+iGLOAD_0, // Load variable 0
+iGLOAD_1, // Load variable 1
+iGLOAD_2, // Load variable 2
+iGLOAD_3, // Load variable 3
+iGLOAD_4, // Load variable 4
+
+iGSTORE, // Store variable
+iGSTORE_0, // Store variable 0
+iGSTORE_1, // Store variable 1
+iGSTORE_2, // Store variable 2
+iGSTORE_3, // Store variable 3
+iGSTORE_4, // Store variable 4
 
 iCALL,
 iRETURN,
