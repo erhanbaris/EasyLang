@@ -84,7 +84,7 @@ class vm_system
 public:
     vm_system();
     ~vm_system();
-	void execute(size_t* code, size_t len);
+	void execute(size_t* code, size_t len, size_t startIndex);
 	size_t getUInt();
 
 private:

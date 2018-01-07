@@ -10,7 +10,7 @@
 
 #define PEEK() *(currentStack - 1)
 #define POP() (*(--currentStack))
-#define PUSH(obj) (*(currentStack++)) = obj
+#define PUSH(obj) *currentStack = obj; ++currentStack;
 #define SET(obj) (*(currentStack - 1)) = obj
 
 #define TO_INT(code) code ? 1 : 0;
@@ -85,9 +85,10 @@ public:
 
     size_t* currentStack;
 
-	void execute(size_t* code, size_t len)
+	void execute(size_t* code, size_t len, size_t startIndex)
 	{
         size_t* startPoint = code;
+        code += startIndex;
 		while (1) {
 			switch (*code)
 			{
@@ -298,8 +299,9 @@ public:
 					POP();
 					break;
 
-				case vm_inst::iPUSH:
+				case vm_inst::iPUSH: {
 					PUSH(*++code);
+				}
 					break;
 
 				case vm_inst::iPRINT:
@@ -326,9 +328,9 @@ vm_system::~vm_system()
 	delete impl;
 }
 
-void vm_system::execute(size_t* code, size_t len)
+void vm_system::execute(size_t* code, size_t len, size_t startIndex)
 {
-	impl->execute(code, len);
+	impl->execute(code, len, startIndex);
 }
 
 size_t vm_system::getUInt()

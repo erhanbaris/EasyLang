@@ -57,7 +57,7 @@ TEST_CASE("VM Fibonacci tests 2") {
 
 			iRETURN 
 	};
-	vm.execute(&codes[0], codes.size());
+	vm.execute(&codes[0], codes.size(), 0);
 
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 	duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
