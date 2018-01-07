@@ -233,27 +233,27 @@ public:
                     
                     
                 case vm_inst::iGLOAD:
-                    PUSH(LOAD(*++code));
+                    PUSH(GLOAD(*++code));
                     break;
                     
                 case vm_inst::iGLOAD_0:
-                    PUSH(LOAD(0));
+                    PUSH(GLOAD(0));
                     break;
                     
                 case vm_inst::iGLOAD_1:
-                    PUSH(LOAD(1));
+                    PUSH(GLOAD(1));
                     break;
                     
                 case vm_inst::iGLOAD_2:
-                    PUSH(LOAD(2));
+                    PUSH(GLOAD(2));
                     break;
                     
                 case vm_inst::iGLOAD_3:
-                    PUSH(LOAD(3));
+                    PUSH(GLOAD(3));
                     break;
                     
                 case vm_inst::iGLOAD_4:
-                    PUSH(LOAD(4));
+                    PUSH(GLOAD(4));
                     break;
                     
                 case vm_inst::iGSTORE:
