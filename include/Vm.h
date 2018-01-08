@@ -58,19 +58,19 @@ iSTORE_2, // Store variable 2
 iSTORE_3, // Store variable 3
 iSTORE_4, // Store variable 4
 
-iGLOAD, // Load variable
-iGLOAD_0, // Load variable 0
-iGLOAD_1, // Load variable 1
-iGLOAD_2, // Load variable 2
-iGLOAD_3, // Load variable 3
-iGLOAD_4, // Load variable 4
+iGLOAD, // Load global variable
+iGLOAD_0, // Load global variable 0
+iGLOAD_1, // Load global variable 1
+iGLOAD_2, // Load global variable 2
+iGLOAD_3, // Load global variable 3
+iGLOAD_4, // Load global variable 4
 
-iGSTORE, // Store variable
-iGSTORE_0, // Store variable 0
-iGSTORE_1, // Store variable 1
-iGSTORE_2, // Store variable 2
-iGSTORE_3, // Store variable 3
-iGSTORE_4, // Store variable 4
+iGSTORE, // Store global variable
+iGSTORE_0, // Store global variable 0
+iGSTORE_1, // Store global variable 1
+iGSTORE_2, // Store global variable 2
+iGSTORE_3, // Store global variable 3
+iGSTORE_4, // Store global variable 4
 
 iCALL,
 iRETURN,
@@ -85,6 +85,7 @@ public:
     vm_system();
     ~vm_system();
 	void execute(size_t* code, size_t len, size_t startIndex);
+	void dump(size_t* code, size_t len);
 	size_t getUInt();
 
 private:

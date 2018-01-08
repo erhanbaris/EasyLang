@@ -60,6 +60,7 @@ public:
 	std::unordered_map<string_type, size_t> variables;
 	std::unordered_map<string_type, size_t> methods;
     std::vector<size_t> codes;
+	bool dumpOpcode;
 
 	std::vector<OpcodeItem*> intermediateCode;
 	size_t opCodeIndex;
@@ -69,6 +70,7 @@ public:
 	{
         inClass = false;
 		opCodeIndex = 0;
+		dumpOpcode = false;
 	}
 };
 
@@ -179,7 +181,6 @@ PrimativeValue* VmBackend::Execute()
         getData(*it);
 
 	temporaryAsts.clear();
-    //func test(a,b) return a + b test(10,20)
 	
 	this->Generate();
     
@@ -192,10 +193,11 @@ PrimativeValue* VmBackend::Execute()
     }
     
     this->impl->intermediateCode.clear();
-    
-	impl->system.execute(&impl->codes[0], impl->codes.size(), codeStart);
+	impl->system.execute(&impl->codes[0], impl->codes.size(), codeStart);	
 	auto data = impl->system.getUInt();
 
+	result = new PrimativeValue((int)data);
+	console_out << result->Describe() << '\n';
 	return result;
 }
 
@@ -215,10 +217,11 @@ void VmBackend::Generate()
 {
 	size_t indexer = 0;
 	impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iHALT));
+	++this->impl->opCodeIndex;
     size_t totalIntermediateCode = this->impl->intermediateCode.size();
     
 	for (int i = 0; i < totalIntermediateCode; ++i) {
-		console_out << _T("\t") << indexer << _T(" -> ") << vm_instToString(this->impl->intermediateCode[i]->OpCode);
+		//console_out << _T("\t") << indexer << _T(" -> ") << vm_instToString(this->impl->intermediateCode[i]->OpCode);
 
 		impl->codes.push_back(this->impl->intermediateCode[i]->OpCode);
 		++indexer;
@@ -229,24 +232,24 @@ void VmBackend::Generate()
 			{
 			case OptVar::VARIABLE:
 				impl->codes.push_back(this->impl->variables[((VariableOptVar*)this->impl->intermediateCode[i]->Opt)->Data]);
-				console_out << _T(" ") << impl->codes[impl->codes.size() - 1];
+				//console_out << _T(" ") << impl->codes[impl->codes.size() - 1];
 				break;
 
 			case OptVar::METHOD:
 				impl->codes.push_back(this->impl->methods[((MethodOptVar*)this->impl->intermediateCode[i]->Opt)->Data]);
-				console_out << _T(" ") << impl->codes[impl->codes.size() - 1];
+				//console_out << _T(" ") << impl->codes[impl->codes.size() - 1];
 				break;
 
 			case OptVar::INT:
 				impl->codes.push_back(((IntOptVar*)this->impl->intermediateCode[i]->Opt)->Data);
-				console_out << _T(" ") << impl->codes[impl->codes.size() - 1];
+				//console_out << _T(" ") << impl->codes[impl->codes.size() - 1];
 				break;
 			}
 
 			++indexer;
 		}
 
-		console_out << '\n';
+		//console_out << '\n';
 	}
 }
 
@@ -306,8 +309,13 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     auto* jpmAddress = new OpcodeItem(vm_inst::iJMP);
     this->impl->opCodeIndex += 2;
     this->impl->intermediateCode.push_back(jpmAddress);
-    bool definedFunc = this->impl->methods.find(ast->Name) != this->impl->methods.end();
-    size_t oldMethodName = this->impl->methods[ast->Name];
+
+	if (this->impl->methods.find(ast->Name) != this->impl->methods.end())
+	{
+		size_t oldMethodOrderNumber = this->impl->methods[ast->Name];
+		this->impl->codes[oldMethodOrderNumber] = vm_inst::iJMP;
+		this->impl->codes[oldMethodOrderNumber + 1] = this->impl->opCodeIndex;
+	}
     
 	this->impl->methods[ast->Name] = this->impl->opCodeIndex;
     size_t totalParameter = ast->Args.size();
@@ -353,12 +361,6 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     
     ast->Body->accept(this);
     jpmAddress->Opt = new IntOptVar(this->impl->opCodeIndex);
-    
-    if (definedFunc)
-    {
-        this->impl->codes[oldMethodName] = vm_inst::iJMP;
-        this->impl->codes[oldMethodName + 1] = this->impl->opCodeIndex;
-    }
 }
 
 void VmBackend::visit(ForStatementAst* ast) { }
@@ -460,7 +462,13 @@ void VmBackend::visit(ReturnAst* ast)
 void VmBackend::visit(ParenthesesGroupAst* ast) { }
 void VmBackend::visit(FunctionCallAst* ast)
 {
-    size_t totalParameters = ast->Args.size();
+	if (ast->Package == "core" && ast->Function == "dumpopcode")
+	{
+		impl->system.dump(&impl->codes[0], impl->codes.size());
+		return;
+	}
+    
+	size_t totalParameters = ast->Args.size();
     for (size_t i = 0; i < totalParameters; ++i)
         getData(ast->Args[i]);
     

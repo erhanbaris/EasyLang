@@ -198,6 +198,8 @@ bool core::isString(item)
 bool core::isArray(item)
 bool core::isDictionary(item)
 
+bool core::dumpopcode() // Show all executed opcodes on virtual machine
+
 bool core::toBool(item)
 integer core::toInteger(item)
 double core::toDouble(item)
