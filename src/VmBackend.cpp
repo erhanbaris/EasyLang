@@ -57,8 +57,9 @@ class VmBackendImpl
 {
 public:
     vm_system system;
-	std::unordered_map<string_type, size_t> variables;
-	std::unordered_map<string_type, size_t> methods;
+	std::unordered_map<string_type, size_t>* variables;
+	std::vector<std::unordered_map<string_type, size_t>*> variablesList;
+    std::unordered_map<string_type, size_t> methods;
     std::vector<size_t> codes;
 	bool dumpOpcode;
 
@@ -231,7 +232,7 @@ void VmBackend::Generate()
 			switch (this->impl->intermediateCode[i]->Opt->Type)
 			{
 			case OptVar::VARIABLE:
-				impl->codes.push_back(this->impl->variables[((VariableOptVar*)this->impl->intermediateCode[i]->Opt)->Data]);
+				impl->codes.push_back((*this->impl->variables)[((VariableOptVar*)this->impl->intermediateCode[i]->Opt)->Data]);
 				//console_out << _T(" ") << impl->codes[impl->codes.size() - 1];
 				break;
 
@@ -255,9 +256,9 @@ void VmBackend::Generate()
 
 void VmBackend::visit(AssignmentAst* ast)
 {
-	this->impl->variables[ast->Name] = this->impl->variables.size();
+	(*this->impl->variables)[ast->Name] = this->impl->variables->size();
 	this->getData(ast->Data);
-	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE, new IntOptVar(static_cast<int>(this->impl->variables[ast->Name]))));
+	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE, new IntOptVar(static_cast<int>((*this->impl->variables)[ast->Name]))));
 	this->impl->opCodeIndex += 2;
 }
 
@@ -306,6 +307,9 @@ void VmBackend::visit(IfStatementAst* ast)
 
 void VmBackend::visit(FunctionDefinetionAst* ast)
 {
+    this->impl->variablesList.push_back(new std::unordered_map<string_type, size_t>());
+    impl->variables = impl->variablesList[impl->variablesList.size() - 1];
+    
     auto* jpmAddress = new OpcodeItem(vm_inst::iJMP);
     this->impl->opCodeIndex += 2;
     this->impl->intermediateCode.push_back(jpmAddress);
@@ -320,39 +324,34 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 	this->impl->methods[ast->Name] = this->impl->opCodeIndex;
     size_t totalParameter = ast->Args.size();
     for (size_t i = 0; i < totalParameter; ++i) {
+        (*this->impl->variables)[ast->Args[i]] = i;
         switch (i) {
             case 0:
-                //this->impl->iexntermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_0));
                 this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE_0));
                 this->impl->opCodeIndex += 1;
                 break;
-                // func test(a,b) return a + b test(10,20)
+                
             case 1:
-                //this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_1));
                 this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE_1));
                 this->impl->opCodeIndex += 1;
                 break;
                 
             case 2:
-                //this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_2));
                 this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE_2));
                 this->impl->opCodeIndex += 1;
                 break;
                 
             case 3:
-                //this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_3));
                 this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE_3));
                 this->impl->opCodeIndex += 1;
                 break;
                 
             case 4:
-                //this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_4));
                 this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE_4));
                 this->impl->opCodeIndex += 1;
                 break;
                 
             default:
-                //this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD, new IntOptVar(i)));
                 this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE, new IntOptVar(i)));
                 this->impl->opCodeIndex += 2;
                 break;
@@ -361,10 +360,50 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     
     ast->Body->accept(this);
     jpmAddress->Opt = new IntOptVar(this->impl->opCodeIndex);
+    
+    this->impl->variablesList.erase(impl->variablesList.begin() + (impl->variablesList.size() - 1));
+    delete impl->variables;
 }
 
 void VmBackend::visit(ForStatementAst* ast) { }
-void VmBackend::visit(VariableAst* ast) { }
+void VmBackend::visit(VariableAst* ast)
+{
+    if (this->impl->variables->find(ast->Value) == this->impl->variables->end())
+        throw ParseError(ast->Value + _T(" Not Found"));
+    
+    size_t index = (*this->impl->variables)[ast->Value];
+    switch (index) {
+        case 0:
+            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_0));
+            this->impl->opCodeIndex += 1;
+            break;
+        
+        case 1:
+            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_1));
+            this->impl->opCodeIndex += 1;
+            break;
+            
+        case 2:
+            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_2));
+            this->impl->opCodeIndex += 1;
+            break;
+            
+        case 3:
+            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_3));
+            this->impl->opCodeIndex += 1;
+            break;
+            
+        case 4:
+            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_4));
+            this->impl->opCodeIndex += 1;
+            break;
+            
+        default:
+            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD, new IntOptVar(index)));
+            this->impl->opCodeIndex += 2;
+            break;
+    }
+}
 
 void VmBackend::visit(PrimativeAst* ast) {
 	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iPUSH, new IntOptVar(ast->Value->Integer)));
@@ -469,8 +508,8 @@ void VmBackend::visit(FunctionCallAst* ast)
 	}
     
 	size_t totalParameters = ast->Args.size();
-    for (size_t i = 0; i < totalParameters; ++i)
-        getData(ast->Args[i]);
+    for (size_t i = totalParameters; i > 0; --i)
+        getData(ast->Args[i - 1]);
     
     this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iCALL, new IntOptVar(static_cast<int>(this->impl->methods[ast->Function]))));
     this->impl->opCodeIndex += 2;

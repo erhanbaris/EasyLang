@@ -21,62 +21,63 @@ template <typename T> class vm_store;
 template <typename T> class vm_stack;
 
 DECLARE_ENUM(vm_inst,
-iHALT,
-iADD,
-iSUB,
-iMUL,
-iDIV,
-iEQ,
-iLT,
-iLTE,
-iGT,
-iGTE,
-iAND,
-iOR,
-iDUP, // dublicate
-iPOP,
-iJMP, // jump
+iHALT, // 0
+iADD, // 1
+iSUB, // 2
+iMUL, // 3
+iDIV, // 4
+iEQ, // 5
+iLT, // 6
+iLTE, // 7
+iGT, // 8
+iGTE, // 9
+iAND, // 10
+iOR, // 11
+iDUP, // 12
+iPOP, // 13
+iJMP, // 14
 
-iIF_EQ, // if jump
+iIF_EQ, // 15
 
-iJIF, // if jump
-iJNIF, // if not jump
-iINC,
-iDINC,
+iJIF, // 16
+iJNIF, // 17
+iINC, // 18
+iDINC, // 19
 
-iLOAD, // Load variable
-iLOAD_0, // Load variable 0
-iLOAD_1, // Load variable 1
-iLOAD_2, // Load variable 2
-iLOAD_3, // Load variable 3
-iLOAD_4, // Load variable 4
+iLOAD, // 20
+iLOAD_0, // 21
+iLOAD_1, // 22
+iLOAD_2, // 23
+iLOAD_3, // 24
+iLOAD_4, // 25
 
-iSTORE, // Store variable
-iSTORE_0, // Store variable 0
-iSTORE_1, // Store variable 1
-iSTORE_2, // Store variable 2
-iSTORE_3, // Store variable 3
-iSTORE_4, // Store variable 4
+iSTORE, // 26
+iSTORE_0, // 27
+iSTORE_1, // 28
+iSTORE_2, // 29
+iSTORE_3, // 30
+iSTORE_4, // 31
 
-iGLOAD, // Load global variable
-iGLOAD_0, // Load global variable 0
-iGLOAD_1, // Load global variable 1
-iGLOAD_2, // Load global variable 2
-iGLOAD_3, // Load global variable 3
-iGLOAD_4, // Load global variable 4
+iGLOAD, // 32
+iGLOAD_0, // 33
+iGLOAD_1, // 34
+iGLOAD_2, // 35
+iGLOAD_3, // 36
+iGLOAD_4, // 37
 
-iGSTORE, // Store global variable
-iGSTORE_0, // Store global variable 0
-iGSTORE_1, // Store global variable 1
-iGSTORE_2, // Store global variable 2
-iGSTORE_3, // Store global variable 3
-iGSTORE_4, // Store global variable 4
+iGSTORE, // 38
+iGSTORE_0, // 39
+iGSTORE_1, // 40
+iGSTORE_2, // 41
+iGSTORE_3, // 42
+iGSTORE_4, // 43
 
-iCALL,
-iRETURN,
+iCALL, // 44
+iRETURN, // 45
 
-iPUSH,
-iPRINT)
+iPUSH, // 46
+iPRINT // 47
+)
 
 
 class vm_system

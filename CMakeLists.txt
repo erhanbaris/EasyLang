@@ -66,6 +66,8 @@ add_executable(EasyLang
 		include/CodeGenerator.h
 		src/VmBackend.cpp
 		include/VmBackend.h
+		include/termcolor.hpp
+		include/Console.h
         )
 
 

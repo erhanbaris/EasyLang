@@ -210,27 +210,27 @@ public:
 				break;
 
 			case vm_inst::iSTORE:
-				STORE(*++code, PEEK());
+				STORE(*++code, POP());
 				break;
 
 			case vm_inst::iSTORE_0:
-				STORE(0, PEEK());
+				STORE(0, POP());
 				break;
 
 			case vm_inst::iSTORE_1:
-				STORE(1, PEEK());
+				STORE(1, POP());
 				break;
 
 			case vm_inst::iSTORE_2:
-				STORE(2, PEEK());
+				STORE(2, POP());
 				break;
 
 			case vm_inst::iSTORE_3:
-				STORE(3, PEEK());
+				STORE(3, POP());
 				break;
 
 			case vm_inst::iSTORE_4:
-				STORE(4, PEEK());
+				STORE(4, POP());
 				break;
 
 
@@ -259,27 +259,27 @@ public:
 				break;
 
 			case vm_inst::iGSTORE:
-				GSTORE(*++code, PEEK());
+				GSTORE(*++code, POP());
 				break;
 
 			case vm_inst::iGSTORE_0:
-				GSTORE(0, PEEK());
+				GSTORE(0, POP());
 				break;
 
 			case vm_inst::iGSTORE_1:
-				GSTORE(1, PEEK());
+				GSTORE(1, POP());
 				break;
 
 			case vm_inst::iGSTORE_2:
-				GSTORE(2, PEEK());
+				GSTORE(2, POP());
 				break;
 
 			case vm_inst::iGSTORE_3:
-				GSTORE(3, PEEK());
+				GSTORE(3, POP());
 				break;
 
 			case vm_inst::iGSTORE_4:
-				GSTORE(4, PEEK());
+				GSTORE(4, POP());
 				break;
 
 			case vm_inst::iCALL:

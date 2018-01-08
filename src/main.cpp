@@ -19,6 +19,7 @@
 #include "InterpreterBackend.h"
 #include "ASTs.h"
 #include "Lexer.h"
+#include "Console.h"
 
 #include "../Tests/LexerTests.h"
 #include "../Tests/AstTests.h"
@@ -154,7 +155,7 @@ int main(int argc, char* argv[]) {
     
 	string_type line;
 	console_out << _T("EasyLang Virtual Machine\n\n");
-	console_out << _T("easy > ");
+	COLOR_GREY("easy > ");
 	while (std::getline(console_in, line))
 	{
         try {
@@ -163,7 +164,7 @@ int main(int argc, char* argv[]) {
 			console_out << _T("#ERROR ") << e.what() << '\n';
         }
 
-		console_out << _T("easy > ");
+		COLOR_GREY("easy > ");
 	}
 
     getchar();
