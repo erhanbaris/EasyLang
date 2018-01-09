@@ -15,10 +15,12 @@ public:
     }
 };
 
+class vm_system;
 class vm_object;
 class vm_system_impl;
 template <typename T> class vm_store;
 template <typename T> class vm_stack;
+typedef void(*VmMethodCallback)(vm_system* vm, size_t totalArgs);
 
 DECLARE_ENUM(vm_inst,
 iHALT, // 0

@@ -34,6 +34,19 @@ public:
 		return backend->Execute();
 	}
 
+	void Execute(std::vector<size_t> const & opcodes)
+	{
+		backend->Execute(opcodes);
+	}
+
+	void Compile(string_type const & code, std::vector<size_t> & opcodes)
+	{
+		tokinizer->Parse(code, tokens);
+		astParser->Parse(tokens, asts);
+		backend->Prepare(asts);
+		backend->Compile(opcodes);
+	}
+
 	~EasyEngineImpl()
 	{
 		delete backend;
@@ -55,9 +68,21 @@ EasyEngine<TTokinizer, TAstParser, TBackend>::~EasyEngine()
 }
 
 template<class TTokinizer, class TAstParser, class TBackend>
+void EasyEngine<TTokinizer, TAstParser, TBackend>::Execute(std::vector<char> const & opcodes)
+{
+	impl->Execute(opcodes);
+}
+
+template<class TTokinizer, class TAstParser, class TBackend>
 PrimativeValue* EasyEngine<TTokinizer, TAstParser, TBackend>::Execute(string_type const & code)
 {
 	return impl->Execute(code);
+}
+
+template<class TTokinizer, class TAstParser, class TBackend>
+void EasyEngine<TTokinizer, TAstParser, TBackend>::Compile(string_type const & code, std::vector<char> & opcodes)
+{
+	impl->Compile(code, opcodes);
 }
 
 template class EasyEngine<StandartTokinizer, AstParser, VmBackend>;

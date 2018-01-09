@@ -396,6 +396,14 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 	return nullptr;
 }
 
+void InterpreterBackend::Compile(std::vector<size_t> & opcodes)
+{
+}
+
+void InterpreterBackend::Execute(std::vector<size_t> const & opcodes)
+{
+}
+
 PrimativeValue* InterpreterBackend::Execute()
 {
 	PrimativeValue* result = nullptr;

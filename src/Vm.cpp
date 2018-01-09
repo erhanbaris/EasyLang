@@ -4,16 +4,22 @@
 #define BYTES_TO_INT(one,two) (one + ( 256 * two ))
 
 #define STORE(index, obj) *(currentStore->variables + index) = obj
-#define LOAD(index) (*currentStore->variables + index)
+#define LOAD(index) *(currentStore->variables + index)
 
 #define GSTORE(index, obj) *(globalStore.variables + index) = obj
-#define GLOAD(index) (*globalStore.variables + index)
+#define GLOAD(index) *(globalStore.variables + index)
 
-
+#if _DEBUG
+#define PEEK() currentStack[stackIndex - 1]
+#define POP() currentStack[--stackIndex]
+#define PUSH(obj) currentStack[stackIndex++] = obj;
+#define SET(obj) currentStack[stackIndex - 1] = obj
+#else 
 #define PEEK() *(currentStack - 1)
 #define POP() (*(--currentStack))
 #define PUSH(obj) *currentStack = obj; ++currentStack;
 #define SET(obj) (*(currentStack - 1)) = obj
+#endif
 
 #define TO_INT(code) code ? 1 : 0;
 #define TO_BOOL(code) code != 0
@@ -31,9 +37,11 @@ class vm_object
 	vm_object_type Type;
 
 	union {
+		bool Bool;
 		size_t Int;
 		double Double;
-		void * Ptr;
+		string_type* String;
+		VmMethodCallback Method;
 	} Data;
 };
 
@@ -70,6 +78,9 @@ public:
 
 		stores[0] = currentStore;
 		storesCount = 0;
+#if _DEBUG
+		stackIndex = 0;
+#endif
 	}
 
 	~vm_system_impl()
@@ -86,6 +97,9 @@ public:
 	vm_store<size_t> globalStore;
 
 	size_t* currentStack;
+#if _DEBUG
+	size_t stackIndex;
+#endif
 
 	void execute(size_t* code, size_t len, size_t startIndex)
 	{
@@ -311,7 +325,6 @@ public:
 				break;
 
 			case vm_inst::iHALT:
-				--currentStack;
 				return;
 			}
 
@@ -373,5 +386,9 @@ void vm_system::dump(size_t* code, size_t len)
 
 size_t vm_system::getUInt()
 {
+#if _DEBUG
+	return impl->currentStack[impl->stackIndex - 1];
+#else
 	return *impl->currentStack;
+#endif
 }

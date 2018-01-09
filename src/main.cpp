@@ -1,5 +1,7 @@
 //#define LLVM_ACTIVE
 
+#include <fstream>
+
 #include <string>
 #include <vector>
 #include <iostream>
@@ -152,6 +154,53 @@ int main(int argc, char* argv[]) {
 	// Catch::Session().run(argc, argv);
 
 	auto* engine = new VmEasyEngine;
+	if (argc == 2)
+	{
+		string_stream stream;
+		string_type file(argv[1]);
+		string_type line;
+		file_stream codeFile(file);
+		if (codeFile.is_open())
+		{
+			while (getline(codeFile, line))
+				stream << line;
+
+			codeFile.close();
+		}
+		else 
+			console_out << _T("Unable to open file");
+
+		std::vector<size_t> opcodes;
+		if (file.substr(file.find_last_of(_T(".")) + 1) == _T("ea")) {
+			engine->Compile(stream.str(), opcodes);
+			fstream opcodeFile(file + _T("c"), ios::out | ios::binary | ios::trunc);
+
+			if (opcodeFile.is_open())
+			{
+				opcodeFile.seekp(0);
+				opcodeFile.write((char*)&opcodes[0], opcodes.size());
+				opcodeFile.close();
+			}
+			else
+				console_out << _T("Unable to open file");
+		}
+		else if (file.substr(file.find_last_of(_T(".")) + 1) == _T("eac")) {
+			std::vector<size_t> codes;
+			string_type code = stream.str();
+			codes.resize(code.size());
+			size_t totalCode = code.size();
+			for (size_t i = 0; i < totalCode; ++i)
+			{
+				char ch = code[i];
+				codes[i] = (size_t)ch;
+			}
+
+			engine->Execute(codes);
+		}
+
+		return 0;
+	}
+
     
 	string_type line;
 	console_out << _T("EasyLang Virtual Machine\n\n");

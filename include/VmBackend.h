@@ -18,9 +18,11 @@ public:
 
 	void Prepare(std::shared_ptr<std::vector<Ast*>> pAsts) override;
 	PrimativeValue* getPrimative(Ast* ast);
-	void Generate();
+	void Generate(std::vector<size_t> & opcodes);
 	PrimativeValue* getData(Ast* ast);
 	PrimativeValue* Execute() override;
+	void Execute(std::vector<size_t> const & opcodes) override;
+	void Compile(std::vector<size_t> & opcode) override;
 
 	void visit(AssignmentAst* ast) override;
 	void visit(BlockAst* ast) override;

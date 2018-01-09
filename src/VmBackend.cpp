@@ -58,6 +58,7 @@ class VmBackendImpl
 public:
     vm_system system;
 	std::unordered_map<string_type, size_t>* variables;
+	std::unordered_map<string_type, size_t>* globalVariables;
 	std::vector<std::unordered_map<string_type, size_t>*> variablesList;
     std::unordered_map<string_type, size_t> methods;
     std::vector<size_t> codes;
@@ -65,13 +66,122 @@ public:
 
 	std::vector<OpcodeItem*> intermediateCode;
 	size_t opCodeIndex;
-    bool inClass;
+    size_t inClassCounter;
+	size_t inFunctionCounter;
 
 	VmBackendImpl()
 	{
-        inClass = false;
+        inClassCounter = 0;
+		inFunctionCounter = 0;
 		opCodeIndex = 0;
 		dumpOpcode = false;
+		globalVariables = new std::unordered_map<string_type, size_t>();
+		variables = new std::unordered_map<string_type, size_t>();
+		variablesList.push_back(variables);
+	}
+
+	inline OpcodeItem* generateStore(size_t index)
+	{
+		switch (index)
+		{
+		case 0:
+			return new OpcodeItem(vm_inst::iSTORE_0);
+
+		case 1:
+			return new OpcodeItem(vm_inst::iSTORE_1);
+
+		case 2:
+			return new OpcodeItem(vm_inst::iSTORE_2);
+
+		case 3:
+			return new OpcodeItem(vm_inst::iSTORE_3);
+
+		case 4:
+			return new OpcodeItem(vm_inst::iSTORE_4);
+
+		default:
+			new OpcodeItem(vm_inst::iSTORE, new IntOptVar(index));
+		}
+
+		return nullptr;
+	}
+
+	inline OpcodeItem* generateGlobalStore(size_t index)
+	{
+		switch (index)
+		{
+		case 0:
+			return new OpcodeItem(vm_inst::iGSTORE_0);
+
+		case 1:
+			return new OpcodeItem(vm_inst::iGSTORE_1);
+
+		case 2:
+			return new OpcodeItem(vm_inst::iGSTORE_2);
+
+		case 3:
+			return new OpcodeItem(vm_inst::iGSTORE_3);
+
+		case 4:
+			return new OpcodeItem(vm_inst::iGSTORE_4);
+
+		default:
+			new OpcodeItem(vm_inst::iGSTORE, new IntOptVar(index));
+		}
+
+		return nullptr;
+	}
+
+	inline OpcodeItem* generateLoad(size_t index)
+	{
+		switch (index)
+		{
+		case 0:
+			return new OpcodeItem(vm_inst::iLOAD_0);
+
+		case 1:
+			return new OpcodeItem(vm_inst::iLOAD_1);
+
+		case 2:
+			return new OpcodeItem(vm_inst::iLOAD_2);
+
+		case 3:
+			return new OpcodeItem(vm_inst::iLOAD_3);
+
+		case 4:
+			return new OpcodeItem(vm_inst::iLOAD_4);
+
+		default:
+			new OpcodeItem(vm_inst::iLOAD, new IntOptVar(index));
+		}
+
+		return nullptr;
+	}
+
+	inline OpcodeItem* generateGlobalLoad(size_t index)
+	{
+		switch (index)
+		{
+		case 0:
+			return new OpcodeItem(vm_inst::iGLOAD_0);
+
+		case 1:
+			return new OpcodeItem(vm_inst::iGLOAD_1);
+
+		case 2:
+			return new OpcodeItem(vm_inst::iGLOAD_2);
+
+		case 3:
+			return new OpcodeItem(vm_inst::iGLOAD_3);
+
+		case 4:
+			return new OpcodeItem(vm_inst::iGLOAD_4);
+
+		default:
+			new OpcodeItem(vm_inst::iGLOAD, new IntOptVar(index));
+		}
+
+		return nullptr;
 	}
 };
 
@@ -173,27 +283,33 @@ PrimativeValue* VmBackend::getData(Ast* ast)
 	return nullptr;
 }
 
+
+void VmBackend::Compile(std::vector<size_t> & opcode)
+{
+	auto astsEnd = temporaryAsts.cend();
+	for (auto it = temporaryAsts.cbegin(); astsEnd != it; ++it)
+		getData(*it);
+
+	temporaryAsts.clear();
+	this->Generate(opcode);
+
+	size_t totalIntermediateCode = this->impl->intermediateCode.size();
+	for (size_t i = 0; i < totalIntermediateCode; ++i) {
+		if (this->impl->intermediateCode[i]->Opt != nullptr)
+			delete this->impl->intermediateCode[i]->Opt;
+
+		delete this->impl->intermediateCode[i];
+	}
+
+	this->impl->intermediateCode.clear();
+}
+
 PrimativeValue* VmBackend::Execute()
 {
 	PrimativeValue* result = nullptr;
     size_t codeStart = impl->codes.size();
-	auto astsEnd = temporaryAsts.cend();
-	for (auto it = temporaryAsts.cbegin(); astsEnd != it; ++it)
-        getData(*it);
-
-	temporaryAsts.clear();
 	
-	this->Generate();
-    
-    size_t totalIntermediateCode = this->impl->intermediateCode.size();
-    for (size_t i = 0; i < totalIntermediateCode; ++i) {
-        if (this->impl->intermediateCode[i]->Opt != nullptr)
-            delete this->impl->intermediateCode[i]->Opt;
-        
-        delete this->impl->intermediateCode[i];
-    }
-    
-    this->impl->intermediateCode.clear();
+	this->Compile(this->impl->codes);
 	impl->system.execute(&impl->codes[0], impl->codes.size(), codeStart);	
 	auto data = impl->system.getUInt();
 
@@ -202,6 +318,15 @@ PrimativeValue* VmBackend::Execute()
 	return result;
 }
 
+void VmBackend::Execute(std::vector<size_t> const & opcodes)
+{
+	impl->system.execute(const_cast<size_t*>(&opcodes[0]), opcodes.size(), 0);
+	auto data = impl->system.getUInt();
+
+	auto* result = new PrimativeValue((int)data);
+	console_out << result->Describe() << '\n';
+	delete result;
+}
 
 VmBackend::~VmBackend()
 {
@@ -214,7 +339,7 @@ VmBackend::VmBackend()
 	Scope::GlobalScope = new Scope;
 }
 
-void VmBackend::Generate()
+void VmBackend::Generate(std::vector<size_t> & opcodes)
 {
 	size_t indexer = 0;
 	impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iHALT));
@@ -222,9 +347,7 @@ void VmBackend::Generate()
     size_t totalIntermediateCode = this->impl->intermediateCode.size();
     
 	for (int i = 0; i < totalIntermediateCode; ++i) {
-		//console_out << _T("\t") << indexer << _T(" -> ") << vm_instToString(this->impl->intermediateCode[i]->OpCode);
-
-		impl->codes.push_back(this->impl->intermediateCode[i]->OpCode);
+		opcodes.push_back(this->impl->intermediateCode[i]->OpCode);
 		++indexer;
 
 		if (this->impl->intermediateCode[i]->Opt != nullptr)
@@ -232,34 +355,40 @@ void VmBackend::Generate()
 			switch (this->impl->intermediateCode[i]->Opt->Type)
 			{
 			case OptVar::VARIABLE:
-				impl->codes.push_back((*this->impl->variables)[((VariableOptVar*)this->impl->intermediateCode[i]->Opt)->Data]);
-				//console_out << _T(" ") << impl->codes[impl->codes.size() - 1];
+				opcodes.push_back((*this->impl->variables)[((VariableOptVar*)this->impl->intermediateCode[i]->Opt)->Data]);
 				break;
 
 			case OptVar::METHOD:
-				impl->codes.push_back(this->impl->methods[((MethodOptVar*)this->impl->intermediateCode[i]->Opt)->Data]);
-				//console_out << _T(" ") << impl->codes[impl->codes.size() - 1];
+				opcodes.push_back(this->impl->methods[((MethodOptVar*)this->impl->intermediateCode[i]->Opt)->Data]);
 				break;
 
 			case OptVar::INT:
-				impl->codes.push_back(((IntOptVar*)this->impl->intermediateCode[i]->Opt)->Data);
-				//console_out << _T(" ") << impl->codes[impl->codes.size() - 1];
+				opcodes.push_back(((IntOptVar*)this->impl->intermediateCode[i]->Opt)->Data);
 				break;
 			}
 
 			++indexer;
 		}
-
-		//console_out << '\n';
 	}
 }
 
 void VmBackend::visit(AssignmentAst* ast)
 {
-	(*this->impl->variables)[ast->Name] = this->impl->variables->size();
+	if (this->impl->inFunctionCounter > 0)
+		(*this->impl->variables)[ast->Name] = this->impl->variables->size();
+	else 
+		(*this->impl->globalVariables)[ast->Name] = this->impl->globalVariables->size();
+
 	this->getData(ast->Data);
-	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE, new IntOptVar(static_cast<int>((*this->impl->variables)[ast->Name]))));
-	this->impl->opCodeIndex += 2;
+	if (this->impl->inFunctionCounter > 0)
+		this->impl->intermediateCode.push_back(this->impl->generateStore(static_cast<int>((*this->impl->variables)[ast->Name])));
+	else 
+		this->impl->intermediateCode.push_back(this->impl->generateGlobalStore(static_cast<int>((*this->impl->globalVariables)[ast->Name])));
+
+	if (this->impl->intermediateCode[this->impl->intermediateCode.size() - 1]->Opt == nullptr)
+		++this->impl->opCodeIndex;
+	else 
+		this->impl->opCodeIndex += 2;
 }
 
 void VmBackend::visit(BlockAst* ast)
@@ -307,6 +436,7 @@ void VmBackend::visit(IfStatementAst* ast)
 
 void VmBackend::visit(FunctionDefinetionAst* ast)
 {
+	++this->impl->inFunctionCounter;
     this->impl->variablesList.push_back(new std::unordered_map<string_type, size_t>());
     impl->variables = impl->variablesList[impl->variablesList.size() - 1];
     
@@ -325,84 +455,55 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     size_t totalParameter = ast->Args.size();
     for (size_t i = 0; i < totalParameter; ++i) {
         (*this->impl->variables)[ast->Args[i]] = i;
-        switch (i) {
-            case 0:
-                this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE_0));
-                this->impl->opCodeIndex += 1;
-                break;
-                
-            case 1:
-                this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE_1));
-                this->impl->opCodeIndex += 1;
-                break;
-                
-            case 2:
-                this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE_2));
-                this->impl->opCodeIndex += 1;
-                break;
-                
-            case 3:
-                this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE_3));
-                this->impl->opCodeIndex += 1;
-                break;
-                
-            case 4:
-                this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE_4));
-                this->impl->opCodeIndex += 1;
-                break;
-                
-            default:
-                this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSTORE, new IntOptVar(i)));
-                this->impl->opCodeIndex += 2;
-                break;
-        }
+	
+		auto* opCode = this->impl->generateStore(i);
+		this->impl->intermediateCode.push_back(opCode);
+
+		if (opCode->Opt != nullptr)
+			this->impl->opCodeIndex += 2;
+		else
+			++this->impl->opCodeIndex;
     }
     
     ast->Body->accept(this);
     jpmAddress->Opt = new IntOptVar(this->impl->opCodeIndex);
     
     this->impl->variablesList.erase(impl->variablesList.begin() + (impl->variablesList.size() - 1));
+	--this->impl->inFunctionCounter;
     delete impl->variables;
 }
 
 void VmBackend::visit(ForStatementAst* ast) { }
 void VmBackend::visit(VariableAst* ast)
 {
-    if (this->impl->variables->find(ast->Value) == this->impl->variables->end())
+    if (this->impl->inFunctionCounter > 0 && this->impl->variables->find(ast->Value) == this->impl->variables->end())
         throw ParseError(ast->Value + _T(" Not Found"));
+
+	if (this->impl->inFunctionCounter == 0 && this->impl->globalVariables->find(ast->Value) == this->impl->globalVariables->end())
+		throw ParseError(ast->Value + _T(" Not Found"));
     
-    size_t index = (*this->impl->variables)[ast->Value];
-    switch (index) {
-        case 0:
-            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_0));
-            this->impl->opCodeIndex += 1;
-            break;
-        
-        case 1:
-            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_1));
-            this->impl->opCodeIndex += 1;
-            break;
-            
-        case 2:
-            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_2));
-            this->impl->opCodeIndex += 1;
-            break;
-            
-        case 3:
-            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_3));
-            this->impl->opCodeIndex += 1;
-            break;
-            
-        case 4:
-            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD_4));
-            this->impl->opCodeIndex += 1;
-            break;
-            
-        default:
-            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLOAD, new IntOptVar(index)));
-            this->impl->opCodeIndex += 2;
-            break;
-    }
+	if (this->impl->inFunctionCounter == 0)
+	{
+		size_t index = (*this->impl->globalVariables)[ast->Value];
+		auto* opCode = this->impl->generateGlobalLoad(index);
+		this->impl->intermediateCode.push_back(opCode);
+		
+		if (opCode->Opt != nullptr)
+			this->impl->opCodeIndex += 2; 
+		else 
+			++this->impl->opCodeIndex;
+	}
+	else
+	{
+		size_t index = (*this->impl->globalVariables)[ast->Value];
+		auto* opCode = this->impl->generateLoad(index);
+		this->impl->intermediateCode.push_back(opCode);
+
+		if (opCode->Opt != nullptr)
+			this->impl->opCodeIndex += 2;
+		else
+			++this->impl->opCodeIndex;
+	}
 }
 
 void VmBackend::visit(PrimativeAst* ast) {

@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <fstream>
 
 #if defined(_UNICODE)
 #define EASY_STRING_TYPE std::wstring
@@ -12,6 +13,7 @@
 #define console_out std::wcout
 #define console_in std::wcin
 #define EASY_CHAR_TYPE wchar_t
+#define EASY_FILE_STREAM_TYPE std::wifstream
 
 #if !defined(_T)
 #define _T(x) L##x
@@ -27,11 +29,13 @@
 #define console_out std::cout
 #define console_in std::cin
 #define EASY_CHAR_TYPE char
+#define EASY_FILE_STREAM_TYPE std::ifstream
 
 #endif
 
 typedef EASY_STRING_TYPE string_type;
 typedef EASY_STRING_STREAM string_stream;
 typedef EASY_CHAR_TYPE char_type;
+typedef EASY_FILE_STREAM_TYPE file_stream;
 
 #endif

@@ -275,10 +275,10 @@ iHALT   : Stop system
 /*
 func fibonacci(num) 
 { 
-    if num = 0 then 
+    if num == 0 then 
         return 0
 
-    if num = 1 then 
+    if num == 1 then 
         return 1 
         
     left = fibonacci(num - 1)
