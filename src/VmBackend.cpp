@@ -22,9 +22,9 @@ public:
 class IntOptVar : public OptVar
 {
 public:
-	size_t Data;
+	int Data;
 	IntOptVar() { Type = INT; }
-	IntOptVar(size_t data) { Type = INT; Data = data; }
+	IntOptVar(int data) { Type = INT; Data = data; }
 };
 
 class MethodOptVar : public OptVar

@@ -20,7 +20,13 @@ class vm_object;
 class vm_system_impl;
 template <typename T> class vm_store;
 template <typename T> class vm_stack;
+
 typedef void(*VmMethodCallback)(vm_system* vm, size_t totalArgs);
+typedef char vm_char_t;
+typedef union vm_double_u { vm_char_t Chars[8];  double Double; } vm_double_t;
+typedef union vm_long_u { vm_char_t Chars[4];  long Long; } vm_long_t;
+typedef union vm_int_u { vm_char_t Chars[2];  int Int; } vm_int_t;
+typedef bool vm_bool_t;
 
 DECLARE_ENUM(vm_inst,
 iHALT, // 0

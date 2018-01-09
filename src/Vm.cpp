@@ -19,6 +19,12 @@
 #define POP() (*(--currentStack))
 #define PUSH(obj) *currentStack = obj; ++currentStack;
 #define SET(obj) (*(currentStack - 1)) = obj
+
+#define iPEEK() (( PEEK() << 8) | (PEEK() & 0x00FF))
+#define iPOP() (( POP() << 8) | (POP() & 0x00FF))
+#define iPUSH(obj1, obj2) *currentStack = obj1; ++currentStack; *currentStack = obj2; ++currentStack;
+#define iSET(obj) (*(currentStack - 1)) = obj
+
 #endif
 
 #define TO_INT(code) code ? 1 : 0;
