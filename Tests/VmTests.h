@@ -22,7 +22,7 @@ TEST_CASE("VM Fibonacci tests 2") {
 
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 	vm_system vm;
-	std::vector<size_t> codes{
+	std::vector<char> codes{
 			iPUSH, 25, // number
 			iCALL, 5, // jump and create new stack
 			iHALT,

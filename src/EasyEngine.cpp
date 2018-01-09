@@ -34,12 +34,12 @@ public:
 		return backend->Execute();
 	}
 
-	void Execute(std::vector<size_t> const & opcodes)
+	void Execute(std::vector<char> const & opcodes)
 	{
 		backend->Execute(opcodes);
 	}
 
-	void Compile(string_type const & code, std::vector<size_t> & opcodes)
+	void Compile(string_type const & code, std::vector<char> & opcodes)
 	{
 		tokinizer->Parse(code, tokens);
 		astParser->Parse(tokens, asts);

@@ -10,8 +10,8 @@
 #define GLOAD(index) *(globalStore.variables + index)
 
 #if _DEBUG
-#define PEEK() currentStack[stackIndex - 1]
-#define POP() currentStack[--stackIndex]
+#define PEEK() (int)currentStack[stackIndex - 1]
+#define POP() (int)currentStack[--stackIndex]
 #define PUSH(obj) currentStack[stackIndex++] = obj;
 #define SET(obj) currentStack[stackIndex - 1] = obj
 #else 
@@ -101,9 +101,9 @@ public:
 	size_t stackIndex;
 #endif
 
-	void execute(size_t* code, size_t len, size_t startIndex)
+	void execute(char* code, size_t len, size_t startIndex)
 	{
-		size_t* startPoint = code;
+		char* startPoint = code;
 		code += startIndex;
 		while (1) {
 			switch (*code)
@@ -193,6 +193,10 @@ public:
 
 			case vm_inst::iINC:
 				SET(PEEK() + 1);
+				break;
+			
+			case vm_inst::iNEG:
+				SET(PEEK() * -1);
 				break;
 
 			case vm_inst::iDINC:
@@ -332,7 +336,7 @@ public:
 		}
 	}
 
-	void dump(size_t* code, size_t len)
+	void dump(char* code, size_t len)
 	{
 		size_t index = 0;
 		while (index < len) {
@@ -351,7 +355,7 @@ public:
 				case vm_inst::iGSTORE:
 				case vm_inst::iCALL:
 				case vm_inst::iPUSH: 
-					console_out << _T(" ") << _T(*++code);
+					console_out << _T(" ") << (int)*++code;
 					++index;
 					break;
 			}
@@ -374,12 +378,12 @@ vm_system::~vm_system()
 	delete impl;
 }
 
-void vm_system::execute(size_t* code, size_t len, size_t startIndex)
+void vm_system::execute(char* code, size_t len, size_t startIndex)
 {
 	impl->execute(code, len, startIndex);
 }
 
-void vm_system::dump(size_t* code, size_t len)
+void vm_system::dump(char* code, size_t len)
 {
 	impl->dump(code, len);
 }

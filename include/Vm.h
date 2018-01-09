@@ -78,7 +78,8 @@ iCALL, // 44
 iRETURN, // 45
 
 iPUSH, // 46
-iPRINT // 47
+iPRINT, // 47
+iNEG // 48
 )
 
 
@@ -87,8 +88,8 @@ class vm_system
 public:
     vm_system();
     ~vm_system();
-	void execute(size_t* code, size_t len, size_t startIndex);
-	void dump(size_t* code, size_t len);
+	void execute(char* code, size_t len, size_t startIndex);
+	void dump(char* code, size_t len);
 	size_t getUInt();
 
 private:

@@ -61,7 +61,7 @@ public:
 	std::unordered_map<string_type, size_t>* globalVariables;
 	std::vector<std::unordered_map<string_type, size_t>*> variablesList;
     std::unordered_map<string_type, size_t> methods;
-    std::vector<size_t> codes;
+    std::vector<char> codes;
 	bool dumpOpcode;
 
 	std::vector<OpcodeItem*> intermediateCode;
@@ -183,6 +183,12 @@ public:
 
 		return nullptr;
 	}
+
+	~VmBackendImpl()
+	{
+		delete variables;
+		delete globalVariables;
+	}
 };
 
 
@@ -209,13 +215,8 @@ PrimativeValue* VmBackend::getData(Ast* ast)
 	case EASY_AST_TYPE::UNARY:
 	{
 		auto* unary = static_cast<UnaryAst*>(ast);
+		getData(unary->Data);
 		unary->accept(this);
-		if (unary->Opt == EASY_OPERATOR_TYPE::MINUS)
-		{
-			auto* unaryData = getData(unary->Data);
-			return (*unaryData) * (-1);
-		}
-
 		return nullptr;
 	}
 	break;
@@ -284,7 +285,7 @@ PrimativeValue* VmBackend::getData(Ast* ast)
 }
 
 
-void VmBackend::Compile(std::vector<size_t> & opcode)
+void VmBackend::Compile(std::vector<char> & opcode)
 {
 	auto astsEnd = temporaryAsts.cend();
 	for (auto it = temporaryAsts.cbegin(); astsEnd != it; ++it)
@@ -318,9 +319,9 @@ PrimativeValue* VmBackend::Execute()
 	return result;
 }
 
-void VmBackend::Execute(std::vector<size_t> const & opcodes)
+void VmBackend::Execute(std::vector<char> const & opcodes)
 {
-	impl->system.execute(const_cast<size_t*>(&opcodes[0]), opcodes.size(), 0);
+	impl->system.execute(const_cast<char*>(&opcodes[0]), opcodes.size(), 0);
 	auto data = impl->system.getUInt();
 
 	auto* result = new PrimativeValue((int)data);
@@ -331,6 +332,7 @@ void VmBackend::Execute(std::vector<size_t> const & opcodes)
 VmBackend::~VmBackend()
 {
 	delete impl;
+	delete Scope::GlobalScope;
 }
 // data = (123 * 23) + 123 - 2
 VmBackend::VmBackend()
@@ -339,7 +341,7 @@ VmBackend::VmBackend()
 	Scope::GlobalScope = new Scope;
 }
 
-void VmBackend::Generate(std::vector<size_t> & opcodes)
+void VmBackend::Generate(std::vector<char> & opcodes)
 {
 	size_t indexer = 0;
 	impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iHALT));
@@ -616,7 +618,12 @@ void VmBackend::visit(FunctionCallAst* ast)
     this->impl->opCodeIndex += 2;
 }
 
-void VmBackend::visit(UnaryAst* ast) { }
+void VmBackend::visit(UnaryAst* ast) 
+{ 
+	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iNEG));
+	++this->impl->opCodeIndex;
+}
+
 void VmBackend::visit(ExprStatementAst* ast)
 {
 	ast->Expr->accept(this);
