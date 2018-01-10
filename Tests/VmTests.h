@@ -29,17 +29,18 @@ TEST_CASE("VM Fibonacci tests 2") {
 
 			// Init variables
 			iSTORE_0, // save number
+			iLOAD_0,
 
 			/* if (n == 0) return 0; */
 			iPUSH, 0,
-			iIF_EQ, 13,
+			iIF_EQ, 14,
 			iPUSH, 0,
 			iRETURN,
 
 			/* if (n == 1) return 1; */
 			iLOAD, 0, // get total to stack
 			iPUSH, 1,
-			iIF_EQ, 22,
+			iIF_EQ, 23,
 			iPUSH, 1,
 			iRETURN,
 

@@ -79,8 +79,8 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 		Scope blockScope(&scope);
 
 		BlockAst* block = static_cast<BlockAst*>(ast);
-		std::vector<Ast*>::const_iterator blocksEnd = block->Blocks->cend();
-		for (std::vector<Ast*>::const_iterator it = block->Blocks->cbegin(); it != blocksEnd; ++it)
+		std::vector<Ast*>::const_iterator blocksEnd = block->Blocks.cend();
+		for (std::vector<Ast*>::const_iterator it = block->Blocks.cbegin(); it != blocksEnd; ++it)
 		{
 			Ast* blockAst = *it;
 			PrimativeValue* result = getData(blockAst, blockScope);
@@ -166,7 +166,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 			{
 				Ast* argAst = call->Args[i];
 				PrimativeValue* argItem = getData(argAst, scope);
-				args[functionInfo->FunctionAst->Args[i]] = argItem;
+				args[functionInfo->FunctionAst->Args[i]->Name] = argItem;
 			}
 
 			functionInfo->Callback(args, returnValue, *Scope::GlobalScope);

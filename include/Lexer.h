@@ -71,7 +71,13 @@ DECLARE_ENUM(EASY_KEYWORD_TYPE,
     BOOL_FALSE,
 	FUNC,
 	RETURN,
-    PACKAGE)
+    PACKAGE,
+	TYPE_BOOL,
+	TYPE_INT,
+	TYPE_DOUBLE,
+	TYPE_STRING,
+	TYPE_ARRAY,
+	TYPE_DICTIONARY)
 
 struct EnumClassHash
 {
@@ -121,9 +127,26 @@ static std::unordered_map<string_type, EASY_KEYWORD_TYPE> Keywords {
 	{ _T("for"), EASY_KEYWORD_TYPE::FOR },
 	{ _T("in"), EASY_KEYWORD_TYPE::IN_KEYWORD },
 	{ _T("to"), EASY_KEYWORD_TYPE::TO_KEYWORD },
-	{ _T("step"), EASY_KEYWORD_TYPE::STEP_KEYWORD }
+	{ _T("step"), EASY_KEYWORD_TYPE::STEP_KEYWORD },
+	{ _T("bool"), EASY_KEYWORD_TYPE::TYPE_BOOL },
+	{ _T("int"), EASY_KEYWORD_TYPE::TYPE_INT },
+	{ _T("double"), EASY_KEYWORD_TYPE::TYPE_DOUBLE },
+	{ _T("string"), EASY_KEYWORD_TYPE::TYPE_STRING },
+	{ _T("array"), EASY_KEYWORD_TYPE::TYPE_ARRAY },
+	{ _T("dict"), EASY_KEYWORD_TYPE::TYPE_DICTIONARY },
 };
 static std::unordered_map<string_type, EASY_KEYWORD_TYPE>::const_iterator KeywordsEnd = Keywords.cend();
+
+static std::unordered_set<EASY_KEYWORD_TYPE, EnumClassHash> Types{
+	EASY_KEYWORD_TYPE::TYPE_BOOL,
+	EASY_KEYWORD_TYPE::TYPE_STRING,
+	EASY_KEYWORD_TYPE::TYPE_ARRAY,
+	EASY_KEYWORD_TYPE::TYPE_DICTIONARY,
+	EASY_KEYWORD_TYPE::TYPE_DOUBLE,
+	EASY_KEYWORD_TYPE::TYPE_INT
+};
+static std::unordered_set<EASY_KEYWORD_TYPE, EnumClassHash>::const_iterator TypesEnd = Types.cend();
+
 
 class Token
 {

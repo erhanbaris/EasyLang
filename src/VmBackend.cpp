@@ -287,9 +287,10 @@ PrimativeValue* VmBackend::getData(Ast* ast)
 
 void VmBackend::Compile(std::vector<char> & opcode)
 {
-	auto astsEnd = temporaryAsts.cend();
-	for (auto it = temporaryAsts.cbegin(); astsEnd != it; ++it)
-		getData(*it);
+	size_t totalAst = temporaryAsts.size();
+	for (int i = 0; i < totalAst; ++i) {
+		getData(temporaryAsts[i]);
+	}
 
 	temporaryAsts.clear();
 	this->Generate(opcode);
@@ -376,10 +377,15 @@ void VmBackend::Generate(std::vector<char> & opcodes)
 
 void VmBackend::visit(AssignmentAst* ast)
 {
+	std::unordered_map<string_type, size_t>* variables = nullptr;
 	if (this->impl->inFunctionCounter > 0)
-		(*this->impl->variables)[ast->Name] = this->impl->variables->size();
+		variables = this->impl->variables;
 	else 
-		(*this->impl->globalVariables)[ast->Name] = this->impl->globalVariables->size();
+		variables = this->impl->globalVariables;
+
+	if (variables->find(ast->Name) == variables->end())
+		(*variables)[ast->Name] = variables->size();
+
 
 	this->getData(ast->Data);
 	if (this->impl->inFunctionCounter > 0)
@@ -396,9 +402,9 @@ void VmBackend::visit(AssignmentAst* ast)
 void VmBackend::visit(BlockAst* ast)
 {
     //if data == 123 then { data = 111 } else {data = 999}
-    size_t totalBlock = ast->Blocks.get()->size();
+    size_t totalBlock = ast->Blocks.size();
     for (size_t i = 0; i < totalBlock; ++i) {
-        getData(ast->Blocks->at(i));
+        getData(ast->Blocks.at(i));
     }
 }
 
@@ -456,7 +462,7 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 	this->impl->methods[ast->Name] = this->impl->opCodeIndex;
     size_t totalParameter = ast->Args.size();
     for (size_t i = 0; i < totalParameter; ++i) {
-        (*this->impl->variables)[ast->Args[i]] = i;
+        (*this->impl->variables)[ast->Args[i]->Name] = i;
 	
 		auto* opCode = this->impl->generateStore(i);
 		this->impl->intermediateCode.push_back(opCode);

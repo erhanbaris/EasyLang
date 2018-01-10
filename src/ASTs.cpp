@@ -210,9 +210,9 @@ public:
 		case EASY_AST_TYPE::BLOCK:
 		{
 			auto* block = static_cast<BlockAst*>(ast);
-			auto blockEnd = block->Blocks->cend();
+			auto blockEnd = block->Blocks.cend();
 
-			for (auto it = block->Blocks->cbegin(); it != blockEnd; ++it)
+			for (auto it = block->Blocks.cbegin(); it != blockEnd; ++it)
 			{
 				//dumpLevel(*it, buffer);
 			}
@@ -249,6 +249,20 @@ public:
 		}
 
 		return ast;
+	}
+
+	EASY_KEYWORD_TYPE getVariableType()
+	{
+		if (!isKeyword(peek()))
+			throw ParseError(_T("Variable type required"));
+
+		KeywordToken* token = static_cast<KeywordToken*>(advance());
+		if (Types.find(token->Value) == TypesEnd)
+			throw ParseError(_T("Type not found"));
+
+		return token->Value;
+
+		// Todo : Implement array[string], dict[string:int]
 	}
 
 	ExprAst* primaryExpr()
@@ -435,11 +449,20 @@ public:
 	ExprAst* assignmentExpr()
 	{
 		ExprAst* expr = orExpr();
-		if (match({ EASY_OPERATOR_TYPE::ASSIGN }))
+
+		if (match({ EASY_OPERATOR_TYPE::SINGLE_COLON }))
 		{
+            EASY_KEYWORD_TYPE  variableType = getVariableType();
+            consume(EASY_OPERATOR_TYPE::ASSIGN, _T("Variable defination not finished."));
 			ExprAst* value = orExpr();
 			if (expr->GetType() == EASY_AST_TYPE::VARIABLE)
-				return new AssignmentAst(static_cast<VariableAst*>(expr)->Value, value);
+			{
+				AssignmentAst *assignment = new AssignmentAst;
+				assignment->Data = value;
+				assignment->Name = static_cast<VariableAst*>(expr)->Value;
+				assignment->VariableType = variableType;
+				return assignment;
+			}
 
 			throw ParseError(_T("Invalid assignment"));
 		}
@@ -549,11 +572,12 @@ public:
 		Token* funcName = consume(EASY_TOKEN_TYPE::SYMBOL, _T("Function name required"));
 		consume(EASY_OPERATOR_TYPE::LEFT_PARENTHESES, _T("'(' required"));
 
-		std::vector<string_type> args;
+		std::vector<FunctionDefinetionArg*> args;
 		if (!check(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES))
 			do {
 				Token* arg = consume(EASY_TOKEN_TYPE::SYMBOL, _T("Only string variable name allowed"));
-				args.push_back(static_cast<SymbolToken*>(arg)->Value);
+				consume(EASY_OPERATOR_TYPE::SINGLE_COLON, _T("Parameter type required"));
+				args.push_back(new FunctionDefinetionArg(static_cast<SymbolToken*>(arg)->Value, getVariableType()));
 			} while (match({ EASY_OPERATOR_TYPE::COMMA }));
 
 			StmtAst* body = nullptr;
@@ -572,7 +596,7 @@ public:
 		BlockAst* block = new BlockAst;
 		std::vector<StmtAst*> statements;
 		while (!check(EASY_OPERATOR_TYPE::BLOCK_END) && !isAtEnd()) {
-			block->Blocks->push_back(declarationStmt());
+			block->Blocks.push_back(declarationStmt());
 		}
 
 		consume(EASY_OPERATOR_TYPE::BLOCK_END, _T("'}' required"));

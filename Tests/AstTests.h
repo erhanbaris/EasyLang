@@ -295,10 +295,10 @@ TEST_CASE("Block test") {
 	REQUIRE(asts.get()->size() == 1);
 
 	auto* block = static_cast<BlockAst*>(asts.get()->at(0));
-	REQUIRE(block->Blocks->size() == 1);
+	REQUIRE(block->Blocks.size() == 1);
 	
-	REQUIRE(block->Blocks->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
-	auto* stmt = static_cast<ExprStatementAst*>(block->Blocks->at(0));
+	REQUIRE(block->Blocks.at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+	auto* stmt = static_cast<ExprStatementAst*>(block->Blocks.at(0));
 
 	AssignmentAst* assignment = static_cast<AssignmentAst*>(stmt->Expr);
 	REQUIRE(assignment->Name == _T("erhan"));
@@ -316,9 +316,9 @@ TEST_CASE("Block test") {
 	astParser->Parse(tokens, asts);
 	REQUIRE(asts.get()->size() == 3);
 
-	REQUIRE(static_cast<BlockAst*>(asts.get()->at(0))->Blocks->size() == 0);
-	REQUIRE(static_cast<BlockAst*>(asts.get()->at(1))->Blocks->size() == 0);
-	REQUIRE(static_cast<BlockAst*>(asts.get()->at(2))->Blocks->size() == 1);
+	REQUIRE(static_cast<BlockAst*>(asts.get()->at(0))->Blocks.size() == 0);
+	REQUIRE(static_cast<BlockAst*>(asts.get()->at(1))->Blocks.size() == 0);
+	REQUIRE(static_cast<BlockAst*>(asts.get()->at(2))->Blocks.size() == 1);
 }
 
 TEST_CASE("loop test 1") {
@@ -563,16 +563,16 @@ TEST_CASE( "Function asd test" ) {
         REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::BLOCK);
         
         auto* block = static_cast<BlockAst*>(decl->Body);
-        REQUIRE(block->Blocks->size() == 1);
-        REQUIRE(block->Blocks->at(0)->GetType() == EASY_AST_TYPE::RETURN);
+        REQUIRE(block->Blocks.size() == 1);
+        REQUIRE(block->Blocks.at(0)->GetType() == EASY_AST_TYPE::RETURN);
         
-        auto* ret = static_cast<ReturnAst*>(block->Blocks->at(0));
+        auto* ret = static_cast<ReturnAst*>(block->Blocks.at(0));
         REQUIRE(ret->Data != nullptr);
         REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
     }
 
-	SECTION( "func test (data) { return data }" ) {
-		tokinizer->Parse(_T("func test (data) { return data }"), tokens);
+	SECTION( "func test (data:int) { return data }" ) {
+		tokinizer->Parse(_T("func test (data:int) { return data }"), tokens);
 		astParser->Parse(tokens, asts);
 
 		REQUIRE(asts->size() == 1);
@@ -581,15 +581,15 @@ TEST_CASE( "Function asd test" ) {
 		auto* decl = static_cast<FunctionDefinetionAst*>(asts->at(0));
 		REQUIRE(decl->Name == _T("test"));
 		REQUIRE(decl->Args.size() == 1);
-		REQUIRE(decl->Args.at(0) == _T("data"));
+		REQUIRE(decl->Args.at(0)->Name == _T("data"));
 		REQUIRE(decl->Body != nullptr);
 		REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::BLOCK);
 
 		auto* block = static_cast<BlockAst*>(decl->Body);
-		REQUIRE(block->Blocks->size() == 1);
-		REQUIRE(block->Blocks->at(0)->GetType() == EASY_AST_TYPE::RETURN);
+		REQUIRE(block->Blocks.size() == 1);
+		REQUIRE(block->Blocks.at(0)->GetType() == EASY_AST_TYPE::RETURN);
 
-		auto* ret = static_cast<ReturnAst*>(block->Blocks->at(0));
+		auto* ret = static_cast<ReturnAst*>(block->Blocks.at(0));
 		REQUIRE(ret->Data != nullptr);
 		REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::VARIABLE);
 	}
