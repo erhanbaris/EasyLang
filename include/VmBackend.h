@@ -1,6 +1,5 @@
 #include "Backend.h"
 #include "Scope.h"
-#include "CodeGenerator.h"
 
 #ifndef EASYLANG_VMBACKEND_H
 #define EASYLANG_VMBACKEND_H

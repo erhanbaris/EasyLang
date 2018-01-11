@@ -62,8 +62,6 @@ add_executable(EasyLang
         src/Vm.cpp 
 		include/Vm.h
 		Tests/VmTests.h
-		src/CodeGenerator.cpp
-		include/CodeGenerator.h
 		src/VmBackend.cpp
 		include/VmBackend.h
 		include/termcolor.hpp

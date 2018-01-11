@@ -29,63 +29,76 @@ typedef union vm_int_u { vm_char_t Chars[2];  int Int; } vm_int_t;
 typedef bool vm_bool_t;
 
 DECLARE_ENUM(vm_inst,
-iHALT, // 0
-iADD, // 1
-iSUB, // 2
-iMUL, // 3
-iDIV, // 4
-iEQ, // 5
-iLT, // 6
-iLTE, // 7
-iGT, // 8
-iGTE, // 9
-iAND, // 10
-iOR, // 11
-iDUP, // 12
-iPOP, // 13
-iJMP, // 14
+OPT_HALT, // 0
+OPT_iADD, // 1
+OPT_dADD, // 2
+OPT_lADD, // 3
 
-iIF_EQ, // 15
+OPT_iSUB, // 4
+OPT_dSUB, // 5
+OPT_lSUB, // 6
 
-iJIF, // 16
-iJNIF, // 17
-iINC, // 18
-iDINC, // 19
+OPT_iMUL, // 7
+OPT_dMUL, // 8
+OPT_lMUL, // 9
 
-iLOAD, // 20
-iLOAD_0, // 21
-iLOAD_1, // 22
-iLOAD_2, // 23
-iLOAD_3, // 24
-iLOAD_4, // 25
+OPT_iDIV, // 10
+OPT_dDIV, // 11
+OPT_lDIV, // 12
 
-iSTORE, // 26
-iSTORE_0, // 27
-iSTORE_1, // 28
-iSTORE_2, // 29
-iSTORE_3, // 30
-iSTORE_4, // 31
+OPT_EQ, // 13
+OPT_LT, // 14
+OPT_LTE, // 15
+OPT_GT, // 16
+OPT_GTE, // 17
 
-iGLOAD, // 32
-iGLOAD_0, // 33
-iGLOAD_1, // 34
-iGLOAD_2, // 35
-iGLOAD_3, // 36
-iGLOAD_4, // 37
+OPT_AND, // 18
+OPT_OR, // 11
+OPT_DUP, // 12
+OPT_POP, // 13
+OPT_JMP, // 14
 
-iGSTORE, // 38
-iGSTORE_0, // 39
-iGSTORE_1, // 40
-iGSTORE_2, // 41
-iGSTORE_3, // 42
-iGSTORE_4, // 43
+OPT_IF_EQ, // 15
 
-iCALL, // 44
-iRETURN, // 45
+OPT_JIF, // 16
+OPT_JNIF, // 17
+OPT_INC, // 18
+OPT_DINC, // 19
 
-iPUSH, // 46
-iPRINT, // 47
-iNEG // 48
+OPT_LOAD, // 20
+OPT_LOAD_0, // 21
+OPT_LOAD_1, // 22
+OPT_LOAD_2, // 23
+OPT_LOAD_3, // 24
+OPT_LOAD_4, // 25
+
+OPT_STORE, // 26
+OPT_STORE_0, // 27
+OPT_STORE_1, // 28
+OPT_STORE_2, // 29
+OPT_STORE_3, // 30
+OPT_STORE_4, // 31
+
+OPT_GLOAD, // 32
+OPT_GLOAD_0, // 33
+OPT_GLOAD_1, // 34
+OPT_GLOAD_2, // 35
+OPT_GLOAD_3, // 36
+OPT_GLOAD_4, // 37
+
+OPT_GSTORE, // 38
+OPT_GSTORE_0, // 39
+OPT_GSTORE_1, // 40
+OPT_GSTORE_2, // 41
+OPT_GSTORE_3, // 42
+OPT_GSTORE_4, // 43
+
+OPT_CALL, // 44
+OPT_RETURN, // 45
+
+OPT_PUSH, // 46
+OPT_PRINT, // 47
+OPT_NEG // 48
 )
 
 

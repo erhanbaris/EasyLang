@@ -85,22 +85,22 @@ public:
 		switch (index)
 		{
 		case 0:
-			return new OpcodeItem(vm_inst::iSTORE_0);
+			return new OpcodeItem(vm_inst::OPT_STORE_0);
 
 		case 1:
-			return new OpcodeItem(vm_inst::iSTORE_1);
+			return new OpcodeItem(vm_inst::OPT_STORE_1);
 
 		case 2:
-			return new OpcodeItem(vm_inst::iSTORE_2);
+			return new OpcodeItem(vm_inst::OPT_STORE_2);
 
 		case 3:
-			return new OpcodeItem(vm_inst::iSTORE_3);
+			return new OpcodeItem(vm_inst::OPT_STORE_3);
 
 		case 4:
-			return new OpcodeItem(vm_inst::iSTORE_4);
+			return new OpcodeItem(vm_inst::OPT_STORE_4);
 
 		default:
-			new OpcodeItem(vm_inst::iSTORE, new IntOptVar(index));
+			new OpcodeItem(vm_inst::OPT_STORE, new IntOptVar(index));
 		}
 
 		return nullptr;
@@ -111,22 +111,22 @@ public:
 		switch (index)
 		{
 		case 0:
-			return new OpcodeItem(vm_inst::iGSTORE_0);
+			return new OpcodeItem(vm_inst::OPT_GSTORE_0);
 
 		case 1:
-			return new OpcodeItem(vm_inst::iGSTORE_1);
+			return new OpcodeItem(vm_inst::OPT_GSTORE_1);
 
 		case 2:
-			return new OpcodeItem(vm_inst::iGSTORE_2);
+			return new OpcodeItem(vm_inst::OPT_GSTORE_2);
 
 		case 3:
-			return new OpcodeItem(vm_inst::iGSTORE_3);
+			return new OpcodeItem(vm_inst::OPT_GSTORE_3);
 
 		case 4:
-			return new OpcodeItem(vm_inst::iGSTORE_4);
+			return new OpcodeItem(vm_inst::OPT_GSTORE_4);
 
 		default:
-			new OpcodeItem(vm_inst::iGSTORE, new IntOptVar(index));
+			new OpcodeItem(vm_inst::OPT_GSTORE, new IntOptVar(index));
 		}
 
 		return nullptr;
@@ -137,22 +137,22 @@ public:
 		switch (index)
 		{
 		case 0:
-			return new OpcodeItem(vm_inst::iLOAD_0);
+			return new OpcodeItem(vm_inst::OPT_LOAD_0);
 
 		case 1:
-			return new OpcodeItem(vm_inst::iLOAD_1);
+			return new OpcodeItem(vm_inst::OPT_LOAD_1);
 
 		case 2:
-			return new OpcodeItem(vm_inst::iLOAD_2);
+			return new OpcodeItem(vm_inst::OPT_LOAD_2);
 
 		case 3:
-			return new OpcodeItem(vm_inst::iLOAD_3);
+			return new OpcodeItem(vm_inst::OPT_LOAD_3);
 
 		case 4:
-			return new OpcodeItem(vm_inst::iLOAD_4);
+			return new OpcodeItem(vm_inst::OPT_LOAD_4);
 
 		default:
-			new OpcodeItem(vm_inst::iLOAD, new IntOptVar(index));
+			new OpcodeItem(vm_inst::OPT_LOAD, new IntOptVar(index));
 		}
 
 		return nullptr;
@@ -163,22 +163,22 @@ public:
 		switch (index)
 		{
 		case 0:
-			return new OpcodeItem(vm_inst::iGLOAD_0);
+			return new OpcodeItem(vm_inst::OPT_GLOAD_0);
 
 		case 1:
-			return new OpcodeItem(vm_inst::iGLOAD_1);
+			return new OpcodeItem(vm_inst::OPT_GLOAD_1);
 
 		case 2:
-			return new OpcodeItem(vm_inst::iGLOAD_2);
+			return new OpcodeItem(vm_inst::OPT_GLOAD_2);
 
 		case 3:
-			return new OpcodeItem(vm_inst::iGLOAD_3);
+			return new OpcodeItem(vm_inst::OPT_GLOAD_3);
 
 		case 4:
-			return new OpcodeItem(vm_inst::iGLOAD_4);
+			return new OpcodeItem(vm_inst::OPT_GLOAD_4);
 
 		default:
-			new OpcodeItem(vm_inst::iGLOAD, new IntOptVar(index));
+			new OpcodeItem(vm_inst::OPT_GLOAD, new IntOptVar(index));
 		}
 
 		return nullptr;
@@ -345,7 +345,7 @@ VmBackend::VmBackend()
 void VmBackend::Generate(std::vector<char> & opcodes)
 {
 	size_t indexer = 0;
-	impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iHALT));
+	impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_HALT));
 	++this->impl->opCodeIndex;
     size_t totalIntermediateCode = this->impl->intermediateCode.size();
     
@@ -416,14 +416,14 @@ void VmBackend::visit(IfStatementAst* ast)
 	OpcodeItem* condition = nullptr; 
 	switch (lastOperator)
 	{
-	case vm_inst::iEQ:
-		condition = new OpcodeItem(vm_inst::iIF_EQ, new IntOptVar(0));
+	case vm_inst::OPT_EQ:
+		condition = new OpcodeItem(vm_inst::OPT_IF_EQ, new IntOptVar(0));
 		this->impl->intermediateCode.erase(this->impl->intermediateCode.begin() + (this->impl->intermediateCode.size() - 1));
 		--this->impl->opCodeIndex;
 		break;
 
 	default:
-		condition = new OpcodeItem(vm_inst::iJIF, new IntOptVar(0));
+		condition = new OpcodeItem(vm_inst::OPT_JIF, new IntOptVar(0));
 		break;
 	}
     
@@ -435,7 +435,7 @@ void VmBackend::visit(IfStatementAst* ast)
 	if (ast->False != nullptr)
 	{
 		((IntOptVar*)condition->Opt)->Data += 2;
-		auto* trueStmt = new OpcodeItem(vm_inst::iJMP, new IntOptVar(0));
+		auto* trueStmt = new OpcodeItem(vm_inst::OPT_JMP, new IntOptVar(0));
 		this->impl->intermediateCode.push_back(trueStmt);
 		this->getData(ast->False);
 		((IntOptVar*)trueStmt->Opt)->Data = this->impl->opCodeIndex;
@@ -448,14 +448,14 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     this->impl->variablesList.push_back(new std::unordered_map<string_type, size_t>());
     impl->variables = impl->variablesList[impl->variablesList.size() - 1];
     
-    auto* jpmAddress = new OpcodeItem(vm_inst::iJMP);
+    auto* jpmAddress = new OpcodeItem(vm_inst::OPT_JMP);
     this->impl->opCodeIndex += 2;
     this->impl->intermediateCode.push_back(jpmAddress);
 
 	if (this->impl->methods.find(ast->Name) != this->impl->methods.end())
 	{
 		size_t oldMethodOrderNumber = this->impl->methods[ast->Name];
-		this->impl->codes[oldMethodOrderNumber] = vm_inst::iJMP;
+		this->impl->codes[oldMethodOrderNumber] = vm_inst::OPT_JMP;
 		this->impl->codes[oldMethodOrderNumber + 1] = this->impl->opCodeIndex;
 	}
     
@@ -515,7 +515,21 @@ void VmBackend::visit(VariableAst* ast)
 }
 
 void VmBackend::visit(PrimativeAst* ast) {
-	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iPUSH, new IntOptVar(ast->Value->Integer)));
+	switch (ast->Value->Type)
+	{
+	case PrimativeValue::Type::PRI_INTEGER:
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_PUSH, new IntOptVar(ast->Value->Integer)));
+		break;
+
+	case PrimativeValue::Type::PRI_STRING:
+		//this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_PUSH, new IntOptVar(ast->Value->String)));
+		break;
+		
+
+	default:
+		break;
+	}
+
 	this->impl->opCodeIndex += 2;
 }
 
@@ -526,35 +540,35 @@ void VmBackend::visit(ControlAst* ast)
 	switch (ast->Op)
 	{
 	case EQUAL:
-		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iEQ));
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_EQ));
 		break;
 
-	case NOT_EQUAL:
-		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSUB));
-		break;
+	//case NOT_EQUAL:
+	//	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::opt_n));
+	//	break;
 
 	case GREATOR:
-		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iGT));
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_GT));
 		break;
 
 	case LOWER:
-		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLT));
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_LT));
 		break;
 
 	case GREATOR_EQUAL:
-		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iGTE));
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_GTE));
 		break;
 
 	case LOWER_EQUAL:
-		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iLTE));
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_LTE));
 		break;
 
 	case OR:
-		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iOR));
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_OR));
 		break;
 
 	case AND:
-		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iAND));
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_AND));
 		break;
 	}
 
@@ -568,19 +582,19 @@ void VmBackend::visit(BinaryAst* ast)
 	switch (ast->Op)
 	{
 		case PLUS:
-			this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iADD));
+			this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_iADD));
 			break;
 
 		case MINUS:
-			this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iSUB));
+			this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_iSUB));
 			break;
 
 		case MULTIPLICATION:
-			this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iMUL));
+			this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_iMUL));
 			break;
 
 		case DIVISION:
-			this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iDIV));
+			this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_iDIV));
 			break;
 
 		case ASSIGN:
@@ -603,7 +617,7 @@ void VmBackend::visit(ReturnAst* ast)
 	if (ast->Data != nullptr)
 		this->getData(ast->Data);
 
-	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iRETURN));
+	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_RETURN));
 	++this->impl->opCodeIndex;
 }
 
@@ -620,13 +634,13 @@ void VmBackend::visit(FunctionCallAst* ast)
     for (size_t i = totalParameters; i > 0; --i)
         getData(ast->Args[i - 1]);
     
-    this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iCALL, new IntOptVar(static_cast<int>(this->impl->methods[ast->Function]))));
+    this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_CALL, new IntOptVar(static_cast<int>(this->impl->methods[ast->Function]))));
     this->impl->opCodeIndex += 2;
 }
 
 void VmBackend::visit(UnaryAst* ast) 
 { 
-	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::iNEG));
+	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_NEG));
 	++this->impl->opCodeIndex;
 }
 

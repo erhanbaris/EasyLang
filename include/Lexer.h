@@ -222,6 +222,7 @@ class StandartTokinizerImpl;
 class StandartTokinizer : public Tokinizer {
 public:
     StandartTokinizer();
+	~StandartTokinizer();
     void Parse(string_type const &data, std::shared_ptr <std::vector<Token *>> Tokens) override;
 	void Dump(std::shared_ptr <std::vector<Token *>> Tokens) override;
     bool HasError();

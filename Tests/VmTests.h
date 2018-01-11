@@ -23,40 +23,40 @@ TEST_CASE("VM Fibonacci tests 2") {
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 	vm_system vm;
 	std::vector<char> codes{
-			iPUSH, 25, // number
-			iCALL, 5, // jump and create new stack
-			iHALT,
+			OPT_PUSH, 25, // number
+			OPT_CALL, 5, // jump and create new stack
+			OPT_HALT,
 
 			// Init variables
-			iSTORE_0, // save number
-			iLOAD_0,
+			OPT_STORE_0, // save number
+			OPT_LOAD_0,
 
 			/* if (n == 0) return 0; */
-			iPUSH, 0,
-			iIF_EQ, 14,
-			iPUSH, 0,
-			iRETURN,
+			OPT_PUSH, 0,
+			OPT_IF_EQ, 14,
+			OPT_PUSH, 0,
+			OPT_RETURN,
 
 			/* if (n == 1) return 1; */
-			iLOAD, 0, // get total to stack
-			iPUSH, 1,
-			iIF_EQ, 23,
-			iPUSH, 1,
-			iRETURN,
+			OPT_LOAD, 0, // get total to stack
+			OPT_PUSH, 1,
+			OPT_IF_EQ, 23,
+			OPT_PUSH, 1,
+			OPT_RETURN,
 
 			/* return fibonacci(n-1) + fibonacci(n-2); */
-			iLOAD_0, // get total to stack
-			iPUSH, 1,
-			iSUB,
-			iCALL, 5,
+			OPT_LOAD_0, // get total to stack
+			OPT_PUSH, 1,
+			OPT_iSUB,
+			OPT_CALL, 5,
 
-			iLOAD_0, // get total to stack
-			iPUSH, 2,
-			iSUB,
-			iCALL, 5,
-			iADD,
+			OPT_LOAD_0, // get total to stack
+			OPT_PUSH, 2,
+			OPT_iSUB,
+			OPT_CALL, 5,
+			OPT_iADD,
 
-			iRETURN 
+			OPT_RETURN 
 	};
 	vm.execute(&codes[0], codes.size(), 0);
 

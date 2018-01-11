@@ -25,7 +25,7 @@
 
 #include "../Tests/LexerTests.h"
 #include "../Tests/AstTests.h"
-#include "../Tests/InterpreterTests.h"
+//#include "../Tests/InterpreterTests.h"
 #include "../Tests/VmTests.h"
 
 using namespace std;
@@ -210,7 +210,10 @@ int main(int argc, char* argv[]) {
 	while (std::getline(console_in, line))
 	{
         try {
-			engine->Execute(line);
+			auto* result = engine->Execute(line);
+			if (result != nullptr)
+				delete result;
+
         } catch (exception& e) {
 			console_out << _T("#ERROR ") << e.what() << '\n';
         }

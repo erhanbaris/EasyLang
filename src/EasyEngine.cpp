@@ -45,6 +45,18 @@ public:
 		astParser->Parse(tokens, asts);
 		backend->Prepare(asts);
 		backend->Compile(opcodes);
+
+		size_t totalToken = tokens->size();
+		for (size_t i = 0; i < totalToken; ++i)
+			delete tokens->at(i);
+		
+		tokens.reset();
+
+		size_t totalAsts = asts->size();
+		for (size_t i = 0; i < totalAsts; ++i)
+			delete asts->at(i);
+
+		asts.reset();
 	}
 
 	~EasyEngineImpl()

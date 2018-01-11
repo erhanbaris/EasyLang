@@ -14,6 +14,12 @@
 #define POP() (int)currentStack[--stackIndex]
 #define PUSH(obj) currentStack[stackIndex++] = obj;
 #define SET(obj) currentStack[stackIndex - 1] = obj
+
+#define iPEEK() (( PEEK() << 8) | (PEEK() & 0x00FF))
+#define iPOP() (( POP() << 8) | (POP() & 0x00FF))
+#define iPUSH(obj1, obj2) *currentStack = obj1; ++currentStack; *currentStack = obj2; ++currentStack;
+#define iSET(obj) (*(currentStack - 1)) = obj
+
 #else 
 #define PEEK() *(currentStack - 1)
 #define POP() (*(--currentStack))
@@ -62,11 +68,12 @@ public:
 
 	~vm_store()
 	{
-		delete[] variables;
+		if (variables != nullptr)
+			delete[] variables;
 	}
 
 	size_t startAddress;
-	T* variables;
+	T* variables{nullptr};
 };
 
 class vm_system_impl
@@ -94,6 +101,7 @@ public:
 		for (int i = 0; i < 1024; ++i)
 			delete stores[i];
 
+		delete[] currentStack;
 		delete[] stores;
 	}
 
@@ -114,19 +122,19 @@ public:
 		while (1) {
 			switch (*code)
 			{
-			case vm_inst::iADD:
+			case vm_inst::OPT_iADD:
 				PUSH(POP() + POP());
 				break;
 
-			case vm_inst::iSUB:
+			case vm_inst::OPT_iSUB:
 				PUSH(-POP() + POP());
 				break;
 
-			case vm_inst::iMUL:
+			case vm_inst::OPT_iMUL:
 				PUSH(POP() * POP());
 				break;
 
-			case vm_inst::iDIV:
+			case vm_inst::OPT_iDIV:
 			{
 				size_t a = POP();
 				size_t b = POP();
@@ -134,43 +142,43 @@ public:
 			}
 			break;
 
-			case vm_inst::iEQ:
+			case vm_inst::OPT_EQ:
 				PUSH(TO_INT(POP() == POP()));
 				break;
 
-			case vm_inst::iLT:
+			case vm_inst::OPT_LT:
 				PUSH(POP() > POP() ? 1 : 0);
 				break;
 
-			case vm_inst::iLTE:
+			case vm_inst::OPT_LTE:
 				PUSH(POP() >= POP() ? 1 : 0);
 				break;
 
-			case vm_inst::iGT:
+			case vm_inst::OPT_GT:
 				PUSH(POP() < POP() ? 1 : 0);
 				break;
 
-			case vm_inst::iGTE:
+			case vm_inst::OPT_GTE:
 				PUSH(POP() <= POP() ? 1 : 0);
 				break;
 
-			case vm_inst::iAND:
+			case vm_inst::OPT_AND:
 				PUSH(TO_INT(TO_BOOL(POP()) && TO_BOOL(POP())));
 				break;
 
-			case vm_inst::iOR:
+			case vm_inst::OPT_OR:
 				PUSH(TO_INT(TO_BOOL(POP()) || TO_BOOL(POP())));
 				break;
 
-			case vm_inst::iDUP:
+			case vm_inst::OPT_DUP:
 				PUSH(POP());
 				break;
 
-			case vm_inst::iJMP:
+			case vm_inst::OPT_JMP:
 				code = startPoint + (*++code - 1);
 				break;
 
-			case vm_inst::iJIF:
+			case vm_inst::OPT_JIF:
 			{
 				if (TO_BOOL(POP()))
 					++code;
@@ -179,7 +187,7 @@ public:
 			}
 			break;
 
-			case vm_inst::iIF_EQ:
+			case vm_inst::OPT_IF_EQ:
 			{
 				if (TO_BOOL(POP() == POP()))
 					++code;
@@ -188,7 +196,7 @@ public:
 			}
 			break;
 
-			case vm_inst::iJNIF:
+			case vm_inst::OPT_JNIF:
 			{
 				if (!TO_BOOL(POP()))
 					code = startPoint + (*++code - 1);
@@ -197,116 +205,116 @@ public:
 			}
 			break;
 
-			case vm_inst::iINC:
+			case vm_inst::OPT_INC:
 				SET(PEEK() + 1);
 				break;
 			
-			case vm_inst::iNEG:
+			case vm_inst::OPT_NEG:
 				SET(PEEK() * -1);
 				break;
 
-			case vm_inst::iDINC:
+			case vm_inst::OPT_DINC:
 				SET(PEEK() - 1);
 				break;
 
-			case vm_inst::iLOAD:
+			case vm_inst::OPT_LOAD:
 				PUSH(LOAD(*++code));
 				break;
 
-			case vm_inst::iLOAD_0:
+			case vm_inst::OPT_LOAD_0:
 				PUSH(LOAD(0));
 				break;
 
-			case vm_inst::iLOAD_1:
+			case vm_inst::OPT_LOAD_1:
 				PUSH(LOAD(1));
 				break;
 
-			case vm_inst::iLOAD_2:
+			case vm_inst::OPT_LOAD_2:
 				PUSH(LOAD(2));
 				break;
 
-			case vm_inst::iLOAD_3:
+			case vm_inst::OPT_LOAD_3:
 				PUSH(LOAD(3));
 				break;
 
-			case vm_inst::iLOAD_4:
+			case vm_inst::OPT_LOAD_4:
 				PUSH(LOAD(4));
 				break;
 
-			case vm_inst::iSTORE:
+			case vm_inst::OPT_STORE:
 				STORE(*++code, POP());
 				break;
 
-			case vm_inst::iSTORE_0:
+			case vm_inst::OPT_STORE_0:
 				STORE(0, POP());
 				break;
 
-			case vm_inst::iSTORE_1:
+			case vm_inst::OPT_STORE_1:
 				STORE(1, POP());
 				break;
 
-			case vm_inst::iSTORE_2:
+			case vm_inst::OPT_STORE_2:
 				STORE(2, POP());
 				break;
 
-			case vm_inst::iSTORE_3:
+			case vm_inst::OPT_STORE_3:
 				STORE(3, POP());
 				break;
 
-			case vm_inst::iSTORE_4:
+			case vm_inst::OPT_STORE_4:
 				STORE(4, POP());
 				break;
 
 
-			case vm_inst::iGLOAD:
+			case vm_inst::OPT_GLOAD:
 				PUSH(GLOAD(*++code));
 				break;
 
-			case vm_inst::iGLOAD_0:
+			case vm_inst::OPT_GLOAD_0:
 				PUSH(GLOAD(0));
 				break;
 
-			case vm_inst::iGLOAD_1:
+			case vm_inst::OPT_GLOAD_1:
 				PUSH(GLOAD(1));
 				break;
 
-			case vm_inst::iGLOAD_2:
+			case vm_inst::OPT_GLOAD_2:
 				PUSH(GLOAD(2));
 				break;
 
-			case vm_inst::iGLOAD_3:
+			case vm_inst::OPT_GLOAD_3:
 				PUSH(GLOAD(3));
 				break;
 
-			case vm_inst::iGLOAD_4:
+			case vm_inst::OPT_GLOAD_4:
 				PUSH(GLOAD(4));
 				break;
 
-			case vm_inst::iGSTORE:
+			case vm_inst::OPT_GSTORE:
 				GSTORE(*++code, POP());
 				break;
 
-			case vm_inst::iGSTORE_0:
+			case vm_inst::OPT_GSTORE_0:
 				GSTORE(0, POP());
 				break;
 
-			case vm_inst::iGSTORE_1:
+			case vm_inst::OPT_GSTORE_1:
 				GSTORE(1, POP());
 				break;
 
-			case vm_inst::iGSTORE_2:
+			case vm_inst::OPT_GSTORE_2:
 				GSTORE(2, POP());
 				break;
 
-			case vm_inst::iGSTORE_3:
+			case vm_inst::OPT_GSTORE_3:
 				GSTORE(3, POP());
 				break;
 
-			case vm_inst::iGSTORE_4:
+			case vm_inst::OPT_GSTORE_4:
 				GSTORE(4, POP());
 				break;
 
-			case vm_inst::iCALL:
+			case vm_inst::OPT_CALL:
 			{
 				currentStore = stores[++storesCount];
 				currentStore->startAddress = (code - startPoint) + 1;
@@ -314,27 +322,27 @@ public:
 			}
 			break;
 
-			case vm_inst::iRETURN:
+			case vm_inst::OPT_RETURN:
 			{
 				code = startPoint + currentStore->startAddress;
 				currentStore = stores[--storesCount];
 			}
 			break;
 
-			case vm_inst::iPOP:
+			case vm_inst::OPT_POP:
 				POP();
 				break;
 
-			case vm_inst::iPUSH: {
+			case vm_inst::OPT_PUSH: {
 				PUSH(*++code);
 			}
 								 break;
 
-			case vm_inst::iPRINT:
+			case vm_inst::OPT_PRINT:
 				console_out << POP();
 				break;
 
-			case vm_inst::iHALT:
+			case vm_inst::OPT_HALT:
 				return;
 			}
 
@@ -351,16 +359,16 @@ public:
 
 			switch (*code)
 			{
-				case vm_inst::iJMP:
-				case vm_inst::iJIF:
-				case vm_inst::iIF_EQ:
-				case vm_inst::iJNIF:
-				case vm_inst::iLOAD:
-				case vm_inst::iSTORE:
-				case vm_inst::iGLOAD:
-				case vm_inst::iGSTORE:
-				case vm_inst::iCALL:
-				case vm_inst::iPUSH: 
+				case vm_inst::OPT_JMP:
+				case vm_inst::OPT_JIF:
+				case vm_inst::OPT_IF_EQ:
+				case vm_inst::OPT_JNIF:
+				case vm_inst::OPT_LOAD:
+				case vm_inst::OPT_STORE:
+				case vm_inst::OPT_GLOAD:
+				case vm_inst::OPT_GSTORE:
+				case vm_inst::OPT_CALL:
+				case vm_inst::OPT_PUSH: 
 					console_out << _T(" ") << (int)*++code;
 					++index;
 					break;
