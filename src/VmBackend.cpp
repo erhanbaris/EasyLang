@@ -15,8 +15,23 @@ public:
 	enum {
 		VARIABLE,
 		METHOD,
-		INT
+		INT,
+		STRING
 	} Type;
+
+	virtual size_t Size() = 0;
+};
+
+class ByteOptVar : public OptVar
+{
+public:
+    char const * Data{nullptr};
+    size_t Length;
+    ByteOptVar() { Type = INT; }
+    ByteOptVar(char const * data, size_t length) { Type = INT; Data = data; Length = length; }
+	size_t Size() override {
+		return Length + 1;
+	}
 };
 
 class IntOptVar : public OptVar
@@ -25,6 +40,9 @@ public:
 	int Data;
 	IntOptVar() { Type = INT; }
 	IntOptVar(int data) { Type = INT; Data = data; }
+	size_t Size() override {
+		return 3;
+	}
 };
 
 class MethodOptVar : public OptVar
@@ -33,6 +51,9 @@ public:
 	string_type Data;
 	MethodOptVar() { Type = METHOD; }
 	MethodOptVar(string_type data) { Type = METHOD; Data = data; }
+	size_t Size() override {
+		return 3;
+	}
 };
 
 class VariableOptVar : public OptVar
@@ -41,6 +62,9 @@ public:
 	string_type Data;
 	VariableOptVar() { Type = VARIABLE; }
 	VariableOptVar(string_type data) { Type = VARIABLE; Data = data; }
+	size_t Size() override {
+		return 3;
+	}
 };
 
 class OpcodeItem {
@@ -522,7 +546,10 @@ void VmBackend::visit(PrimativeAst* ast) {
 		break;
 
 	case PrimativeValue::Type::PRI_STRING:
-		//this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_PUSH, new IntOptVar(ast->Value->String)));
+    {
+        const char* text = ast->Value->String->c_str();
+        this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_PUSH, new ByteOptVar(text, strlen(text))));
+    }
 		break;
 		
 

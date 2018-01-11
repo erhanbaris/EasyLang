@@ -10,8 +10,8 @@
 #define GLOAD(index) *(globalStore.variables + index)
 
 #if _DEBUG
-#define PEEK() (int)currentStack[stackIndex - 1]
-#define POP() (int)currentStack[--stackIndex]
+#define PEEK() currentStack[stackIndex - 1]
+#define POP() currentStack[--stackIndex]
 #define PUSH(obj) currentStack[stackIndex++] = obj;
 #define SET(obj) currentStack[stackIndex - 1] = obj
 
@@ -38,6 +38,7 @@
 
 class vm_object
 {
+public:
 	enum class vm_object_type {
 		INT,
 		DOUBLE,
@@ -46,15 +47,32 @@ class vm_object
 		CALL
 	};
 
+	vm_object& operator=(int right) {
+		Int = right;
+		Type = vm_object_type::INT;
+		return *this;
+	}
+
+	vm_object& operator=(double right) {
+		Double = right;
+		Type = vm_object_type::DOUBLE;
+		return *this;
+	}
+
+    operator int()
+    {
+        return Int;
+    }
+
 	vm_object_type Type;
 
 	union {
 		bool Bool;
-		size_t Int;
+		int Int;
 		double Double;
 		string_type* String;
 		VmMethodCallback Method;
-	} Data;
+	};
 };
 
 template <typename T>
@@ -82,12 +100,12 @@ public:
 	vm_system_impl()
 	{
 		const int STORE_SIZE = 1024;
-		currentStack = new size_t[1024 * 512];
-		currentStore = new vm_store<size_t>;
-		stores = new vm_store<size_t>*[STORE_SIZE];
+		currentStack = new vm_object[1024 * 512];
+		currentStore = new vm_store<vm_object>;
+		stores = new vm_store<vm_object>*[STORE_SIZE];
 
 		for (size_t i = 0; i < STORE_SIZE; ++i)
-			stores[i] = new vm_store<size_t>;
+			stores[i] = new vm_store<vm_object>;
 
 		stores[0] = currentStore;
 		storesCount = 0;
@@ -106,11 +124,11 @@ public:
 	}
 
 	size_t storesCount;
-	vm_store<size_t>** stores;
-	vm_store<size_t>* currentStore{ nullptr };
-	vm_store<size_t> globalStore;
+	vm_store<vm_object>** stores{nullptr};
+	vm_store<vm_object>* currentStore{ nullptr };
+	vm_store<vm_object> globalStore;
 
-	size_t* currentStack;
+	vm_object* currentStack{nullptr};
 #if _DEBUG
 	size_t stackIndex;
 #endif
@@ -123,55 +141,55 @@ public:
 			switch (*code)
 			{
 			case vm_inst::OPT_iADD:
-				PUSH(POP() + POP());
+				PUSH(POP().Int + POP().Int);
 				break;
 
 			case vm_inst::OPT_iSUB:
-				PUSH(-POP() + POP());
+				PUSH(-POP().Int + POP().Int);
 				break;
 
 			case vm_inst::OPT_iMUL:
-				PUSH(POP() * POP());
+				currentStack[stackIndex++] = currentStack[--stackIndex].Int * currentStack[--stackIndex].Int;
 				break;
 
 			case vm_inst::OPT_iDIV:
 			{
-				size_t a = POP();
-				size_t b = POP();
+				int a = POP().Int;
+				int b = POP().Int;
 				PUSH(b / a);
 			}
 			break;
 
 			case vm_inst::OPT_EQ:
-				PUSH(TO_INT(POP() == POP()));
+				PUSH(TO_INT(POP().Bool == POP().Bool));
 				break;
 
 			case vm_inst::OPT_LT:
-				PUSH(POP() > POP() ? 1 : 0);
+				PUSH(POP().Int > POP().Int ? 1 : 0);
 				break;
 
 			case vm_inst::OPT_LTE:
-				PUSH(POP() >= POP() ? 1 : 0);
+				PUSH(POP().Int >= POP().Int ? 1 : 0);
 				break;
 
 			case vm_inst::OPT_GT:
-				PUSH(POP() < POP() ? 1 : 0);
+				PUSH(POP().Int < POP().Int ? 1 : 0);
 				break;
 
 			case vm_inst::OPT_GTE:
-				PUSH(POP() <= POP() ? 1 : 0);
+				PUSH(POP().Int <= POP().Int ? 1 : 0);
 				break;
 
 			case vm_inst::OPT_AND:
-				PUSH(TO_INT(TO_BOOL(POP()) && TO_BOOL(POP())));
+				PUSH(TO_INT(TO_BOOL(POP().Int) && TO_BOOL(POP().Int)));
 				break;
 
 			case vm_inst::OPT_OR:
-				PUSH(TO_INT(TO_BOOL(POP()) || TO_BOOL(POP())));
+				PUSH(TO_INT(TO_BOOL(POP().Int) || TO_BOOL(POP().Int)));
 				break;
 
 			case vm_inst::OPT_DUP:
-				PUSH(POP());
+				PUSH(POP().Int);
 				break;
 
 			case vm_inst::OPT_JMP:
@@ -180,7 +198,7 @@ public:
 
 			case vm_inst::OPT_JIF:
 			{
-				if (TO_BOOL(POP()))
+				if (TO_BOOL(POP().Int))
 					++code;
 				else
 					code = startPoint + (*++code - 1);
@@ -189,7 +207,7 @@ public:
 
 			case vm_inst::OPT_IF_EQ:
 			{
-				if (TO_BOOL(POP() == POP()))
+				if (TO_BOOL(POP().Int == POP().Int))
 					++code;
 				else
 					code = startPoint + (*++code - 1);
@@ -198,7 +216,7 @@ public:
 
 			case vm_inst::OPT_JNIF:
 			{
-				if (!TO_BOOL(POP()))
+				if (!TO_BOOL(POP().Int))
 					code = startPoint + (*++code - 1);
 				else
 					++code;
@@ -206,15 +224,15 @@ public:
 			break;
 
 			case vm_inst::OPT_INC:
-				SET(PEEK() + 1);
+				SET(PEEK().Int + 1);
 				break;
 			
 			case vm_inst::OPT_NEG:
-				SET(PEEK() * -1);
+				SET(PEEK().Int * -1);
 				break;
 
 			case vm_inst::OPT_DINC:
-				SET(PEEK() - 1);
+				SET(PEEK().Int - 1);
 				break;
 
 			case vm_inst::OPT_LOAD:
@@ -242,27 +260,27 @@ public:
 				break;
 
 			case vm_inst::OPT_STORE:
-				STORE(*++code, POP());
+				STORE(*++code, POP().Int);
 				break;
 
 			case vm_inst::OPT_STORE_0:
-				STORE(0, POP());
+				STORE(0, POP().Int);
 				break;
 
 			case vm_inst::OPT_STORE_1:
-				STORE(1, POP());
+				STORE(1, POP().Int);
 				break;
 
 			case vm_inst::OPT_STORE_2:
-				STORE(2, POP());
+				STORE(2, POP().Int);
 				break;
 
 			case vm_inst::OPT_STORE_3:
-				STORE(3, POP());
+				STORE(3, POP().Int);
 				break;
 
 			case vm_inst::OPT_STORE_4:
-				STORE(4, POP());
+				STORE(4, POP().Int);
 				break;
 
 
@@ -291,27 +309,27 @@ public:
 				break;
 
 			case vm_inst::OPT_GSTORE:
-				GSTORE(*++code, POP());
+				GSTORE(*++code, POP().Int);
 				break;
 
 			case vm_inst::OPT_GSTORE_0:
-				GSTORE(0, POP());
+				GSTORE(0, POP().Int);
 				break;
 
 			case vm_inst::OPT_GSTORE_1:
-				GSTORE(1, POP());
+				GSTORE(1, POP().Int);
 				break;
 
 			case vm_inst::OPT_GSTORE_2:
-				GSTORE(2, POP());
+				GSTORE(2, POP().Int);
 				break;
 
 			case vm_inst::OPT_GSTORE_3:
-				GSTORE(3, POP());
+				GSTORE(3, POP().Int);
 				break;
 
 			case vm_inst::OPT_GSTORE_4:
-				GSTORE(4, POP());
+				GSTORE(4, POP().Int);
 				break;
 
 			case vm_inst::OPT_CALL:
@@ -330,7 +348,7 @@ public:
 			break;
 
 			case vm_inst::OPT_POP:
-				POP();
+				POP().Int;
 				break;
 
 			case vm_inst::OPT_PUSH: {
@@ -339,7 +357,7 @@ public:
 								 break;
 
 			case vm_inst::OPT_PRINT:
-				console_out << POP();
+				console_out << POP().Int;
 				break;
 
 			case vm_inst::OPT_HALT:
@@ -405,7 +423,7 @@ void vm_system::dump(char* code, size_t len)
 size_t vm_system::getUInt()
 {
 #if _DEBUG
-	return impl->currentStack[impl->stackIndex - 1];
+	return impl->currentStack[impl->stackIndex - 1].Int;
 #else
 	return *impl->currentStack;
 #endif
