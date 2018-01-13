@@ -3,6 +3,12 @@
 #include "System.h"
 #include "Vm.h"
 
+#define INC_OPCODE() ++this->impl->opCodeIndex;
+#define ADD_OPCODE(num) this->impl->opCodeIndex += num ;
+
+//#define INC_OPCODE() {++this->impl->opCodeIndex; console_out << _T("OPCODE : ") << this->impl->opCodeIndex << _T(" ") << __LINE__ << '\n';}
+//#define ADD_OPCODE(num) {this->impl->opCodeIndex += num ; console_out << _T("OPCODE : ") << this->impl->opCodeIndex << _T(" ") << __LINE__ << '\n';}
+
 class NullBuffer : public std::streambuf
 {
 public:
@@ -104,9 +110,17 @@ public:
 
 class VariableInfo {
 public:
-	Type Type;
-	string_type Name;
-	int Index;
+    Type Type;
+    string_type Name;
+    int Index;
+};
+
+class MethodInfo {
+public:
+    Type ReturnType;
+    string_type Function;
+    int Index;
+	std::vector<Type> Args;
 };
 
 class VmBackendImpl
@@ -116,7 +130,7 @@ public:
 	std::unordered_map<string_type, VariableInfo*>* variables;
 	std::unordered_map<string_type, VariableInfo*>* globalVariables;
 	std::vector<std::unordered_map<string_type, VariableInfo*>*> variablesList;
-    std::unordered_map<string_type, size_t> methods;
+    std::unordered_map<string_type, MethodInfo*> methods;
     std::vector<char> codes;
 	bool dumpOpcode;
 
@@ -275,6 +289,8 @@ void VmBackend::addConvertOpcode(Type from, Type to)
 		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_D2B));
 	else if (to == Type::DOUBLE && from == Type::BOOL)
 		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_B2D));
+
+	INC_OPCODE();
 }
 
 Type VmBackend::operationResultType(Type from, Type to)
@@ -283,13 +299,19 @@ Type VmBackend::operationResultType(Type from, Type to)
 		return Type::DOUBLE;
 	else if (to == Type::INT && from == Type::DOUBLE)
 		return Type::DOUBLE;
+	else if (to == Type::INT && from == Type::INT)
+		return Type::INT;
 	else if (from == Type::INT && to == Type::BOOL)
 		return Type::INT;
 	else if (to == Type::INT && from == Type::BOOL)
 		return Type::INT;
+	else if (to == Type::BOOL && from == Type::BOOL)
+		return Type::BOOL;
 	else if (from == Type::DOUBLE && to == Type::BOOL)
 		return Type::DOUBLE;
 	else if (to == Type::DOUBLE && from == Type::BOOL)
+		return Type::DOUBLE;
+	else if (to == Type::DOUBLE && from == Type::DOUBLE)
 		return Type::DOUBLE;
 }
 
@@ -339,14 +361,27 @@ Type VmBackend::detectType(Ast* ast)
 			return Type::EMPTY;
 
 		case EASY_AST_TYPE::PARENTHESES_BLOCK:
-			return Type::EMPTY;
+            return detectType(static_cast<ParenthesesGroupAst*>(ast)->Data);
 
 		case EASY_AST_TYPE::EXPR_STATEMENT:
 			return detectType(static_cast<ExprStatementAst*>(ast)->Expr);
 			break;
 
 		case EASY_AST_TYPE::VARIABLE:
-			//static_cast<VariableAst*>(ast)->accept(this);
+        {
+            auto* var = static_cast<VariableAst*>(ast);
+            std::unordered_map<string_type, VariableInfo*>* variables = nullptr;
+
+            if (this->impl->inFunctionCounter > 0)
+                variables = this->impl->variables;
+            else
+                variables = this->impl->globalVariables;
+
+            if (variables->find(var->Value) == variables->end())
+                throw ParseError(_T("'") + var->Value + _T("' Not Found"));
+
+			return variables->find(var->Value)->second->Type;
+        }
 			break;
 
 		case EASY_AST_TYPE::ASSIGNMENT:
@@ -362,7 +397,10 @@ Type VmBackend::detectType(Ast* ast)
 			break;
 
 		case EASY_AST_TYPE::FUNCTION_CALL:
-			//static_cast<FunctionCallAst*>(ast)->accept(this);
+        {
+            auto* call = static_cast<FunctionCallAst*>(ast);
+            return this->impl->methods[call->Package + _T("::") + call->Function]->ReturnType;
+        }
 			break;
 
 		case EASY_AST_TYPE::IF_STATEMENT:
@@ -497,6 +535,12 @@ void VmBackend::Compile(std::vector<char> & opcode)
 	this->impl->intermediateCode.clear();
 }
 
+/*
+ *
+ * func carp(a:int):int return a * 10
+ * func test(a:int, b:int):int return a + b
+ *
+ * */
 PrimativeValue* VmBackend::Execute()
 {
 	PrimativeValue* result = nullptr;
@@ -556,7 +600,7 @@ void VmBackend::Generate(std::vector<char> & opcodes)
 {
 	size_t indexer = 0;
 	impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_HALT));
-	++this->impl->opCodeIndex;
+	INC_OPCODE();
     size_t totalIntermediateCode = this->impl->intermediateCode.size();
     
 	for (int i = 0; i < totalIntermediateCode; ++i) {
@@ -572,7 +616,7 @@ void VmBackend::Generate(std::vector<char> & opcodes)
 				break;
 
 			case OptVar::METHOD:
-				opcodes.push_back(this->impl->methods[((MethodOptVar*)this->impl->intermediateCode[i]->Opt)->Data]);
+				opcodes.push_back(this->impl->methods[((MethodOptVar*)this->impl->intermediateCode[i]->Opt)->Data]->Index);
 				break;
 
             case OptVar::BOOL:
@@ -652,10 +696,13 @@ void VmBackend::visit(AssignmentAst* ast)
 	else
 		this->impl->intermediateCode.push_back(this->impl->generateGlobalStore(static_cast<int>((*this->impl->globalVariables)[ast->Name]->Index)));
 
-	if (this->impl->intermediateCode[this->impl->intermediateCode.size() - 1]->Opt == nullptr)
-		++this->impl->opCodeIndex;
+	if (this->impl->intermediateCode[this->impl->intermediateCode.size() - 1]->Opt == nullptr) {
+		INC_OPCODE();
+	}
 	else
-		this->impl->opCodeIndex += 2;
+	{
+		ADD_OPCODE(2);
+	}
 }
 
 void VmBackend::visit(BlockAst* ast)
@@ -679,6 +726,7 @@ void VmBackend::visit(IfStatementAst* ast)
 		condition = new OpcodeItem(vm_inst::OPT_IF_EQ);
 		this->impl->intermediateCode.erase(this->impl->intermediateCode.begin() + (this->impl->intermediateCode.size() - 1));
 		--this->impl->opCodeIndex;
+		console_out << _T("OPCODE : ") << this->impl->opCodeIndex << _T(" ") << __LINE__ << '\n';
 		break;
 
 	default:
@@ -687,7 +735,7 @@ void VmBackend::visit(IfStatementAst* ast)
 	}
 
 	this->impl->intermediateCode.push_back(condition);
-	this->impl->opCodeIndex += 3;
+	ADD_OPCODE(3);
 	this->getAstItem(ast->True);
     condition->Opt = new ByteOptVar(this->impl->opCodeIndex);
 
@@ -715,30 +763,94 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     impl->variables = impl->variablesList[impl->variablesList.size() - 1];
 
     auto* jpmAddress = new OpcodeItem(vm_inst::OPT_JMP);
-    this->impl->opCodeIndex += 3;
+	ADD_OPCODE(3);
     this->impl->intermediateCode.push_back(jpmAddress);
 
-	if (this->impl->methods.find(ast->Name) != this->impl->methods.end())
+	if (this->impl->methods.find(_T("::") + ast->Name) != this->impl->methods.end())
 	{
-		size_t oldMethodOrderNumber = this->impl->methods[ast->Name];
+		size_t oldMethodOrderNumber = this->impl->methods[_T("::") + ast->Name]->Index;
 		this->impl->codes[oldMethodOrderNumber] = vm_inst::OPT_JMP;
 		this->impl->codes[oldMethodOrderNumber + 1] = static_cast<char>(this->impl->opCodeIndex);
 	}
 
-	this->impl->methods[ast->Name] = static_cast<unsigned long>(this->impl->opCodeIndex);
+    MethodInfo* methodInfo = new MethodInfo;
+    methodInfo->Index = static_cast<unsigned long>(this->impl->opCodeIndex);
+    switch (ast->ReturnType)
+    {
+        case TYPE_BOOL:
+            methodInfo->ReturnType = Type::BOOL;
+            break;
+
+        case TYPE_INT:
+            methodInfo->ReturnType = Type::INT;
+            break;
+
+        case TYPE_DOUBLE:
+            methodInfo->ReturnType = Type::DOUBLE;
+            break;
+
+        case TYPE_STRING:
+            methodInfo->ReturnType = Type::STRING;
+            break;
+
+        case TYPE_ARRAY:
+            methodInfo->ReturnType = Type::ARRAY;
+            break;
+
+        case TYPE_DICTIONARY:
+            methodInfo->ReturnType = Type::DICTIONARY;
+            break;
+    }
+
+    methodInfo->Function = ast->Name;
+	this->impl->methods[_T("::") + ast->Name] = methodInfo;
     size_t totalParameter = ast->Args.size();
 
 	// Todo : Save variable information
     for (size_t i = 0; i < totalParameter; ++i) {
-        (*this->impl->variables)[ast->Args[i]->Name]->Index = i;
+
+        auto* varInfo = new VariableInfo;
+        varInfo->Index = i;
+        varInfo->Name = ast->Args[i]->Name;
+        switch (ast->Args[i]->Type)
+        {
+            case TYPE_BOOL:
+                varInfo->Type = Type::BOOL;
+                break;
+
+            case TYPE_INT:
+                varInfo->Type = Type::INT;
+                break;
+
+            case TYPE_DOUBLE:
+                varInfo->Type = Type::DOUBLE;
+                break;
+
+            case TYPE_STRING:
+                varInfo->Type = Type::STRING;
+                break;
+
+            case TYPE_ARRAY:
+                varInfo->Type = Type::ARRAY;
+                break;
+
+            case TYPE_DICTIONARY:
+                varInfo->Type = Type::DICTIONARY;
+                break;
+        }
+
+        (*this->impl->variables)[ast->Args[i]->Name] = varInfo;
 
 		auto* opCode = this->impl->generateStore(i);
 		this->impl->intermediateCode.push_back(opCode);
+		methodInfo->Args.push_back(varInfo->Type);
 
 		if (opCode->Opt != nullptr)
-			this->impl->opCodeIndex += 2;
+		{
+			ADD_OPCODE(2);
+		}
 		else
-			++this->impl->opCodeIndex;
+			INC_OPCODE();
     }
 
     ast->Body->accept(this);
@@ -765,9 +877,11 @@ void VmBackend::visit(VariableAst* ast)
 		this->impl->intermediateCode.push_back(opCode);
 
 		if (opCode->Opt != nullptr)
-			this->impl->opCodeIndex += 2;
+		{
+			ADD_OPCODE(2);
+		}
 		else
-			++this->impl->opCodeIndex;
+			INC_OPCODE();
 	}
 	else
 	{
@@ -776,9 +890,11 @@ void VmBackend::visit(VariableAst* ast)
 		this->impl->intermediateCode.push_back(opCode);
 
 		if (opCode->Opt != nullptr)
-			this->impl->opCodeIndex += 2;
+		{
+			ADD_OPCODE(2);
+		}
 		else
-			++this->impl->opCodeIndex;
+			INC_OPCODE();
 	}
 }
 
@@ -812,10 +928,12 @@ void VmBackend::visit(PrimativeAst* ast) {
 		break;
 	}
 
-    if (this->impl->intermediateCode[this->impl->intermediateCode.size() - 1]->Opt != nullptr)
-	    this->impl->opCodeIndex += this->impl->intermediateCode[this->impl->intermediateCode.size() - 1]->Opt->Size();
+    /*if (this->impl->intermediateCode[this->impl->intermediateCode.size() - 1]->Opt != nullptr) {
+		this->impl->opCodeIndex += this->impl->intermediateCode[this->impl->intermediateCode.size() - 1]->Opt->Size();
+		console_out << _T("OPCODE : ") << this->impl->opCodeIndex << _T(" ") << __LINE__ << '\n';
+	}*/
 
-    ++this->impl->opCodeIndex;
+    INC_OPCODE();
 }
 
 void VmBackend::visit(ControlAst* ast)
@@ -858,7 +976,7 @@ void VmBackend::visit(ControlAst* ast)
 		break;
 	}
 
-	++this->impl->opCodeIndex;
+	INC_OPCODE();
 }
 
 void VmBackend::visit(BinaryAst* ast)
@@ -927,7 +1045,7 @@ void VmBackend::visit(BinaryAst* ast)
 			break;
 	}
 
-	++this->impl->opCodeIndex;
+	INC_OPCODE();
 }
 //if data == 123 then { data = 111 } else {data = 999}
 
@@ -938,7 +1056,7 @@ void VmBackend::visit(ReturnAst* ast)
 		this->getAstItem(ast->Data);
 
 	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_RETURN));
-	++this->impl->opCodeIndex;
+	INC_OPCODE();
 }
 
 void VmBackend::visit(ParenthesesGroupAst* ast) { }
@@ -950,18 +1068,39 @@ void VmBackend::visit(FunctionCallAst* ast)
 		return;
 	}
 
+	std::unordered_map<string_type, VariableInfo*>* variables = nullptr;
+
+	if (this->impl->inFunctionCounter > 0)
+		variables = this->impl->variables;
+	else
+		variables = this->impl->globalVariables;
+
+	auto* function = this->impl->methods[ast->Package + _T("::") + ast->Function];
+	if (function == nullptr)
+		throw ParseError(_T("'") + ast->Function + _T("' Not Found"));
+
+	if (function->Args.size() != ast->Args.size())
+		throw ParseError("Argument type matched.");
+
 	size_t totalParameters = ast->Args.size();
     for (size_t i = totalParameters; i > 0; --i)
-        getAstItem(ast->Args[i - 1]);
+	{
+		Type type = detectType(ast->Args[i - 1]);
+		if (type != function->Args[i - 1])
+			throw ParseError("Argument not type matched.");
 
-    this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_CALL, new ByteOptVar(static_cast<int>(this->impl->methods[ast->Function]))));
-    this->impl->opCodeIndex += 3;
+		getAstItem(ast->Args[i - 1]);
+	}
+
+    this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_CALL, new ByteOptVar(static_cast<int>(this->impl->methods[ast->Package + _T("::") + ast->Function]->Index))));
+	ADD_OPCODE(3);
+
 }
 
 void VmBackend::visit(UnaryAst* ast)
 {
 	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_NEG));
-	++this->impl->opCodeIndex;
+	INC_OPCODE();
 }
 
 void VmBackend::visit(ExprStatementAst* ast)

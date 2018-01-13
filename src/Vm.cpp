@@ -292,27 +292,27 @@ public:
 				break;
 
 			case vm_inst::OPT_STORE:
-				STORE(*++code, POP().Int);
+				STORE(*++code, POP());
 				break;
 
 			case vm_inst::OPT_STORE_0:
-				STORE(0, POP().Int);
+				STORE(0, POP());
 				break;
 
 			case vm_inst::OPT_STORE_1:
-				STORE(1, POP().Int);
+				STORE(1, POP());
 				break;
 
 			case vm_inst::OPT_STORE_2:
-				STORE(2, POP().Int);
+				STORE(2, POP());
 				break;
 
 			case vm_inst::OPT_STORE_3:
-				STORE(3, POP().Int);
+				STORE(3, POP());
 				break;
 
 			case vm_inst::OPT_STORE_4:
-				STORE(4, POP().Int);
+				STORE(4, POP());
 				break;
 
 
@@ -361,7 +361,7 @@ public:
 				break;
 
 			case vm_inst::OPT_GSTORE_4:
-				GSTORE(4, POP().Int);
+				GSTORE(4, POP());
 				break;
 
 			case vm_inst::OPT_CALL:
@@ -384,7 +384,7 @@ public:
 			break;
 
 			case vm_inst::OPT_POP:
-				POP().Int;
+				POP();
 				break;
 
 			case vm_inst::OPT_iPUSH: {

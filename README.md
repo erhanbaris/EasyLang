@@ -6,7 +6,7 @@ It is a programming language that has begun to be developed for testing purposes
 ### Primative Types
 1. Integer
 2. Double
-3. Text
+3. String
 4. Boolean
 5. Array
 6. Dictionary (soon)
@@ -98,17 +98,17 @@ Result
 ##### Function decleration
 Singline decleration
 ```
-func HelloWorld()
+func HelloWorld():string
     return "hello world"
 
-func SumTwoNumber(a, b)
+func SumTwoNumber(a:int, b:int):int
     return a + b
 ```
 
 Multiline decleration
 ```
 
-func SumAndPrint(a, b)
+func SumAndPrint(a:int, b:int):int
 {
     sum = a + b
     io::print (sum)
@@ -159,12 +159,12 @@ for i in data1 to data5 then
 
 Fibonacci Code Example.
 ```
-func fibonacci(num) 
+func fibonacci(num:int):int
 { 
-    if num = 0 then 
+    if num == 0 then 
         return 0
 
-    if num = 1 then 
+    if num == 1 then 
         return 1 
         
     left = fibonacci(num - 1)
@@ -273,7 +273,7 @@ iHALT   : Stop system
 ##### Vm Usage Example (Fibonacci)
 ```cpp
 /*
-func fibonacci(num) 
+func fibonacci(num:int):int
 { 
     if num == 0 then 
         return 0
