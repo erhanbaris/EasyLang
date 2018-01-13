@@ -17,6 +17,7 @@ public:
 		METHOD,
 		INT,
         DOUBLE,
+        BOOL,
 		STRING
 	} Type;
 
@@ -26,34 +27,47 @@ public:
 class ByteOptVar : public OptVar
 {
 public:
-    char const * Data{nullptr};
+    char * Data{nullptr};
     size_t Length;
     ByteOptVar() { Type = INT; }
-    ByteOptVar(char const * data, size_t length) { Type = INT; Data = data; Length = length; }
+    ByteOptVar(char * data, size_t length) { Type = INT; Data = data; Length = length; }
+    ByteOptVar(int data)
+    {
+        Type = INT;
+        vm_int_t i = { .Int = data };
+        Data = new char[2];
+        Data[0] = i.Chars[0];
+        Data[1] = i.Chars[1];
+        Length = 2;
+    }
+
+    ByteOptVar(double data)
+    {
+        Type = DOUBLE;
+        vm_double_t i = { .Double = data };
+        Data = new char[8];
+        Data[0] = i.Chars[0];
+        Data[1] = i.Chars[1];
+        Data[2] = i.Chars[2];
+        Data[3] = i.Chars[3];
+        Data[4] = i.Chars[4];
+        Data[5] = i.Chars[5];
+        Data[6] = i.Chars[6];
+        Data[7] = i.Chars[7];
+        Length = 8;
+    }
+
+    ByteOptVar(bool data)
+    {
+        Type = BOOL;
+        Data = new char[1];
+        Data[0] = data;
+        Length = 1;
+    }
+
 	size_t Size() override {
 		return Length + 1;
 	}
-};
-
-class IntOptVar : public OptVar
-{
-public:
-    int Data;
-    IntOptVar() { Type = INT; }
-    IntOptVar(int data) { Type = INT; Data = data; }
-    size_t Size() override {
-        return 3;
-    }
-};
-class DoubleOptVar : public OptVar
-{
-public:
-    double Data;
-    DoubleOptVar() { Type = INT; }
-    DoubleOptVar(double data) { Type = DOUBLE; Data = data; }
-    size_t Size() override {
-        return 3;
-    }
 };
 
 class MethodOptVar : public OptVar
@@ -135,7 +149,7 @@ public:
 			return new OpcodeItem(vm_inst::OPT_STORE_4);
 
 		default:
-			new OpcodeItem(vm_inst::OPT_STORE, new IntOptVar(index));
+			new OpcodeItem(vm_inst::OPT_STORE, new ByteOptVar((int)index));
 		}
 
 		return nullptr;
@@ -161,7 +175,7 @@ public:
 			return new OpcodeItem(vm_inst::OPT_GSTORE_4);
 
 		default:
-			new OpcodeItem(vm_inst::OPT_GSTORE, new IntOptVar(index));
+			new OpcodeItem(vm_inst::OPT_GSTORE, new ByteOptVar((int)index));
 		}
 
 		return nullptr;
@@ -187,7 +201,7 @@ public:
 			return new OpcodeItem(vm_inst::OPT_LOAD_4);
 
 		default:
-			new OpcodeItem(vm_inst::OPT_LOAD, new IntOptVar(index));
+			new OpcodeItem(vm_inst::OPT_LOAD, new ByteOptVar((int)index));
 		}
 
 		return nullptr;
@@ -213,7 +227,7 @@ public:
 			return new OpcodeItem(vm_inst::OPT_GLOAD_4);
 
 		default:
-			new OpcodeItem(vm_inst::OPT_GLOAD, new IntOptVar(index));
+			new OpcodeItem(vm_inst::OPT_GLOAD, new ByteOptVar((int)index));
 		}
 
 		return nullptr;
@@ -483,9 +497,24 @@ PrimativeValue* VmBackend::Execute()
 	
 	this->Compile(this->impl->codes);
 	impl->system.execute(&impl->codes[0], impl->codes.size(), codeStart);	
-	auto data = impl->system.getUInt();
+	auto lastItem = impl->system.getObject();
 
-	result = new PrimativeValue((int)data);
+	switch (lastItem.Type)
+	{
+		case vm_object::vm_object_type::INT:
+			result = new PrimativeValue(lastItem.Int);
+			break;
+
+		case vm_object::vm_object_type::DOUBLE:
+			result = new PrimativeValue(lastItem.Double);
+			break;
+
+		case vm_object::vm_object_type::BOOL:
+			result = new PrimativeValue(lastItem.Bool);
+			break;
+	}
+
+
 	console_out << result->Describe() << '\n';
 	return result;
 }
@@ -535,25 +564,13 @@ void VmBackend::Generate(std::vector<char> & opcodes)
 				opcodes.push_back(this->impl->methods[((MethodOptVar*)this->impl->intermediateCode[i]->Opt)->Data]);
 				break;
 
+            case OptVar::BOOL:
 			case OptVar::INT:
-            {
-                vm_int_t integer = { .Int = ((IntOptVar*)this->impl->intermediateCode[i]->Opt)->Data };
-                opcodes.push_back(integer.Chars[1]);
-                opcodes.push_back(integer.Chars[0]);
-            }
-				break;
-
 			case OptVar::DOUBLE:
 			{
-				vm_double_t d = { .Double = ((DoubleOptVar*)this->impl->intermediateCode[i]->Opt)->Data };
-				opcodes.push_back(d.Chars[7]);
-				opcodes.push_back(d.Chars[6]);
-				opcodes.push_back(d.Chars[5]);
-				opcodes.push_back(d.Chars[4]);
-				opcodes.push_back(d.Chars[3]);
-				opcodes.push_back(d.Chars[2]);
-				opcodes.push_back(d.Chars[1]);
-				opcodes.push_back(d.Chars[0]);
+                ByteOptVar* byteOpt = (ByteOptVar*)this->impl->intermediateCode[i]->Opt;
+                for (int j = 0; j < byteOpt->Length; ++j)
+                    opcodes.push_back(byteOpt->Data[(byteOpt->Length - j) - 1]);
 			}
 				break;
 			}
@@ -605,28 +622,35 @@ void VmBackend::visit(IfStatementAst* ast)
 	switch (lastOperator)
 	{
 	case vm_inst::OPT_EQ:
-		condition = new OpcodeItem(vm_inst::OPT_IF_EQ, new IntOptVar(0));
+		condition = new OpcodeItem(vm_inst::OPT_IF_EQ);
 		this->impl->intermediateCode.erase(this->impl->intermediateCode.begin() + (this->impl->intermediateCode.size() - 1));
 		--this->impl->opCodeIndex;
 		break;
 
 	default:
-		condition = new OpcodeItem(vm_inst::OPT_JIF, new IntOptVar(0));
+		condition = new OpcodeItem(vm_inst::OPT_JIF);
 		break;
 	}
 
 	this->impl->intermediateCode.push_back(condition);
 	this->impl->opCodeIndex += 2;
 	this->getAstItem(ast->True);
-	((IntOptVar*)condition->Opt)->Data = this->impl->opCodeIndex;
+    condition->Opt = new ByteOptVar(this->impl->opCodeIndex);
 
 	if (ast->False != nullptr)
 	{
-		((IntOptVar*)condition->Opt)->Data += 2;
-		auto* trueStmt = new OpcodeItem(vm_inst::OPT_JMP, new IntOptVar(0));
+        vm_int_t conditionJumpAddress = { .Int = 0 };
+        conditionJumpAddress.Chars[0] = ((ByteOptVar*)condition->Opt)->Data[0];
+        conditionJumpAddress.Chars[1] = ((ByteOptVar*)condition->Opt)->Data[1];
+
+        conditionJumpAddress.Int += 2;
+        ((ByteOptVar*)condition->Opt)->Data[0] = conditionJumpAddress.Chars[0];
+        ((ByteOptVar*)condition->Opt)->Data[1] = conditionJumpAddress.Chars[1];
+
+		auto* trueStmt = new OpcodeItem(vm_inst::OPT_JMP);
 		this->impl->intermediateCode.push_back(trueStmt);
 		this->getAstItem(ast->False);
-		((IntOptVar*)trueStmt->Opt)->Data = this->impl->opCodeIndex;
+        trueStmt->Opt = new ByteOptVar(this->impl->opCodeIndex);
 	}
 }
 
@@ -662,7 +686,7 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     }
 
     ast->Body->accept(this);
-    jpmAddress->Opt = new IntOptVar(static_cast<int>(this->impl->opCodeIndex));
+    jpmAddress->Opt = new ByteOptVar(this->impl->opCodeIndex);
 
     this->impl->variablesList.erase(impl->variablesList.begin() + (impl->variablesList.size() - 1));
 	--this->impl->inFunctionCounter;
@@ -705,22 +729,25 @@ void VmBackend::visit(VariableAst* ast)
 void VmBackend::visit(PrimativeAst* ast) {
 	switch (ast->Value->Type)
 	{
-		case PrimativeValue::Type::PRI_DOUBLE:
-		{
-			vm_double_t doubleConvert = { .Double = ast->Value->Double };
-			this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_PUSH, new DoubleOptVar(ast->Value->Double)));
-		}
-			break;
+        case PrimativeValue::Type::PRI_DOUBLE:
+        {
+            vm_double_t doubleConvert = { .Double = ast->Value->Double };
+            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_dPUSH, new ByteOptVar(ast->Value->Double)));
+        }
+            break;
 
+        case PrimativeValue::Type::PRI_BOOL:
+            this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_bPUSH, new ByteOptVar(ast->Value->Bool)));
+            break;
 
 	case PrimativeValue::Type::PRI_INTEGER:
-		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_PUSH, new IntOptVar(ast->Value->Integer)));
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_iPUSH, new ByteOptVar(ast->Value->Integer)));
 		break;
 
 	case PrimativeValue::Type::PRI_STRING:
     {
-        const char* text = ast->Value->String->c_str();
-        this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_PUSH, new ByteOptVar(text, strlen(text))));
+        // const char* text = ast->Value->String->c_str();
+        // this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_sPUSH, new ByteOptVar(text, strlen(text))));
     }
 		break;
 
@@ -729,7 +756,10 @@ void VmBackend::visit(PrimativeAst* ast) {
 		break;
 	}
 
-	this->impl->opCodeIndex += 2;
+    if (this->impl->intermediateCode[this->impl->intermediateCode.size() - 1]->Opt != nullptr)
+	    this->impl->opCodeIndex += this->impl->intermediateCode[this->impl->intermediateCode.size() - 1]->Opt->Size();
+
+    ++this->impl->opCodeIndex;
 }
 
 void VmBackend::visit(ControlAst* ast)
@@ -868,7 +898,7 @@ void VmBackend::visit(FunctionCallAst* ast)
     for (size_t i = totalParameters; i > 0; --i)
         getAstItem(ast->Args[i - 1]);
 
-    this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_CALL, new IntOptVar(static_cast<int>(this->impl->methods[ast->Function]))));
+    this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_CALL, new ByteOptVar(static_cast<int>(this->impl->methods[ast->Function]))));
     this->impl->opCodeIndex += 2;
 }
 

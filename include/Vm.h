@@ -31,6 +31,7 @@ class vm_object
 {
 public:
 	enum class vm_object_type {
+		EMPTY,
 		INT,
 		DOUBLE,
 		BOOL,
@@ -38,6 +39,29 @@ public:
 		NATIVE_CALL,
 		CALL
 	};
+
+	vm_object()
+	{
+		Type = vm_object_type::EMPTY;
+	}
+
+	vm_object(int i)
+	{
+		Int = i;
+		Type = vm_object_type::INT;
+	}
+
+	vm_object(double d)
+	{
+		Double = d;
+		Type = vm_object_type::DOUBLE;
+	}
+
+	vm_object(bool b)
+	{
+		Bool = b;
+		Type = vm_object_type::BOOL;
+	}
 
 	vm_object& operator=(int right) {
 		Int = right;
@@ -68,7 +92,7 @@ public:
 		bool Bool;
 		int Int;
 		double Double;
-		string_type* String;
+		string_type* String{nullptr};
 		VmMethodCallback Method;
 	};
 };
@@ -98,52 +122,55 @@ OPT_GT, // 16
 OPT_GTE, // 17
 
 OPT_AND, // 18
-OPT_OR, // 11
-OPT_DUP, // 12
-OPT_POP, // 13
-OPT_JMP, // 14
+OPT_OR, // 19
+OPT_DUP, // 20
+OPT_POP, // 21
+OPT_JMP, // 22
 
-OPT_IF_EQ, // 15
+OPT_IF_EQ, // 23
 
-OPT_JIF, // 16
-OPT_JNIF, // 17
-OPT_INC, // 18
-OPT_DINC, // 19
+OPT_JIF, // 24
+OPT_JNIF, // 25
+OPT_INC, // 26
+OPT_DINC, // 27
 
-OPT_LOAD, // 20
-OPT_LOAD_0, // 21
-OPT_LOAD_1, // 22
-OPT_LOAD_2, // 23
-OPT_LOAD_3, // 24
-OPT_LOAD_4, // 25
+OPT_LOAD, // 28
+OPT_LOAD_0, // 29
+OPT_LOAD_1, // 30
+OPT_LOAD_2, // 31
+OPT_LOAD_3, // 32
+OPT_LOAD_4, // 33
 
-OPT_STORE, // 26
-OPT_STORE_0, // 27
-OPT_STORE_1, // 28
-OPT_STORE_2, // 29
-OPT_STORE_3, // 30
-OPT_STORE_4, // 31
+OPT_STORE, // 34
+OPT_STORE_0, // 35
+OPT_STORE_1, // 36
+OPT_STORE_2, // 37
+OPT_STORE_3, // 38
+OPT_STORE_4, // 39
 
-OPT_GLOAD, // 32
-OPT_GLOAD_0, // 33
-OPT_GLOAD_1, // 34
-OPT_GLOAD_2, // 35
-OPT_GLOAD_3, // 36
-OPT_GLOAD_4, // 37
+OPT_GLOAD, // 40
+OPT_GLOAD_0, // 41
+OPT_GLOAD_1, // 42
+OPT_GLOAD_2, // 43
+OPT_GLOAD_3, // 44
+OPT_GLOAD_4, // 45
 
-OPT_GSTORE, // 38
-OPT_GSTORE_0, // 39
-OPT_GSTORE_1, // 40
-OPT_GSTORE_2, // 41
-OPT_GSTORE_3, // 42
-OPT_GSTORE_4, // 43
+OPT_GSTORE, // 46
+OPT_GSTORE_0, // 47
+OPT_GSTORE_1, // 48
+OPT_GSTORE_2, // 49
+OPT_GSTORE_3, // 50
+OPT_GSTORE_4, // 51
 
-OPT_CALL, // 44
-OPT_RETURN, // 45
+OPT_CALL, // 52
+OPT_RETURN, // 53
 
-OPT_PUSH, // 46
-OPT_PRINT, // 47
-OPT_NEG, // 48
+OPT_iPUSH, // 54
+OPT_dPUSH, // 55
+OPT_bPUSH, // 56
+OPT_sPUSH, // 57
+OPT_PRINT, // 58
+OPT_NEG, // 59
 
 OPT_I2D,
 OPT_D2I,
@@ -162,6 +189,7 @@ public:
 	void execute(char* code, size_t len, size_t startIndex);
 	void dump(char* code, size_t len);
 	size_t getUInt();
+	vm_object getObject();
 
 private:
 	vm_system_impl* impl;

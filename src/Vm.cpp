@@ -359,13 +359,32 @@ public:
 				POP().Int;
 				break;
 
-			case vm_inst::OPT_PUSH: {
+			case vm_inst::OPT_iPUSH: {
 				vm_int_t integer = {.Int = 0};
 				integer.Chars[1] = *++code;
 				integer.Chars[0] = *++code;
 				PUSH(integer.Int);
 			}
 			break;
+
+			case vm_inst::OPT_dPUSH: {
+				vm_double_t d = {.Double = 0};
+				d.Chars[7] = *++code;
+				d.Chars[6] = *++code;
+				d.Chars[5] = *++code;
+				d.Chars[4] = *++code;
+				d.Chars[3] = *++code;
+				d.Chars[2] = *++code;
+				d.Chars[1] = *++code;
+				d.Chars[0] = *++code;
+				PUSH(d.Double);
+			}
+				break;
+
+
+			case vm_inst::OPT_bPUSH:
+				PUSH((bool)*++code);
+				break;
 
 			case vm_inst::OPT_PRINT:
 				console_out << POP().Int;
@@ -431,10 +450,12 @@ public:
 				case vm_inst::OPT_GLOAD:
 				case vm_inst::OPT_GSTORE:
 				case vm_inst::OPT_CALL:
-				case vm_inst::OPT_PUSH: 
 					console_out << _T(" ") << (int)*++code;
 					++index;
 					break;
+
+                case vm_inst ::OPT_iPUSH:
+                    break;
 			}
 
 			console_out << '\n';
@@ -471,5 +492,14 @@ size_t vm_system::getUInt()
 	return impl->currentStack[impl->stackIndex - 1].Int;
 #else
 	return *(impl->currentStack - 1);
+#endif
+}
+
+vm_object vm_system::getObject()
+{
+#if _DEBUG
+    return impl->currentStack[impl->stackIndex - 1];
+#else
+    return *(impl->currentStack - 1);
 #endif
 }
