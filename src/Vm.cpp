@@ -21,7 +21,7 @@
 #define iSET(obj) (*(currentStack - 1)) = obj
 
 #else 
-#define PEEK() *(currentStack - 1)
+#define PEEK() (*(currentStack - 1))
 #define POP() (*(--currentStack))
 #define PUSH(obj) *currentStack = obj; ++currentStack;
 #define SET(obj) (*(currentStack - 1)) = obj
@@ -35,45 +35,6 @@
 
 #define TO_INT(code) code ? 1 : 0;
 #define TO_BOOL(code) code != 0
-
-class vm_object
-{
-public:
-	enum class vm_object_type {
-		INT,
-		DOUBLE,
-		STR,
-		NATIVE_CALL,
-		CALL
-	};
-
-	vm_object& operator=(int right) {
-		Int = right;
-		Type = vm_object_type::INT;
-		return *this;
-	}
-
-	vm_object& operator=(double right) {
-		Double = right;
-		Type = vm_object_type::DOUBLE;
-		return *this;
-	}
-
-    operator int()
-    {
-        return Int;
-    }
-
-	vm_object_type Type;
-
-	union {
-		bool Bool;
-		int Int;
-		double Double;
-		string_type* String;
-		VmMethodCallback Method;
-	};
-};
 
 template <typename T>
 class vm_store
@@ -138,18 +99,31 @@ public:
 		char* startPoint = code;
 		code += startIndex;
 		while (1) {
-			switch (*code)
+			switch ((vm_inst)*code)
 			{
 			case vm_inst::OPT_iADD:
-				PUSH(POP().Int + POP().Int);
+			{
+				int a = POP().Int;
+				int b = POP().Int;
+				PUSH(b + a);
+			}
 				break;
 
 			case vm_inst::OPT_iSUB:
-				PUSH(-POP().Int + POP().Int);
+			{
+				int a = POP().Int;
+				int b = POP().Int;
+				PUSH(b - a);
+			}
 				break;
 
 			case vm_inst::OPT_iMUL:
-				currentStack[stackIndex++] = currentStack[--stackIndex].Int * currentStack[--stackIndex].Int;
+            {
+                int a = POP().Int;
+                int b = POP().Int;
+                int c = a * b;
+                PUSH(c);
+            }
 				break;
 
 			case vm_inst::OPT_iDIV:
@@ -159,6 +133,40 @@ public:
 				PUSH(b / a);
 			}
 			break;
+
+
+			case vm_inst::OPT_dADD:
+			{
+				double a = POP().Double;
+				double b = POP().Double;
+				PUSH(b + a);
+			}
+				break;
+
+			case vm_inst::OPT_dSUB:
+			{
+				double a = POP().Double;
+				double b = POP().Double;
+				PUSH(b - a);
+			}
+				break;
+
+			case vm_inst::OPT_dMUL:
+			{
+				double a = POP().Double;
+				double b = POP().Double;
+				double c = a * b;
+				PUSH(c);
+			}
+				break;
+
+			case vm_inst::OPT_dDIV:
+			{
+				double a = POP().Double;
+				double b = POP().Double;
+				PUSH(b / a);
+			}
+				break;
 
 			case vm_inst::OPT_EQ:
 				PUSH(TO_INT(POP().Bool == POP().Bool));
@@ -352,9 +360,12 @@ public:
 				break;
 
 			case vm_inst::OPT_PUSH: {
-				PUSH(*++code);
+				vm_int_t integer = {.Int = 0};
+				integer.Chars[1] = *++code;
+				integer.Chars[0] = *++code;
+				PUSH(integer.Int);
 			}
-								 break;
+			break;
 
 			case vm_inst::OPT_PRINT:
 				console_out << POP().Int;
@@ -362,6 +373,40 @@ public:
 
 			case vm_inst::OPT_HALT:
 				return;
+
+			case OPT_lADD:break;
+			case OPT_lSUB:break;
+			case OPT_lMUL:break;
+			case OPT_lDIV:break;
+
+
+			case OPT_I2D:
+			{
+				int a = POP().Int;
+				double b = static_cast<double>(a);
+				PUSH(b);
+			}
+                break;
+
+            case OPT_D2I:
+                PUSH(static_cast<int>(POP().Double));
+                break;
+
+            case OPT_I2B:
+                PUSH(POP().Int == 0.0 ? false : true);
+                break;
+
+            case OPT_B2I:
+                PUSH(POP().Bool ? 1 : 0);
+                break;
+
+            case OPT_D2B:
+                PUSH(POP().Double == 0.0 ? false : true);
+                break;
+
+            case OPT_B2D:
+                PUSH(POP().Bool ? 1.0 : 0.0);
+                break;
 			}
 
 			++code;
@@ -425,6 +470,6 @@ size_t vm_system::getUInt()
 #if _DEBUG
 	return impl->currentStack[impl->stackIndex - 1].Int;
 #else
-	return *impl->currentStack;
+	return *(impl->currentStack - 1);
 #endif
 }

@@ -4,11 +4,38 @@
 #ifndef EASYLANG_VMBACKEND_H
 #define EASYLANG_VMBACKEND_H
 
+
+enum class Type {
+	EMPTY,
+	INT,
+	DOUBLE,
+	STRING,
+	BOOL,
+	ARRAY,
+	DICTIONARY
+};
+
 class VmBackendImpl;
 class VmBackend :
 		public Backend,
 		public StmtVisitor<void>,
-		public ExprVisitor<void>
+		public ExprVisitor<void>/*10 * 20,
+		public BaseVisitor,
+		public Visitor<VariableAst, Type>,
+		public Visitor<PrimativeAst, Type>,
+		public Visitor<ControlAst, Type>,
+		public Visitor<BinaryAst, Type>,
+		public Visitor<StructAst, Type>,
+		public Visitor<ParenthesesGroupAst, Type>,
+		public Visitor<UnaryAst, Type>,
+		public Visitor<FunctionCallAst, Type>,
+		public Visitor<AssignmentAst, Type>,
+		public Visitor<BlockAst, Type>,
+		public Visitor<IfStatementAst, Type>,
+		public Visitor<FunctionDefinetionAst, Type>,
+		public Visitor<ForStatementAst, Type>,
+		public Visitor<ExprStatementAst, Type>,
+		public Visitor<ReturnAst, Type>*/
 {
 public:
 
@@ -18,7 +45,10 @@ public:
 	void Prepare(std::shared_ptr<std::vector<Ast*>> pAsts) override;
 	PrimativeValue* getPrimative(Ast* ast);
 	void Generate(std::vector<char> & opcodes);
-	PrimativeValue* getData(Ast* ast);
+	PrimativeValue* getAstItem(Ast* ast);
+	Type detectType(Ast* ast);
+    void addConvertOpcode(Type from, Type to);
+	Type operationResultType(Type from, Type to);
 	PrimativeValue* Execute() override;
 	void Execute(std::vector<char> const & opcodes) override;
 	void Compile(std::vector<char> & opcode) override;

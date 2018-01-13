@@ -16,6 +16,7 @@ public:
 		VARIABLE,
 		METHOD,
 		INT,
+        DOUBLE,
 		STRING
 	} Type;
 
@@ -37,12 +38,22 @@ public:
 class IntOptVar : public OptVar
 {
 public:
-	int Data;
-	IntOptVar() { Type = INT; }
-	IntOptVar(int data) { Type = INT; Data = data; }
-	size_t Size() override {
-		return 3;
-	}
+    int Data;
+    IntOptVar() { Type = INT; }
+    IntOptVar(int data) { Type = INT; Data = data; }
+    size_t Size() override {
+        return 3;
+    }
+};
+class DoubleOptVar : public OptVar
+{
+public:
+    double Data;
+    DoubleOptVar() { Type = INT; }
+    DoubleOptVar(double data) { Type = DOUBLE; Data = data; }
+    size_t Size() override {
+        return 3;
+    }
 };
 
 class MethodOptVar : public OptVar
@@ -89,7 +100,7 @@ public:
 	bool dumpOpcode;
 
 	std::vector<OpcodeItem*> intermediateCode;
-	size_t opCodeIndex;
+	int opCodeIndex;
     size_t inClassCounter;
 	size_t inFunctionCounter;
 
@@ -229,7 +240,142 @@ PrimativeValue* VmBackend::getPrimative(Ast* ast)
 	return primative;
 }
 
-PrimativeValue* VmBackend::getData(Ast* ast)
+void VmBackend::addConvertOpcode(Type from, Type to)
+{
+	if (from == Type::INT && to == Type::DOUBLE)
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_I2D));
+	else if (to == Type::INT && from == Type::DOUBLE)
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_D2I));
+	else if (from == Type::INT && to == Type::BOOL)
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_I2B));
+	else if (to == Type::INT && from == Type::BOOL)
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_B2I));
+	else if (from == Type::DOUBLE && to == Type::BOOL)
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_D2B));
+	else if (to == Type::DOUBLE && from == Type::BOOL)
+		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_B2D));
+}
+
+Type VmBackend::operationResultType(Type from, Type to)
+{
+	if (from == Type::INT && to == Type::DOUBLE)
+		return Type::DOUBLE;
+	else if (to == Type::INT && from == Type::DOUBLE)
+		return Type::DOUBLE;
+	else if (from == Type::INT && to == Type::BOOL)
+		return Type::INT;
+	else if (to == Type::INT && from == Type::BOOL)
+		return Type::INT;
+	else if (from == Type::DOUBLE && to == Type::BOOL)
+		return Type::DOUBLE;
+	else if (to == Type::DOUBLE && from == Type::BOOL)
+		return Type::DOUBLE;
+}
+
+Type VmBackend::detectType(Ast* ast)
+{
+	if (ast == nullptr)
+		return Type::EMPTY;
+
+	switch (ast->GetType())
+	{
+		case EASY_AST_TYPE::UNARY:
+		{
+			auto* unary = static_cast<UnaryAst*>(ast);
+			return detectType(unary->Data);
+		}
+
+		case EASY_AST_TYPE::PRIMATIVE:
+		{
+			auto type = static_cast<PrimativeAst*>(ast)->Value->Type;
+			switch (type)
+			{
+
+				case PrimativeValue::Type::PRI_INTEGER:
+					return Type::INT;
+
+				case PrimativeValue::Type::PRI_DOUBLE:
+					return Type::DOUBLE;
+
+				case PrimativeValue::Type::PRI_STRING:
+					return Type::STRING;
+
+				case PrimativeValue::Type::PRI_BOOL:
+					return Type::BOOL;
+
+				case PrimativeValue::Type::PRI_ARRAY:
+					return Type::ARRAY;
+
+				case PrimativeValue::Type::PRI_DICTIONARY:
+					return Type::DICTIONARY;
+
+				case PrimativeValue::Type::PRI_NULL:
+					return Type::EMPTY;
+			}
+		}
+
+		case EASY_AST_TYPE::RETURN:
+			return Type::EMPTY;
+
+		case EASY_AST_TYPE::PARENTHESES_BLOCK:
+			return Type::EMPTY;
+
+		case EASY_AST_TYPE::EXPR_STATEMENT:
+			return detectType(static_cast<ExprStatementAst*>(ast)->Expr);
+			break;
+
+		case EASY_AST_TYPE::VARIABLE:
+			static_cast<VariableAst*>(ast)->accept(this);
+			break;
+
+		case EASY_AST_TYPE::ASSIGNMENT:
+			return Type::EMPTY;
+			break;
+
+		case EASY_AST_TYPE::BLOCK:
+			return Type::EMPTY;
+			break;
+
+		case EASY_AST_TYPE::FUNCTION_DECLERATION:
+			static_cast<FunctionDefinetionAst*>(ast)->accept(this);
+			break;
+
+		case EASY_AST_TYPE::FUNCTION_CALL:
+			static_cast<FunctionCallAst*>(ast)->accept(this);
+			break;
+
+		case EASY_AST_TYPE::IF_STATEMENT:
+			return Type::EMPTY;
+
+		case EASY_AST_TYPE::FOR:
+			return Type::EMPTY;
+
+		case EASY_AST_TYPE::BINARY_OPERATION:
+		{
+			auto binary = static_cast<BinaryAst*>(ast);
+			Type rightType =  detectType(binary->Right);
+			Type leftType =  detectType(binary->Left);
+
+            return operationResultType(rightType, leftType);
+		}
+			break;
+
+		case EASY_AST_TYPE::STRUCT_OPERATION:
+			static_cast<StructAst*>(ast)->accept(this);
+			break;
+
+		case EASY_AST_TYPE::CONTROL_OPERATION:
+			static_cast<ControlAst*>(ast)->accept(this);
+			break;
+
+		case EASY_AST_TYPE::NONE:
+			return Type::EMPTY;
+	}
+
+	return Type::EMPTY;
+}
+
+PrimativeValue* VmBackend::getAstItem(Ast* ast)
 {
 	if (ast == nullptr)
 		return nullptr;
@@ -239,7 +385,7 @@ PrimativeValue* VmBackend::getData(Ast* ast)
 	case EASY_AST_TYPE::UNARY:
 	{
 		auto* unary = static_cast<UnaryAst*>(ast);
-		getData(unary->Data);
+		getAstItem(unary->Data);
 		unary->accept(this);
 		return nullptr;
 	}
@@ -313,7 +459,7 @@ void VmBackend::Compile(std::vector<char> & opcode)
 {
 	size_t totalAst = temporaryAsts.size();
 	for (int i = 0; i < totalAst; ++i) {
-		getData(temporaryAsts[i]);
+		getAstItem(temporaryAsts[i]);
 	}
 
 	temporaryAsts.clear();
@@ -390,7 +536,25 @@ void VmBackend::Generate(std::vector<char> & opcodes)
 				break;
 
 			case OptVar::INT:
-				opcodes.push_back(((IntOptVar*)this->impl->intermediateCode[i]->Opt)->Data);
+            {
+                vm_int_t integer = { .Int = ((IntOptVar*)this->impl->intermediateCode[i]->Opt)->Data };
+                opcodes.push_back(integer.Chars[1]);
+                opcodes.push_back(integer.Chars[0]);
+            }
+				break;
+
+			case OptVar::DOUBLE:
+			{
+				vm_double_t d = { .Double = ((DoubleOptVar*)this->impl->intermediateCode[i]->Opt)->Data };
+				opcodes.push_back(d.Chars[7]);
+				opcodes.push_back(d.Chars[6]);
+				opcodes.push_back(d.Chars[5]);
+				opcodes.push_back(d.Chars[4]);
+				opcodes.push_back(d.Chars[3]);
+				opcodes.push_back(d.Chars[2]);
+				opcodes.push_back(d.Chars[1]);
+				opcodes.push_back(d.Chars[0]);
+			}
 				break;
 			}
 
@@ -404,22 +568,22 @@ void VmBackend::visit(AssignmentAst* ast)
 	std::unordered_map<string_type, size_t>* variables = nullptr;
 	if (this->impl->inFunctionCounter > 0)
 		variables = this->impl->variables;
-	else 
+	else
 		variables = this->impl->globalVariables;
 
 	if (variables->find(ast->Name) == variables->end())
 		(*variables)[ast->Name] = variables->size();
 
 
-	this->getData(ast->Data);
+	this->getAstItem(ast->Data);
 	if (this->impl->inFunctionCounter > 0)
 		this->impl->intermediateCode.push_back(this->impl->generateStore(static_cast<int>((*this->impl->variables)[ast->Name])));
-	else 
+	else
 		this->impl->intermediateCode.push_back(this->impl->generateGlobalStore(static_cast<int>((*this->impl->globalVariables)[ast->Name])));
 
 	if (this->impl->intermediateCode[this->impl->intermediateCode.size() - 1]->Opt == nullptr)
 		++this->impl->opCodeIndex;
-	else 
+	else
 		this->impl->opCodeIndex += 2;
 }
 
@@ -428,16 +592,16 @@ void VmBackend::visit(BlockAst* ast)
     //if data == 123 then { data = 111 } else {data = 999}
     size_t totalBlock = ast->Blocks.size();
     for (size_t i = 0; i < totalBlock; ++i) {
-        getData(ast->Blocks.at(i));
+        getAstItem(ast->Blocks.at(i));
     }
 }
 
 void VmBackend::visit(IfStatementAst* ast)
 {
-	this->getData(ast->ControlOpt);
+	this->getAstItem(ast->ControlOpt);
 	auto lastOperator = this->impl->intermediateCode[this->impl->intermediateCode.size() - 1]->OpCode;
 
-	OpcodeItem* condition = nullptr; 
+	OpcodeItem* condition = nullptr;
 	switch (lastOperator)
 	{
 	case vm_inst::OPT_EQ:
@@ -450,10 +614,10 @@ void VmBackend::visit(IfStatementAst* ast)
 		condition = new OpcodeItem(vm_inst::OPT_JIF, new IntOptVar(0));
 		break;
 	}
-    
+
 	this->impl->intermediateCode.push_back(condition);
 	this->impl->opCodeIndex += 2;
-	this->getData(ast->True);
+	this->getAstItem(ast->True);
 	((IntOptVar*)condition->Opt)->Data = this->impl->opCodeIndex;
 
 	if (ast->False != nullptr)
@@ -461,7 +625,7 @@ void VmBackend::visit(IfStatementAst* ast)
 		((IntOptVar*)condition->Opt)->Data += 2;
 		auto* trueStmt = new OpcodeItem(vm_inst::OPT_JMP, new IntOptVar(0));
 		this->impl->intermediateCode.push_back(trueStmt);
-		this->getData(ast->False);
+		this->getAstItem(ast->False);
 		((IntOptVar*)trueStmt->Opt)->Data = this->impl->opCodeIndex;
 	}
 }
@@ -471,7 +635,7 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 	++this->impl->inFunctionCounter;
     this->impl->variablesList.push_back(new std::unordered_map<string_type, size_t>());
     impl->variables = impl->variablesList[impl->variablesList.size() - 1];
-    
+
     auto* jpmAddress = new OpcodeItem(vm_inst::OPT_JMP);
     this->impl->opCodeIndex += 2;
     this->impl->intermediateCode.push_back(jpmAddress);
@@ -480,14 +644,14 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 	{
 		size_t oldMethodOrderNumber = this->impl->methods[ast->Name];
 		this->impl->codes[oldMethodOrderNumber] = vm_inst::OPT_JMP;
-		this->impl->codes[oldMethodOrderNumber + 1] = this->impl->opCodeIndex;
+		this->impl->codes[oldMethodOrderNumber + 1] = static_cast<char>(this->impl->opCodeIndex);
 	}
-    
-	this->impl->methods[ast->Name] = this->impl->opCodeIndex;
+
+	this->impl->methods[ast->Name] = static_cast<unsigned long>(this->impl->opCodeIndex);
     size_t totalParameter = ast->Args.size();
     for (size_t i = 0; i < totalParameter; ++i) {
         (*this->impl->variables)[ast->Args[i]->Name] = i;
-	
+
 		auto* opCode = this->impl->generateStore(i);
 		this->impl->intermediateCode.push_back(opCode);
 
@@ -496,10 +660,10 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 		else
 			++this->impl->opCodeIndex;
     }
-    
+
     ast->Body->accept(this);
-    jpmAddress->Opt = new IntOptVar(this->impl->opCodeIndex);
-    
+    jpmAddress->Opt = new IntOptVar(static_cast<int>(this->impl->opCodeIndex));
+
     this->impl->variablesList.erase(impl->variablesList.begin() + (impl->variablesList.size() - 1));
 	--this->impl->inFunctionCounter;
     delete impl->variables;
@@ -513,16 +677,16 @@ void VmBackend::visit(VariableAst* ast)
 
 	if (this->impl->inFunctionCounter == 0 && this->impl->globalVariables->find(ast->Value) == this->impl->globalVariables->end())
 		throw ParseError(ast->Value + _T(" Not Found"));
-    
+
 	if (this->impl->inFunctionCounter == 0)
 	{
 		size_t index = (*this->impl->globalVariables)[ast->Value];
 		auto* opCode = this->impl->generateGlobalLoad(index);
 		this->impl->intermediateCode.push_back(opCode);
-		
+
 		if (opCode->Opt != nullptr)
-			this->impl->opCodeIndex += 2; 
-		else 
+			this->impl->opCodeIndex += 2;
+		else
 			++this->impl->opCodeIndex;
 	}
 	else
@@ -541,6 +705,14 @@ void VmBackend::visit(VariableAst* ast)
 void VmBackend::visit(PrimativeAst* ast) {
 	switch (ast->Value->Type)
 	{
+		case PrimativeValue::Type::PRI_DOUBLE:
+		{
+			vm_double_t doubleConvert = { .Double = ast->Value->Double };
+			this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_PUSH, new DoubleOptVar(ast->Value->Double)));
+		}
+			break;
+
+
 	case PrimativeValue::Type::PRI_INTEGER:
 		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_PUSH, new IntOptVar(ast->Value->Integer)));
 		break;
@@ -551,7 +723,7 @@ void VmBackend::visit(PrimativeAst* ast) {
         this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_PUSH, new ByteOptVar(text, strlen(text))));
     }
 		break;
-		
+
 
 	default:
 		break;
@@ -560,10 +732,11 @@ void VmBackend::visit(PrimativeAst* ast) {
 	this->impl->opCodeIndex += 2;
 }
 
-void VmBackend::visit(ControlAst* ast) 
-{ 
-	getData(ast->Left);
-	getData(ast->Right);
+void VmBackend::visit(ControlAst* ast)
+{
+	getAstItem(ast->Left);
+	getAstItem(ast->Right);
+
 	switch (ast->Op)
 	{
 	case EQUAL:
@@ -604,8 +777,18 @@ void VmBackend::visit(ControlAst* ast)
 
 void VmBackend::visit(BinaryAst* ast)
 {
-	getData(ast->Left);
-	getData(ast->Right);
+	Type rightType =  detectType(ast->Right);
+	Type leftType =  detectType(ast->Left);
+	auto binaryResultType = detectType(ast);
+
+	getAstItem(ast->Left);
+	if (leftType != binaryResultType)
+		addConvertOpcode(leftType, binaryResultType);
+
+	getAstItem(ast->Right);
+	if (rightType != binaryResultType)
+		addConvertOpcode(rightType, binaryResultType);
+
 	switch (ast->Op)
 	{
 		case PLUS:
@@ -617,7 +800,28 @@ void VmBackend::visit(BinaryAst* ast)
 			break;
 
 		case MULTIPLICATION:
-			this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_iMUL));
+		{
+			switch(binaryResultType)
+			{
+				case Type::INT:
+					this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_iMUL));
+					break;
+
+				case Type::DOUBLE:
+					this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_dMUL));
+					break;
+
+				case Type::STRING:
+					break;
+
+				case Type::BOOL:
+					this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_AND));
+					break;
+
+				default:
+					break;
+			}
+		}
 			break;
 
 		case DIVISION:
@@ -632,6 +836,9 @@ void VmBackend::visit(BinaryAst* ast)
 
 		case INDEXER:
 			break;
+
+		default:
+			break;
 	}
 
 	++this->impl->opCodeIndex;
@@ -639,10 +846,10 @@ void VmBackend::visit(BinaryAst* ast)
 //if data == 123 then { data = 111 } else {data = 999}
 
 void VmBackend::visit(StructAst* ast) { }
-void VmBackend::visit(ReturnAst* ast) 
-{ 
+void VmBackend::visit(ReturnAst* ast)
+{
 	if (ast->Data != nullptr)
-		this->getData(ast->Data);
+		this->getAstItem(ast->Data);
 
 	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_RETURN));
 	++this->impl->opCodeIndex;
@@ -656,17 +863,17 @@ void VmBackend::visit(FunctionCallAst* ast)
 		impl->system.dump(&impl->codes[0], impl->codes.size());
 		return;
 	}
-    
+
 	size_t totalParameters = ast->Args.size();
     for (size_t i = totalParameters; i > 0; --i)
-        getData(ast->Args[i - 1]);
-    
+        getAstItem(ast->Args[i - 1]);
+
     this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_CALL, new IntOptVar(static_cast<int>(this->impl->methods[ast->Function]))));
     this->impl->opCodeIndex += 2;
 }
 
-void VmBackend::visit(UnaryAst* ast) 
-{ 
+void VmBackend::visit(UnaryAst* ast)
+{
 	this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_NEG));
 	++this->impl->opCodeIndex;
 }

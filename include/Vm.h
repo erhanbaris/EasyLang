@@ -16,7 +16,6 @@ public:
 };
 
 class vm_system;
-class vm_object;
 class vm_system_impl;
 template <typename T> class vm_store;
 template <typename T> class vm_stack;
@@ -27,6 +26,52 @@ typedef union vm_double_u { vm_char_t Chars[8];  double Double; } vm_double_t;
 typedef union vm_long_u { vm_char_t Chars[4];  long Long; } vm_long_t;
 typedef union vm_int_u { vm_char_t Chars[2];  int Int; } vm_int_t;
 typedef bool vm_bool_t;
+
+class vm_object
+{
+public:
+	enum class vm_object_type {
+		INT,
+		DOUBLE,
+		BOOL,
+		STR,
+		NATIVE_CALL,
+		CALL
+	};
+
+	vm_object& operator=(int right) {
+		Int = right;
+		Type = vm_object_type::INT;
+		return *this;
+	}
+
+	vm_object& operator=(double right) {
+		Double = right;
+		Type = vm_object_type::DOUBLE;
+		return *this;
+	}
+
+	vm_object& operator=(bool right) {
+		Bool = right;
+		Type = vm_object_type::BOOL;
+		return *this;
+	}
+
+	operator int()
+	{
+		return Int;
+	}
+
+	vm_object_type Type;
+
+	union {
+		bool Bool;
+		int Int;
+		double Double;
+		string_type* String;
+		VmMethodCallback Method;
+	};
+};
 
 DECLARE_ENUM(vm_inst,
 OPT_HALT, // 0
@@ -98,7 +143,14 @@ OPT_RETURN, // 45
 
 OPT_PUSH, // 46
 OPT_PRINT, // 47
-OPT_NEG // 48
+OPT_NEG, // 48
+
+OPT_I2D,
+OPT_D2I,
+OPT_I2B,
+OPT_B2I,
+OPT_D2B,
+OPT_B2D
 )
 
 
