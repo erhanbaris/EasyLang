@@ -132,10 +132,16 @@ class AssignmentAst : public ExprAst {
 public:
 	string_type Name;
     ExprAst* Data{ nullptr };
+	EASY_KEYWORD_TYPE VariableType;
     AssignmentAst() { Type = EASY_AST_TYPE::ASSIGNMENT; }
 	AssignmentAst(string_type name, ExprAst* data) { Type = EASY_AST_TYPE::ASSIGNMENT; Name = name; Data = data; }
 	string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
+
+	~AssignmentAst()
+	{
+		delete Data;
+	}
 };
 
 class UnaryAst : public ExprAst
@@ -147,6 +153,11 @@ public:
 	UnaryAst(EASY_OPERATOR_TYPE opt, ExprAst* data) { Type = EASY_AST_TYPE::UNARY; Opt = opt; Data = data; }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
     void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
+
+	~UnaryAst()
+	{
+		delete Data;
+	}
 };
 
 class VariableAst : public ExprAst {
@@ -171,6 +182,11 @@ public:
     PrimativeAst(std::unordered_map<string_type, PrimativeValue*>* value) : ExprAst() { Type = EASY_AST_TYPE::PRIMATIVE; Value = new PrimativeValue(value); }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
+
+	~PrimativeAst()
+	{
+		delete Value;
+	}
 };
 
 class ControlAst : public ExprAst
@@ -183,15 +199,28 @@ public:
 	ControlAst(ExprAst* left, EASY_OPERATOR_TYPE opt, ExprAst* right) { Type = EASY_AST_TYPE::CONTROL_OPERATION; Op = opt; Left = left; Right = right; }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
+
+	~ControlAst()
+	{
+		delete Left;
+		delete Right;
+	}
 };
 
 class BlockAst : public StmtAst
 {
 public:
-	std::shared_ptr <std::vector<Ast*>> Blocks;
-    BlockAst() { Type = EASY_AST_TYPE::BLOCK; Blocks = std::make_shared<std::vector<Ast*>>(); }
+	std::vector<Ast*> Blocks;
+    BlockAst() { Type = EASY_AST_TYPE::BLOCK; }
 	string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
+
+	~BlockAst()
+	{
+		size_t totalBlocks = Blocks.size();
+		for (size_t i = 0; i < totalBlocks; i++)
+			delete Blocks[i];
+	}
 };
 
 class BinaryAst : public ExprAst
@@ -204,6 +233,12 @@ public:
     BinaryAst(ExprAst* left, EASY_OPERATOR_TYPE opt, ExprAst* right) { Type = EASY_AST_TYPE::BINARY_OPERATION; Op = opt; Left = left; Right = right; }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
+	
+	~BinaryAst()
+	{
+		delete Left;
+		delete Right;
+	}
 };
 
 class StructAst : public ExprAst
@@ -216,6 +251,13 @@ public:
     StructAst() : Target(nullptr), Source1(nullptr), Source2(nullptr) { Type = EASY_AST_TYPE::STRUCT_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
+	
+	~StructAst()
+	{
+		delete Target;
+		delete Source1;
+		delete Source2;
+	}
 };
 
 class IfStatementAst : public StmtAst
@@ -228,18 +270,44 @@ public:
     IfStatementAst(ExprAst* controlOpt, StmtAst* trueAst, StmtAst* falseAst) { Type = EASY_AST_TYPE::IF_STATEMENT; ControlOpt = controlOpt; True = trueAst; False = falseAst; }
 	string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
+	
+	~IfStatementAst()
+	{
+		delete ControlOpt;
+		delete True;
+		delete False;
+	}
+};
+
+class FunctionDefinetionArg {
+public:
+	string_type Name;
+	EASY_KEYWORD_TYPE Type;
+
+	FunctionDefinetionArg() {}
+	FunctionDefinetionArg(string_type name, EASY_KEYWORD_TYPE type) : Name(name), Type(type) {}
 };
 
 class FunctionDefinetionAst : public StmtAst
 {
 public:
 	string_type Name;
-	std::vector<string_type> Args;
+	std::vector<FunctionDefinetionArg*> Args;
 	StmtAst* Body {nullptr};
+    EASY_KEYWORD_TYPE  ReturnType;
     FunctionDefinetionAst() { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; }
-	FunctionDefinetionAst(string_type const & name, std::vector<string_type> args, StmtAst* body) { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; Name = name; Args = args; Body = body; }
+	FunctionDefinetionAst(string_type const & name, std::vector<FunctionDefinetionArg*> & args, EASY_KEYWORD_TYPE  returnType, StmtAst* body) { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; Name = name; Args = args; ReturnType = returnType; Body = body; }
 	string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
+
+	~FunctionDefinetionAst()
+	{
+		size_t totalArgs = Args.size();
+		for (size_t i = 0; i < totalArgs; i++)
+			delete Args[i];
+
+		delete Body;
+	}
 };
 
 class ReturnAst : public StmtAst
@@ -250,6 +318,11 @@ public:
 	ReturnAst(ExprAst* data) { Type = EASY_AST_TYPE::RETURN; Data = data; }
     string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
+
+	~ReturnAst()
+	{
+		delete Data;
+	}
 };
 
 class ParenthesesGroupAst : public ExprAst {
@@ -258,6 +331,11 @@ public:
     ParenthesesGroupAst() { Type = EASY_AST_TYPE::PARENTHESES_BLOCK; }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
+	
+	~ParenthesesGroupAst()
+	{
+		delete Data;
+	}
 };
 
 class ForStatementAst : public StmtAst
@@ -271,6 +349,13 @@ public:
     ForStatementAst(string_type const& variable, ExprAst* start, ExprAst* end, StmtAst* repeat) { Type = EASY_AST_TYPE::FOR; Variable = variable; Start = start; End = end; Repeat = repeat; }
 	string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
+
+	~ForStatementAst()
+	{
+		delete Start;
+		delete End;
+		delete Repeat;
+	}
 };
 
 class ExprStatementAst : public StmtAst
@@ -281,6 +366,11 @@ public:
     ExprStatementAst(ExprAst* expr) { Type = EASY_AST_TYPE::EXPR_STATEMENT; Expr = expr; }
     string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
     void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
+
+	~ExprStatementAst()
+	{
+		delete Expr;
+	}
 };
 
 
@@ -295,6 +385,12 @@ public:
     FunctionCallAst(string_type package, string_type function, std::vector<ExprAst*> args) { Type = EASY_AST_TYPE::FUNCTION_CALL; Package = package; Function = function; Args = args;  }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
+	~FunctionCallAst()
+	{
+		size_t argsCount = Args.size();
+		for (size_t i = 0; i < argsCount; i++)
+			delete Args[i];
+	}
 };
 
 class PrintVisitor : public StmtVisitor<string_type>,
@@ -326,9 +422,14 @@ public:
 	AstParser();
     void Parse(std::shared_ptr<std::vector<Token*>> tokens, std::shared_ptr<std::vector<Ast*>> asts);
 	void Dump(std::shared_ptr<std::vector<Ast*>> asts);
-
+	~AstParser()
+	{
+		delete impl;
+	}
 private:
     AstParserImpl* impl{nullptr};
+
+	
 };
 
 #endif //EASYLANG_ASTS_H

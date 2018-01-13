@@ -16,7 +16,6 @@ public:
 };
 
 class vm_system;
-class vm_object;
 class vm_system_impl;
 template <typename T> class vm_store;
 template <typename T> class vm_stack;
@@ -28,64 +27,157 @@ typedef union vm_long_u { vm_char_t Chars[4];  long Long; } vm_long_t;
 typedef union vm_int_u { vm_char_t Chars[2];  int Int; } vm_int_t;
 typedef bool vm_bool_t;
 
+class vm_object
+{
+public:
+	enum class vm_object_type {
+		EMPTY,
+		INT,
+		DOUBLE,
+		BOOL,
+		STR,
+		NATIVE_CALL,
+		CALL
+	};
+
+	vm_object()
+	{
+		Type = vm_object_type::EMPTY;
+	}
+
+	vm_object(int i)
+	{
+		Int = i;
+		Type = vm_object_type::INT;
+	}
+
+	vm_object(double d)
+	{
+		Double = d;
+		Type = vm_object_type::DOUBLE;
+	}
+
+	vm_object(bool b)
+	{
+		Bool = b;
+		Type = vm_object_type::BOOL;
+	}
+
+	vm_object& operator=(int right) {
+		Int = right;
+		Type = vm_object_type::INT;
+		return *this;
+	}
+
+	vm_object& operator=(double right) {
+		Double = right;
+		Type = vm_object_type::DOUBLE;
+		return *this;
+	}
+
+	vm_object& operator=(bool right) {
+		Bool = right;
+		Type = vm_object_type::BOOL;
+		return *this;
+	}
+
+	operator int()
+	{
+		return Int;
+	}
+
+	vm_object_type Type;
+
+	union {
+		bool Bool;
+		int Int;
+		double Double;
+		string_type* String{nullptr};
+		VmMethodCallback Method;
+	};
+};
+
 DECLARE_ENUM(vm_inst,
-iHALT, // 0
-iADD, // 1
-iSUB, // 2
-iMUL, // 3
-iDIV, // 4
-iEQ, // 5
-iLT, // 6
-iLTE, // 7
-iGT, // 8
-iGTE, // 9
-iAND, // 10
-iOR, // 11
-iDUP, // 12
-iPOP, // 13
-iJMP, // 14
+OPT_HALT, // 0
+OPT_iADD, // 1
+OPT_dADD, // 2
+OPT_lADD, // 3
 
-iIF_EQ, // 15
+OPT_iSUB, // 4
+OPT_dSUB, // 5
+OPT_lSUB, // 6
 
-iJIF, // 16
-iJNIF, // 17
-iINC, // 18
-iDINC, // 19
+OPT_iMUL, // 7
+OPT_dMUL, // 8
+OPT_lMUL, // 9
 
-iLOAD, // 20
-iLOAD_0, // 21
-iLOAD_1, // 22
-iLOAD_2, // 23
-iLOAD_3, // 24
-iLOAD_4, // 25
+OPT_iDIV, // 10
+OPT_dDIV, // 11
+OPT_lDIV, // 12
 
-iSTORE, // 26
-iSTORE_0, // 27
-iSTORE_1, // 28
-iSTORE_2, // 29
-iSTORE_3, // 30
-iSTORE_4, // 31
+OPT_EQ, // 13
+OPT_LT, // 14
+OPT_LTE, // 15
+OPT_GT, // 16
+OPT_GTE, // 17
 
-iGLOAD, // 32
-iGLOAD_0, // 33
-iGLOAD_1, // 34
-iGLOAD_2, // 35
-iGLOAD_3, // 36
-iGLOAD_4, // 37
+OPT_AND, // 18
+OPT_OR, // 19
+OPT_DUP, // 20
+OPT_POP, // 21
+OPT_JMP, // 22
 
-iGSTORE, // 38
-iGSTORE_0, // 39
-iGSTORE_1, // 40
-iGSTORE_2, // 41
-iGSTORE_3, // 42
-iGSTORE_4, // 43
+OPT_IF_EQ, // 23
 
-iCALL, // 44
-iRETURN, // 45
+OPT_JIF, // 24
+OPT_JNIF, // 25
+OPT_INC, // 26
+OPT_DINC, // 27
 
-iPUSH, // 46
-iPRINT, // 47
-iNEG // 48
+OPT_LOAD, // 28
+OPT_LOAD_0, // 29
+OPT_LOAD_1, // 30
+OPT_LOAD_2, // 31
+OPT_LOAD_3, // 32
+OPT_LOAD_4, // 33
+
+OPT_STORE, // 34
+OPT_STORE_0, // 35
+OPT_STORE_1, // 36
+OPT_STORE_2, // 37
+OPT_STORE_3, // 38
+OPT_STORE_4, // 39
+
+OPT_GLOAD, // 40
+OPT_GLOAD_0, // 41
+OPT_GLOAD_1, // 42
+OPT_GLOAD_2, // 43
+OPT_GLOAD_3, // 44
+OPT_GLOAD_4, // 45
+
+OPT_GSTORE, // 46
+OPT_GSTORE_0, // 47
+OPT_GSTORE_1, // 48
+OPT_GSTORE_2, // 49
+OPT_GSTORE_3, // 50
+OPT_GSTORE_4, // 51
+
+OPT_CALL, // 52
+OPT_RETURN, // 53
+
+OPT_iPUSH, // 54
+OPT_dPUSH, // 55
+OPT_bPUSH, // 56
+OPT_sPUSH, // 57
+OPT_PRINT, // 58
+OPT_NEG, // 59
+
+OPT_I2D,
+OPT_D2I,
+OPT_I2B,
+OPT_B2I,
+OPT_D2B,
+OPT_B2D
 )
 
 
@@ -97,6 +189,7 @@ public:
 	void execute(char* code, size_t len, size_t startIndex);
 	void dump(char* code, size_t len);
 	size_t getUInt();
+	vm_object getObject();
 
 private:
 	vm_system_impl* impl;

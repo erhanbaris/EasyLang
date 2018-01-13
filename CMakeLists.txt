@@ -26,7 +26,6 @@ add_definitions(
 # message(STATUS "User selected components = ${COMPONENT_LIST}")
 # message(STATUS "    = ${llvm_libs}")
 
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(EasyLang
@@ -62,8 +61,6 @@ add_executable(EasyLang
         src/Vm.cpp 
 		include/Vm.h
 		Tests/VmTests.h
-		src/CodeGenerator.cpp
-		include/CodeGenerator.h
 		src/VmBackend.cpp
 		include/VmBackend.h
 		include/termcolor.hpp
@@ -71,6 +68,9 @@ add_executable(EasyLang
         )
 
 
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+	target_compile_definitions(EasyLang PUBLIC _DEBUG=1)
+endif()
 
 
 # llvm_map_components_to_libnames(llvm_libs Core

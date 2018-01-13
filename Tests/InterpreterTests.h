@@ -48,8 +48,8 @@ TEST_CASE("Interpreter tests") {
 		REQUIRE(result == nullptr);
 	}
 
-	SECTION("func test(data) { return 1 + data }") {
-		tokinizer->Parse(_T("func test(data) { return 1 + data }"), tokens);
+	SECTION("func test(data:int) { return 1 + data }") {
+		tokinizer->Parse(_T("func test(data:int) { return 1 + data }"), tokens);
 		astParser->Parse(tokens, asts);
 		backend->Prepare(asts);
 		backend->Execute();
@@ -72,7 +72,7 @@ TEST_CASE("Interpreter tests") {
 	}
 
 	SECTION("fibonacci test") {
-		tokinizer->Parse(_T("func fibonacci(num) { if num <= 1 then return 1 left = fibonacci(num - 1) right = fibonacci(num - 2) return left + right }"), tokens);
+		tokinizer->Parse(_T("func fibonacci(num:int) { if num <= 1 then return 1 left = fibonacci(num - 1) right = fibonacci(num - 2) return left + right }"), tokens);
 		astParser->Parse(tokens, asts);
 		backend->Prepare(asts);
 		backend->Execute();
@@ -87,7 +87,7 @@ TEST_CASE("Interpreter tests") {
 	}
 
 	SECTION("sum test 1") {
-		tokinizer->Parse(_T("func sum(a,b) return a + b"), tokens);
+		tokinizer->Parse(_T("func sum(a:int,b:int) return a + b"), tokens);
 		astParser->Parse(tokens, asts);
 		backend->Prepare(asts);
 		backend->Execute();
@@ -102,7 +102,7 @@ TEST_CASE("Interpreter tests") {
 	}
 
 	SECTION("sum test 2") {
-		tokinizer->Parse(_T("func sum(a,b) return a + b"), tokens);
+		tokinizer->Parse(_T("func sum(a:int,b:int) return a + b"), tokens);
 		astParser->Parse(tokens, asts);
 		backend->Prepare(asts);
 		backend->Execute();
@@ -212,8 +212,8 @@ TEST_CASE("Interpreter tests") {
 		REQUIRE(result->Integer == 90);
 	}
 
-	SECTION("data = 10  func setData(a) { data = data + 1 + a } setData(1)") {
-		tokinizer->Parse(_T("data = 10  func setData(a) { data = data + 1 + a } setData(10)"), tokens);
+	SECTION("data = 10  func setData(a:int) { data = data + 1 + a } setData(1)") {
+		tokinizer->Parse(_T("data = 10  func setData(a:int) { data = data + 1 + a } setData(10)"), tokens);
 		astParser->Parse(tokens, asts);
 		backend->Prepare(asts);
 		backend->Execute();

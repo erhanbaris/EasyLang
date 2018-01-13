@@ -141,7 +141,7 @@ TEST_CASE( "Assignment test" ) {
 	AstParser* astParser = new AstParser();
 	std::shared_ptr<std::vector<Token* > > tokens = make_shared<std::vector<Token* > >();
 	std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
-	tokinizer->Parse(_T("erhan = 50"), tokens);
+	tokinizer->Parse(_T("erhan:int = 50"), tokens);
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
@@ -157,7 +157,7 @@ TEST_CASE( "Assignment test" ) {
 
 	REQUIRE(assignment->Data != nullptr);
 
-	tokinizer->Parse(_T("erhan = 150"), tokens);
+	tokinizer->Parse(_T("erhan:int = 150"), tokens);
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
@@ -171,7 +171,7 @@ TEST_CASE( "Assignment test" ) {
 	REQUIRE(static_cast<PrimativeAst*>(assignment->Data)->Value->Type == PrimativeValue::Type::PRI_INTEGER);
 	REQUIRE(static_cast<PrimativeAst*>(assignment->Data)->Value->Integer == 150);
 
-	tokinizer->Parse(_T("erhan = \"deneme\""), tokens);
+	tokinizer->Parse(_T("erhan:string = \"deneme\""), tokens);
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
@@ -185,7 +185,7 @@ TEST_CASE( "Assignment test" ) {
 	REQUIRE(static_cast<PrimativeAst*>(assignment->Data)->Value->Type == PrimativeValue::Type::PRI_STRING);
 	REQUIRE(*static_cast<PrimativeAst*>(assignment->Data)->Value->String == _T("deneme"));
 
-	tokinizer->Parse(_T("erhan = \"deneme\""), tokens);
+	tokinizer->Parse(_T("erhan:string = \"deneme\""), tokens);
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
@@ -200,7 +200,7 @@ TEST_CASE( "Assignment test" ) {
 	REQUIRE(*static_cast<PrimativeAst*>(assignment->Data)->Value->String == _T("deneme"));
 
 
-	tokinizer->Parse(_T("erhan = 0.15"), tokens);
+	tokinizer->Parse(_T("erhan:double = 0.15"), tokens);
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
@@ -214,7 +214,7 @@ TEST_CASE( "Assignment test" ) {
 	REQUIRE(static_cast<PrimativeAst*>(assignment->Data)->Value->Type == PrimativeValue::Type::PRI_DOUBLE);
 	REQUIRE(static_cast<PrimativeAst*>(assignment->Data)->Value->Double == 0.15);
 
-	tokinizer->Parse(_T("erhan = .15"), tokens);
+	tokinizer->Parse(_T("erhan:double = .15"), tokens);
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
@@ -229,7 +229,7 @@ TEST_CASE( "Assignment test" ) {
 	REQUIRE(static_cast<PrimativeAst*>(assignment->Data)->Value->Double == 0.15);
 
 
-	tokinizer->Parse(_T("erhan = 50 + 5"), tokens);
+	tokinizer->Parse(_T("erhan:int = 50 + 5"), tokens);
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
@@ -245,7 +245,7 @@ TEST_CASE( "Assignment test" ) {
 	REQUIRE(static_cast<BinaryAst*>(assignment->Data)->Op == EASY_OPERATOR_TYPE::PLUS);
 
 
-	tokinizer->Parse(_T("erhan = 50 / 5"), tokens);
+	tokinizer->Parse(_T("erhan:double = 50 / 5"), tokens);
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
@@ -265,7 +265,7 @@ TEST_CASE( "Assignment test" ) {
 	REQUIRE(static_cast<PrimativeAst*>(static_cast<BinaryAst*>(assignment->Data)->Right)->Value->Integer == 5);
 
 
-	tokinizer->Parse(_T("erhan = 50 - 5"), tokens);
+	tokinizer->Parse(_T("erhan:int = 50 - 5"), tokens);
 	astParser->Parse(tokens, asts);
 
 	REQUIRE(asts.get()->size() == 1);
@@ -290,15 +290,15 @@ TEST_CASE("Block test") {
 	std::shared_ptr<std::vector<Token* > > tokens = make_shared<std::vector<Token* > >();
 	std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
 
-	tokinizer->Parse(_T("{ erhan = 50 - 5 }"), tokens);
+	tokinizer->Parse(_T("{ erhan:int = 50 - 5 }"), tokens);
 	astParser->Parse(tokens, asts);
 	REQUIRE(asts.get()->size() == 1);
 
 	auto* block = static_cast<BlockAst*>(asts.get()->at(0));
-	REQUIRE(block->Blocks->size() == 1);
+	REQUIRE(block->Blocks.size() == 1);
 	
-	REQUIRE(block->Blocks->at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
-	auto* stmt = static_cast<ExprStatementAst*>(block->Blocks->at(0));
+	REQUIRE(block->Blocks.at(0)->GetType() == EASY_AST_TYPE::EXPR_STATEMENT);
+	auto* stmt = static_cast<ExprStatementAst*>(block->Blocks.at(0));
 
 	AssignmentAst* assignment = static_cast<AssignmentAst*>(stmt->Expr);
 	REQUIRE(assignment->Name == _T("erhan"));
@@ -316,9 +316,9 @@ TEST_CASE("Block test") {
 	astParser->Parse(tokens, asts);
 	REQUIRE(asts.get()->size() == 3);
 
-	REQUIRE(static_cast<BlockAst*>(asts.get()->at(0))->Blocks->size() == 0);
-	REQUIRE(static_cast<BlockAst*>(asts.get()->at(1))->Blocks->size() == 0);
-	REQUIRE(static_cast<BlockAst*>(asts.get()->at(2))->Blocks->size() == 1);
+	REQUIRE(static_cast<BlockAst*>(asts.get()->at(0))->Blocks.size() == 0);
+	REQUIRE(static_cast<BlockAst*>(asts.get()->at(1))->Blocks.size() == 0);
+	REQUIRE(static_cast<BlockAst*>(asts.get()->at(2))->Blocks.size() == 1);
 }
 
 TEST_CASE("loop test 1") {
@@ -513,8 +513,8 @@ TEST_CASE( "Function asd test" ) {
     std::shared_ptr<std::vector<Token* > > tokens = make_shared<std::vector<Token* > >();
     std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
     
-    SECTION( "func test () return 1" ) {
-        tokinizer->Parse(_T("func test () return 1"), tokens);
+    SECTION( "func test ():int return 1" ) {
+        tokinizer->Parse(_T("func test ():int return 1"), tokens);
         astParser->Parse(tokens, asts);
         
         REQUIRE(asts->size() == 1);
@@ -531,8 +531,8 @@ TEST_CASE( "Function asd test" ) {
         REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
     }
 
-	SECTION( "func test ( ) return 1" ) {
-		tokinizer->Parse(_T("func test () return 1"), tokens);
+	SECTION( "func test ( ):int return 1" ) {
+		tokinizer->Parse(_T("func test ():int return 1"), tokens);
 		astParser->Parse(tokens, asts);
 
 		REQUIRE(asts->size() == 1);
@@ -549,8 +549,8 @@ TEST_CASE( "Function asd test" ) {
 		REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	}
     
-    SECTION( "func test () { return 1 }" ) {
-        tokinizer->Parse(_T("func test () { return 1 }"), tokens);
+    SECTION( "func test () : int { return 1 }" ) {
+        tokinizer->Parse(_T("func test () : int { return 1 }"), tokens);
         astParser->Parse(tokens, asts);
         
         REQUIRE(asts->size() == 1);
@@ -563,16 +563,16 @@ TEST_CASE( "Function asd test" ) {
         REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::BLOCK);
         
         auto* block = static_cast<BlockAst*>(decl->Body);
-        REQUIRE(block->Blocks->size() == 1);
-        REQUIRE(block->Blocks->at(0)->GetType() == EASY_AST_TYPE::RETURN);
+        REQUIRE(block->Blocks.size() == 1);
+        REQUIRE(block->Blocks.at(0)->GetType() == EASY_AST_TYPE::RETURN);
         
-        auto* ret = static_cast<ReturnAst*>(block->Blocks->at(0));
+        auto* ret = static_cast<ReturnAst*>(block->Blocks.at(0));
         REQUIRE(ret->Data != nullptr);
         REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
     }
 
-	SECTION( "func test (data) { return data }" ) {
-		tokinizer->Parse(_T("func test (data) { return data }"), tokens);
+	SECTION( "func test (data:int) : int { return data }" ) {
+		tokinizer->Parse(_T("func test (data:int) : int { return data }"), tokens);
 		astParser->Parse(tokens, asts);
 
 		REQUIRE(asts->size() == 1);
@@ -581,15 +581,15 @@ TEST_CASE( "Function asd test" ) {
 		auto* decl = static_cast<FunctionDefinetionAst*>(asts->at(0));
 		REQUIRE(decl->Name == _T("test"));
 		REQUIRE(decl->Args.size() == 1);
-		REQUIRE(decl->Args.at(0) == _T("data"));
+		REQUIRE(decl->Args.at(0)->Name == _T("data"));
 		REQUIRE(decl->Body != nullptr);
 		REQUIRE(decl->Body->GetType() == EASY_AST_TYPE::BLOCK);
 
 		auto* block = static_cast<BlockAst*>(decl->Body);
-		REQUIRE(block->Blocks->size() == 1);
-		REQUIRE(block->Blocks->at(0)->GetType() == EASY_AST_TYPE::RETURN);
+		REQUIRE(block->Blocks.size() == 1);
+		REQUIRE(block->Blocks.at(0)->GetType() == EASY_AST_TYPE::RETURN);
 
-		auto* ret = static_cast<ReturnAst*>(block->Blocks->at(0));
+		auto* ret = static_cast<ReturnAst*>(block->Blocks.at(0));
 		REQUIRE(ret->Data != nullptr);
 		REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::VARIABLE);
 	}

@@ -498,6 +498,11 @@ StandartTokinizer::StandartTokinizer()
     impl = new StandartTokinizerImpl;
 }
 
+StandartTokinizer::~StandartTokinizer()
+{
+	delete impl;
+}
+
 void StandartTokinizer::Parse(string_type const & data, std::shared_ptr<std::vector<Token*>>Tokens)
 {
     impl->content = data;

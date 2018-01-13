@@ -97,7 +97,35 @@ struct PrimativeValue {
 	}
 
 
-    ~PrimativeValue() { }
+    ~PrimativeValue() { 
+		switch (Type)
+		{
+			case PrimativeValue::Type::PRI_STRING:
+				delete String;
+				break;
+
+			case PrimativeValue::Type::PRI_ARRAY:
+			{
+				size_t totalArray = Array->size();
+				for (size_t i = 0; i < totalArray; i++)
+					delete Array->at(i);
+
+				delete Array;
+			}
+			break;
+
+			case PrimativeValue::Type::PRI_DICTIONARY:
+			{
+				auto end = Dictionary->end();
+				for (auto it = Dictionary->begin(); it != end; ++it)
+					delete it->second;
+
+				delete Dictionary;
+			}
+			break;
+
+		}
+	}
 
 	string_type Describe()
 	{
