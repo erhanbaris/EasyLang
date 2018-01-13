@@ -450,10 +450,15 @@ public:
 	{
 		ExprAst* expr = orExpr();
 
-		if (match({ EASY_OPERATOR_TYPE::SINGLE_COLON }))
+		EASY_KEYWORD_TYPE variableType = EASY_KEYWORD_TYPE::KEYWORD_NONE;
+		if (check(EASY_OPERATOR_TYPE::SINGLE_COLON))
 		{
-            EASY_KEYWORD_TYPE  variableType = getVariableType();
-            consume(EASY_OPERATOR_TYPE::ASSIGN, _T("Variable defination not finished."));
+			match({EASY_OPERATOR_TYPE ::SINGLE_COLON});
+			variableType = getVariableType();
+		}
+
+		if (match({ EASY_OPERATOR_TYPE::ASSIGN }))
+		{
 			ExprAst* value = orExpr();
 			if (expr->GetType() == EASY_AST_TYPE::VARIABLE)
 			{
@@ -582,6 +587,9 @@ public:
 
 			StmtAst* body = nullptr;
 			consume(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES, _T("')' required"));
+			consume(EASY_OPERATOR_TYPE::SINGLE_COLON, _T("':' required"));
+			EASY_KEYWORD_TYPE returnType = getVariableType();
+
 			if (match({ EASY_OPERATOR_TYPE::BLOCK_START }))
 				body = block();
 			else {
@@ -589,7 +597,7 @@ public:
 				body = returnStmt();
 			}
 
-		return new FunctionDefinetionAst(static_cast<SymbolToken*>(funcName)->Value, args, body);
+		return new FunctionDefinetionAst(static_cast<SymbolToken*>(funcName)->Value, args, returnType, body);
 	}
 
 	StmtAst* block() {

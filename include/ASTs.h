@@ -294,8 +294,9 @@ public:
 	string_type Name;
 	std::vector<FunctionDefinetionArg*> Args;
 	StmtAst* Body {nullptr};
+    EASY_KEYWORD_TYPE  ReturnType;
     FunctionDefinetionAst() { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; }
-	FunctionDefinetionAst(string_type const & name, std::vector<FunctionDefinetionArg*> & args, StmtAst* body) { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; Name = name; Args = args; Body = body; }
+	FunctionDefinetionAst(string_type const & name, std::vector<FunctionDefinetionArg*> & args, EASY_KEYWORD_TYPE  returnType, StmtAst* body) { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; Name = name; Args = args; ReturnType = returnType; Body = body; }
 	string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
 

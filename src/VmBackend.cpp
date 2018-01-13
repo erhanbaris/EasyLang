@@ -102,13 +102,20 @@ public:
 	OpcodeItem(vm_inst opCode, OptVar* opt) : OpCode(opCode), Opt(opt) { }
 };
 
+class VariableInfo {
+public:
+	Type Type;
+	string_type Name;
+	int Index;
+};
+
 class VmBackendImpl
 {
 public:
     vm_system system;
-	std::unordered_map<string_type, size_t>* variables;
-	std::unordered_map<string_type, size_t>* globalVariables;
-	std::vector<std::unordered_map<string_type, size_t>*> variablesList;
+	std::unordered_map<string_type, VariableInfo*>* variables;
+	std::unordered_map<string_type, VariableInfo*>* globalVariables;
+	std::vector<std::unordered_map<string_type, VariableInfo*>*> variablesList;
     std::unordered_map<string_type, size_t> methods;
     std::vector<char> codes;
 	bool dumpOpcode;
@@ -124,8 +131,8 @@ public:
 		inFunctionCounter = 0;
 		opCodeIndex = 0;
 		dumpOpcode = false;
-		globalVariables = new std::unordered_map<string_type, size_t>();
-		variables = new std::unordered_map<string_type, size_t>();
+		globalVariables = new std::unordered_map<string_type, VariableInfo*>();
+		variables = new std::unordered_map<string_type, VariableInfo*>();
 		variablesList.push_back(variables);
 	}
 
@@ -339,7 +346,7 @@ Type VmBackend::detectType(Ast* ast)
 			break;
 
 		case EASY_AST_TYPE::VARIABLE:
-			static_cast<VariableAst*>(ast)->accept(this);
+			//static_cast<VariableAst*>(ast)->accept(this);
 			break;
 
 		case EASY_AST_TYPE::ASSIGNMENT:
@@ -351,11 +358,11 @@ Type VmBackend::detectType(Ast* ast)
 			break;
 
 		case EASY_AST_TYPE::FUNCTION_DECLERATION:
-			static_cast<FunctionDefinetionAst*>(ast)->accept(this);
+			//static_cast<FunctionDefinetionAst*>(ast)->accept(this);
 			break;
 
 		case EASY_AST_TYPE::FUNCTION_CALL:
-			static_cast<FunctionCallAst*>(ast)->accept(this);
+			//static_cast<FunctionCallAst*>(ast)->accept(this);
 			break;
 
 		case EASY_AST_TYPE::IF_STATEMENT:
@@ -375,11 +382,11 @@ Type VmBackend::detectType(Ast* ast)
 			break;
 
 		case EASY_AST_TYPE::STRUCT_OPERATION:
-			static_cast<StructAst*>(ast)->accept(this);
+			//static_cast<StructAst*>(ast)->accept(this);
 			break;
 
 		case EASY_AST_TYPE::CONTROL_OPERATION:
-			static_cast<ControlAst*>(ast)->accept(this);
+			//static_cast<ControlAst*>(ast)->accept(this);
 			break;
 
 		case EASY_AST_TYPE::NONE:
@@ -512,6 +519,10 @@ PrimativeValue* VmBackend::Execute()
 		case vm_object::vm_object_type::BOOL:
 			result = new PrimativeValue(lastItem.Bool);
 			break;
+
+		case vm_object::vm_object_type::EMPTY:
+			result = new PrimativeValue();
+			break;
 	}
 
 
@@ -557,7 +568,7 @@ void VmBackend::Generate(std::vector<char> & opcodes)
 			switch (this->impl->intermediateCode[i]->Opt->Type)
 			{
 			case OptVar::VARIABLE:
-				opcodes.push_back((*this->impl->variables)[((VariableOptVar*)this->impl->intermediateCode[i]->Opt)->Data]);
+				opcodes.push_back((*this->impl->variables)[((VariableOptVar*)this->impl->intermediateCode[i]->Opt)->Data]->Index);
 				break;
 
 			case OptVar::METHOD:
@@ -582,21 +593,64 @@ void VmBackend::Generate(std::vector<char> & opcodes)
 
 void VmBackend::visit(AssignmentAst* ast)
 {
-	std::unordered_map<string_type, size_t>* variables = nullptr;
+	std::unordered_map<string_type, VariableInfo*>* variables = nullptr;
 	if (this->impl->inFunctionCounter > 0)
 		variables = this->impl->variables;
 	else
 		variables = this->impl->globalVariables;
 
 	if (variables->find(ast->Name) == variables->end())
-		(*variables)[ast->Name] = variables->size();
+	{
+		auto* varInfo = new VariableInfo;
+		varInfo->Index = variables->size();
+		varInfo->Name = ast->Name;
+
+		if (ast->VariableType == EASY_KEYWORD_TYPE::KEYWORD_NONE)
+			varInfo->Type = detectType(ast->Data);
+		else {
+			switch (ast->VariableType)
+			{
+				case TYPE_BOOL:
+					varInfo->Type = Type::BOOL;
+					break;
+
+				case TYPE_INT:
+					varInfo->Type = Type::INT;
+					break;
+
+				case TYPE_DOUBLE:
+					varInfo->Type = Type::DOUBLE;
+					break;
+
+				case TYPE_STRING:
+					varInfo->Type = Type::STRING;
+					break;
+
+				case TYPE_ARRAY:
+					varInfo->Type = Type::ARRAY;
+					break;
+
+				case TYPE_DICTIONARY:
+					varInfo->Type = Type::DICTIONARY;
+					break;
+			}
+		}
+
+		(*variables)[ast->Name] = varInfo;
+	}
+	else
+	{
+		VariableInfo* info = variables->find(ast->Name)->second;
+		if (ast->VariableType != EASY_KEYWORD_TYPE::KEYWORD_NONE || info->Type != detectType(ast->Data))
+			throw ParseError(_T("'") + ast->Name + _T("' Adready Defined"));
+	}
 
 
 	this->getAstItem(ast->Data);
 	if (this->impl->inFunctionCounter > 0)
-		this->impl->intermediateCode.push_back(this->impl->generateStore(static_cast<int>((*this->impl->variables)[ast->Name])));
+		this->impl->intermediateCode.push_back(this->impl->generateStore(static_cast<int>((*this->impl->variables)[ast->Name]->Index)));
 	else
-		this->impl->intermediateCode.push_back(this->impl->generateGlobalStore(static_cast<int>((*this->impl->globalVariables)[ast->Name])));
+		this->impl->intermediateCode.push_back(this->impl->generateGlobalStore(static_cast<int>((*this->impl->globalVariables)[ast->Name]->Index)));
 
 	if (this->impl->intermediateCode[this->impl->intermediateCode.size() - 1]->Opt == nullptr)
 		++this->impl->opCodeIndex;
@@ -633,7 +687,7 @@ void VmBackend::visit(IfStatementAst* ast)
 	}
 
 	this->impl->intermediateCode.push_back(condition);
-	this->impl->opCodeIndex += 2;
+	this->impl->opCodeIndex += 3;
 	this->getAstItem(ast->True);
     condition->Opt = new ByteOptVar(this->impl->opCodeIndex);
 
@@ -643,7 +697,7 @@ void VmBackend::visit(IfStatementAst* ast)
         conditionJumpAddress.Chars[0] = ((ByteOptVar*)condition->Opt)->Data[0];
         conditionJumpAddress.Chars[1] = ((ByteOptVar*)condition->Opt)->Data[1];
 
-        conditionJumpAddress.Int += 2;
+        conditionJumpAddress.Int += 3;
         ((ByteOptVar*)condition->Opt)->Data[0] = conditionJumpAddress.Chars[0];
         ((ByteOptVar*)condition->Opt)->Data[1] = conditionJumpAddress.Chars[1];
 
@@ -657,11 +711,11 @@ void VmBackend::visit(IfStatementAst* ast)
 void VmBackend::visit(FunctionDefinetionAst* ast)
 {
 	++this->impl->inFunctionCounter;
-    this->impl->variablesList.push_back(new std::unordered_map<string_type, size_t>());
+    this->impl->variablesList.push_back(new std::unordered_map<string_type, VariableInfo*>());
     impl->variables = impl->variablesList[impl->variablesList.size() - 1];
 
     auto* jpmAddress = new OpcodeItem(vm_inst::OPT_JMP);
-    this->impl->opCodeIndex += 2;
+    this->impl->opCodeIndex += 3;
     this->impl->intermediateCode.push_back(jpmAddress);
 
 	if (this->impl->methods.find(ast->Name) != this->impl->methods.end())
@@ -673,8 +727,10 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 
 	this->impl->methods[ast->Name] = static_cast<unsigned long>(this->impl->opCodeIndex);
     size_t totalParameter = ast->Args.size();
+
+	// Todo : Save variable information
     for (size_t i = 0; i < totalParameter; ++i) {
-        (*this->impl->variables)[ast->Args[i]->Name] = i;
+        (*this->impl->variables)[ast->Args[i]->Name]->Index = i;
 
 		auto* opCode = this->impl->generateStore(i);
 		this->impl->intermediateCode.push_back(opCode);
@@ -704,7 +760,7 @@ void VmBackend::visit(VariableAst* ast)
 
 	if (this->impl->inFunctionCounter == 0)
 	{
-		size_t index = (*this->impl->globalVariables)[ast->Value];
+		size_t index = (*this->impl->globalVariables)[ast->Value]->Index;
 		auto* opCode = this->impl->generateGlobalLoad(index);
 		this->impl->intermediateCode.push_back(opCode);
 
@@ -715,7 +771,7 @@ void VmBackend::visit(VariableAst* ast)
 	}
 	else
 	{
-		size_t index = (*this->impl->globalVariables)[ast->Value];
+		size_t index = (*this->impl->variables)[ast->Value]->Index;
 		auto* opCode = this->impl->generateLoad(index);
 		this->impl->intermediateCode.push_back(opCode);
 
@@ -899,7 +955,7 @@ void VmBackend::visit(FunctionCallAst* ast)
         getAstItem(ast->Args[i - 1]);
 
     this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_CALL, new ByteOptVar(static_cast<int>(this->impl->methods[ast->Function]))));
-    this->impl->opCodeIndex += 2;
+    this->impl->opCodeIndex += 3;
 }
 
 void VmBackend::visit(UnaryAst* ast)

@@ -201,7 +201,13 @@ public:
 				break;
 
 			case vm_inst::OPT_JMP:
-				code = startPoint + (*++code - 1);
+			{
+				vm_int_t integer = {.Int = 0};
+				integer.Chars[1] = *++code;
+				integer.Chars[0] = *++code;
+
+				code = startPoint + (integer.Int + 1);
+			}
 				break;
 
 			case vm_inst::OPT_JIF:
@@ -209,7 +215,13 @@ public:
 				if (TO_BOOL(POP().Int))
 					++code;
 				else
-					code = startPoint + (*++code - 1);
+				{
+					vm_int_t integer = {.Int = 0};
+					integer.Chars[1] = *++code;
+					integer.Chars[0] = *++code;
+
+					code = startPoint + (integer.Int + 1);
+				}
 			}
 			break;
 
@@ -218,14 +230,26 @@ public:
 				if (TO_BOOL(POP().Int == POP().Int))
 					++code;
 				else
-					code = startPoint + (*++code - 1);
+				{
+					vm_int_t integer = {.Int = 0};
+					integer.Chars[1] = *++code;
+					integer.Chars[0] = *++code;
+
+					code = startPoint + (integer.Int + 1);
+				}
 			}
 			break;
 
 			case vm_inst::OPT_JNIF:
 			{
 				if (!TO_BOOL(POP().Int))
-					code = startPoint + (*++code - 1);
+				{
+					vm_int_t integer = {.Int = 0};
+					integer.Chars[1] = *++code;
+					integer.Chars[0] = *++code;
+
+					code = startPoint + (integer.Int + 1);
+				}
 				else
 					++code;
 			}
@@ -344,7 +368,11 @@ public:
 			{
 				currentStore = stores[++storesCount];
 				currentStore->startAddress = (code - startPoint) + 1;
-				code = startPoint + (*++code - 1);
+                vm_int_t integer = {.Int = 0};
+                integer.Chars[1] = *++code;
+                integer.Chars[0] = *++code;
+
+				code = startPoint + (integer.Int - 1);
 			}
 			break;
 
@@ -439,12 +467,8 @@ public:
 			console_out << _T(">>> ") << index++ << _T(". ");
 			COLOR_RED(vm_instToString((vm_inst)*code));
 
-			switch (*code)
+			switch ((vm_inst)*code)
 			{
-				case vm_inst::OPT_JMP:
-				case vm_inst::OPT_JIF:
-				case vm_inst::OPT_IF_EQ:
-				case vm_inst::OPT_JNIF:
 				case vm_inst::OPT_LOAD:
 				case vm_inst::OPT_STORE:
 				case vm_inst::OPT_GLOAD:
@@ -454,9 +478,44 @@ public:
 					++index;
 					break;
 
+                case vm_inst::OPT_JMP:
+                case vm_inst::OPT_JIF:
+                case vm_inst::OPT_IF_EQ:
+                case vm_inst::OPT_JNIF:
                 case vm_inst ::OPT_iPUSH:
+                {
+                    vm_int_t integer = {.Int = 0};
+                    integer.Chars[1] = *++code;
+                    integer.Chars[0] = *++code;
+                    console_out << _T(" ") << integer.Int;
+                    index += 2;
+                }
                     break;
-			}
+
+                case vm_inst ::OPT_dPUSH:
+                {
+                    vm_double_t d = {.Double = 0};
+                    d.Chars[7] = *++code;
+                    d.Chars[6] = *++code;
+                    d.Chars[5] = *++code;
+                    d.Chars[4] = *++code;
+                    d.Chars[3] = *++code;
+                    d.Chars[2] = *++code;
+                    d.Chars[1] = *++code;
+                    d.Chars[0] = *++code;
+
+                    console_out << _T(" ") << d.Double;
+                    index += 8;
+                }
+                    break;
+
+                case vm_inst::OPT_bPUSH:
+                    console_out << _T(" ") << (bool)*++code;
+                    break;
+
+                case OPT_sPUSH:
+                    break;
+            }
 
 			console_out << '\n';
 			++code;

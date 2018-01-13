@@ -513,8 +513,8 @@ TEST_CASE( "Function asd test" ) {
     std::shared_ptr<std::vector<Token* > > tokens = make_shared<std::vector<Token* > >();
     std::shared_ptr<std::vector<Ast* > > asts = make_shared<std::vector<Ast* > >();
     
-    SECTION( "func test () return 1" ) {
-        tokinizer->Parse(_T("func test () return 1"), tokens);
+    SECTION( "func test ():int return 1" ) {
+        tokinizer->Parse(_T("func test ():int return 1"), tokens);
         astParser->Parse(tokens, asts);
         
         REQUIRE(asts->size() == 1);
@@ -531,8 +531,8 @@ TEST_CASE( "Function asd test" ) {
         REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
     }
 
-	SECTION( "func test ( ) return 1" ) {
-		tokinizer->Parse(_T("func test () return 1"), tokens);
+	SECTION( "func test ( ):int return 1" ) {
+		tokinizer->Parse(_T("func test ():int return 1"), tokens);
 		astParser->Parse(tokens, asts);
 
 		REQUIRE(asts->size() == 1);
@@ -549,8 +549,8 @@ TEST_CASE( "Function asd test" ) {
 		REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
 	}
     
-    SECTION( "func test () { return 1 }" ) {
-        tokinizer->Parse(_T("func test () { return 1 }"), tokens);
+    SECTION( "func test () : int { return 1 }" ) {
+        tokinizer->Parse(_T("func test () : int { return 1 }"), tokens);
         astParser->Parse(tokens, asts);
         
         REQUIRE(asts->size() == 1);
@@ -571,8 +571,8 @@ TEST_CASE( "Function asd test" ) {
         REQUIRE(ret->Data->GetType() == EASY_AST_TYPE::PRIMATIVE);
     }
 
-	SECTION( "func test (data:int) { return data }" ) {
-		tokinizer->Parse(_T("func test (data:int) { return data }"), tokens);
+	SECTION( "func test (data:int) : int { return data }" ) {
+		tokinizer->Parse(_T("func test (data:int) : int { return data }"), tokens);
 		astParser->Parse(tokens, asts);
 
 		REQUIRE(asts->size() == 1);
