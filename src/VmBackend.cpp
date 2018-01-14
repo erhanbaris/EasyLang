@@ -726,7 +726,7 @@ void VmBackend::visit(IfStatementAst* ast)
 		condition = new OpcodeItem(vm_inst::OPT_IF_EQ);
 		this->impl->intermediateCode.erase(this->impl->intermediateCode.begin() + (this->impl->intermediateCode.size() - 1));
 		--this->impl->opCodeIndex;
-		console_out << _T("OPCODE : ") << this->impl->opCodeIndex << _T(" ") << __LINE__ << '\n';
+		//console_out << _T("OPCODE : ") << this->impl->opCodeIndex << _T(" ") << __LINE__ << '\n';
 		break;
 
 	default:
@@ -741,16 +741,17 @@ void VmBackend::visit(IfStatementAst* ast)
 
 	if (ast->False != nullptr)
 	{
-        vm_int_t conditionJumpAddress = { .Int = 0 };
+        /*vm_int_t conditionJumpAddress = { .Int = 0 };
         conditionJumpAddress.Chars[0] = ((ByteOptVar*)condition->Opt)->Data[0];
         conditionJumpAddress.Chars[1] = ((ByteOptVar*)condition->Opt)->Data[1];
 
         conditionJumpAddress.Int += 3;
         ((ByteOptVar*)condition->Opt)->Data[0] = conditionJumpAddress.Chars[0];
-        ((ByteOptVar*)condition->Opt)->Data[1] = conditionJumpAddress.Chars[1];
+        ((ByteOptVar*)condition->Opt)->Data[1] = conditionJumpAddress.Chars[1];*/
 
 		auto* trueStmt = new OpcodeItem(vm_inst::OPT_JMP);
 		this->impl->intermediateCode.push_back(trueStmt);
+		ADD_OPCODE(3);
 		this->getAstItem(ast->False);
         trueStmt->Opt = new ByteOptVar(this->impl->opCodeIndex);
 	}
@@ -905,6 +906,7 @@ void VmBackend::visit(PrimativeAst* ast) {
         {
             vm_double_t doubleConvert = { .Double = ast->Value->Double };
             this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_dPUSH, new ByteOptVar(ast->Value->Double)));
+			ADD_OPCODE(8);
         }
             break;
 
@@ -914,6 +916,7 @@ void VmBackend::visit(PrimativeAst* ast) {
 
 	case PrimativeValue::Type::PRI_INTEGER:
 		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_iPUSH, new ByteOptVar(ast->Value->Integer)));
+		ADD_OPCODE(2)
 		break;
 
 	case PrimativeValue::Type::PRI_STRING:
