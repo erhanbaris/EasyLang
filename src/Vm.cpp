@@ -22,9 +22,6 @@
 #define SET(obj) (*(currentStack - 1)) = obj
 #endif
 
-#define TO_INT(code) code ? 1 : 0;
-#define TO_BOOL(code) code != 0
-
 template <int N>
 struct StaticAssignment {
 	static void assign(vm_char_t * data, char*& code)
@@ -145,6 +142,23 @@ struct Operations {
 	static void Convert(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 1] = static_cast<To>((From)currentStack[stackIndex - 1]);
+	}
+
+	static vm_object& Pop(vm_object * currentStack, size_t & stackIndex)
+	{
+		return currentStack[--stackIndex];
+	}
+
+	template<typename  T>
+	static T PopAs(vm_object * currentStack, size_t & stackIndex)
+	{
+		return (T)currentStack[--stackIndex];
+	}
+
+	template<typename T>
+	static bool IsEqual(vm_object * currentStack, size_t & stackIndex)
+	{
+		return (T)currentStack[--stackIndex] == (T)currentStack[--stackIndex];
 	}
 };
 
@@ -289,7 +303,7 @@ public:
 
 			case vm_inst::OPT_JIF:
 			{
-				if (TO_BOOL(POP().Int))
+				if (Operations::PopAs<bool>(currentStack, stackIndex))
 					++code;
 				else
 				{
@@ -302,7 +316,7 @@ public:
 
 			case vm_inst::OPT_IF_EQ:
 			{
-				if (TO_BOOL(POP().Int == POP().Int))
+				if (Operations::IsEqual<bool>(currentStack, stackIndex))
 					++code;
 				else
 				{
@@ -315,7 +329,7 @@ public:
 
 			case vm_inst::OPT_JNIF:
 			{
-				if (!TO_BOOL(POP().Int))
+				if (!Operations::IsEqual<bool>(currentStack, stackIndex))
 				{
 					vm_int_t integer;
 					integer.Int = 0;
@@ -498,7 +512,7 @@ public:
 				break;
 
 			case vm_inst::OPT_PRINT:
-				console_out << POP().Int;
+				console_out << Operations::PopAs<int>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_HALT:
