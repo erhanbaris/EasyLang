@@ -67,13 +67,22 @@ public:
         Length = 8;
     }
 
-    ByteOptVar(bool data)
-    {
-        Type = BOOL;
-        Data = new char[1];
-        Data[0] = data;
-        Length = 1;
-    }
+	ByteOptVar(string_type const & data)
+	{
+		Length = data.size();
+		Type = STRING;
+		Data = new char[Length];
+		for (size_t i = 0; i < Length; i++)
+			Data[i] = data[i];
+	}
+
+	ByteOptVar(bool data)
+	{
+		Type = BOOL;
+		Data = new char[1];
+		Data[0] = data;
+		Length = 1;
+	}
 
 	size_t Size() override {
 		return Length + 1;
@@ -571,6 +580,10 @@ PrimativeValue* VmBackend::Execute()
 		case vm_object::vm_object_type::EMPTY:
 			result = new PrimativeValue();
 			break;
+
+		case vm_object::vm_object_type::STR:
+			result = new PrimativeValue(string_type(lastItem.String));
+			break;
 	}
 
 
@@ -632,6 +645,21 @@ void VmBackend::Generate(std::vector<char> & opcodes)
                     opcodes.push_back(byteOpt->Data[(byteOpt->Length - j) - 1]);
 			}
 				break;
+
+			case OptVar::STRING:
+			{
+				vm_int_t len;
+				ByteOptVar* byteOpt = (ByteOptVar*)this->impl->intermediateCode[i]->Opt;
+				len.Int = (int)byteOpt->Length;
+				opcodes.push_back(len.Chars[3]);
+				opcodes.push_back(len.Chars[2]);
+				opcodes.push_back(len.Chars[1]);
+				opcodes.push_back(len.Chars[0]);
+
+				for (int j = 0; j < byteOpt->Length; ++j)
+					opcodes.push_back(byteOpt->Data[(byteOpt->Length - j) - 1]);
+			}
+			break;
 			}
 
 			++indexer;
@@ -926,8 +954,8 @@ void VmBackend::visit(PrimativeAst* ast) {
 
 	case PrimativeValue::Type::PRI_STRING:
     {
-        // const char* text = ast->Value->String->c_str();
-        // this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_sPUSH, new ByteOptVar(text, strlen(text))));
+        const char* text = ast->Value->String->c_str();
+        this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_sPUSH, new ByteOptVar(*ast->Value->String)));
     }
 		break;
 

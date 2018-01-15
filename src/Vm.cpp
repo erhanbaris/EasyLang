@@ -36,6 +36,22 @@
 #define TO_INT(code) code ? 1 : 0;
 #define TO_BOOL(code) code != 0
 
+template <int N>
+struct StaticAssignment {
+	static void assign(vm_char_t * data, char*& code)
+	{
+		data[N - 1] = *++code;
+		StaticAssignment<N - 1>::assign(data, code);
+	}
+};
+template <>
+struct StaticAssignment<1> {
+	static void assign(vm_char_t * data, char* & code)
+	{
+		data[0] = *++code;
+	}
+};
+
 template <typename T>
 class vm_store
 {
@@ -102,28 +118,15 @@ public:
 			switch ((vm_inst)*code)
 			{
 			case vm_inst::OPT_iADD:
-			{
-				int a = POP().Int;
-				int b = POP().Int;
-				PUSH(b + a);
-			}
+				PUSH(POP().Int + POP().Int);
 				break;
 
 			case vm_inst::OPT_iSUB:
-			{
-				int a = POP().Int;
-				int b = POP().Int;
-				PUSH(b - a);
-			}
+				PUSH(-POP().Int + POP().Int);
 				break;
 
 			case vm_inst::OPT_iMUL:
-            {
-                int a = POP().Int;
-                int b = POP().Int;
-                int c = a * b;
-                PUSH(c);
-            }
+                PUSH(POP().Int * POP().Int);
 				break;
 
 			case vm_inst::OPT_iDIV:
@@ -136,11 +139,7 @@ public:
 
 
 			case vm_inst::OPT_dADD:
-			{
-				double a = POP().Double;
-				double b = POP().Double;
-				PUSH(b + a);
-			}
+				PUSH(POP().Double * POP().Double);
 				break;
 
 			case vm_inst::OPT_dSUB:
@@ -204,10 +203,7 @@ public:
 			{
 				vm_int_t integer;
 				integer.Int = 0;
-				integer.Chars[3] = *++code;
-				integer.Chars[2] = *++code;
-				integer.Chars[1] = *++code;
-				integer.Chars[0] = *++code;
+				StaticAssignment<4>::assign(integer.Chars, code);
 
 				code = startPoint + (integer.Int + 1);
 			}
@@ -220,11 +216,7 @@ public:
 				else
 				{
 					vm_int_t integer;
-					integer.Int = 0;
-					integer.Chars[3] = *++code;
-					integer.Chars[2] = *++code;
-					integer.Chars[1] = *++code;
-					integer.Chars[0] = *++code;
+					StaticAssignment<4>::assign(integer.Chars, code);
 
 					code = startPoint + (integer.Int + 1);
 				}
@@ -238,11 +230,7 @@ public:
 				else
 				{
 					vm_int_t integer;
-					integer.Int = 0;
-					integer.Chars[3] = *++code;
-					integer.Chars[2] = *++code;
-					integer.Chars[1] = *++code;
-					integer.Chars[0] = *++code;
+					StaticAssignment<4>::assign(integer.Chars, code);
 
 					code = startPoint + (integer.Int + 1);
 				}
@@ -255,10 +243,7 @@ public:
 				{
 					vm_int_t integer;
 					integer.Int = 0;
-					integer.Chars[3] = *++code;
-					integer.Chars[2] = *++code;
-					integer.Chars[1] = *++code;
-					integer.Chars[0] = *++code;
+					StaticAssignment<4>::assign(integer.Chars, code);
 
 					code = startPoint + (integer.Int + 1);
 				}
@@ -385,11 +370,7 @@ public:
 				currentStore->startAddress = (code - startPoint) + 1;
 				vm_int_t integer;
 				integer.Int = 0;
-				integer.Chars[3] = *++code;
-				integer.Chars[2] = *++code;
-                integer.Chars[1] = *++code;
-                integer.Chars[0] = *++code;
-
+				StaticAssignment<4>::assign(integer.Chars, code);
 				code = startPoint + (integer.Int - 1);
 			}
 			break;
@@ -408,10 +389,8 @@ public:
 			case vm_inst::OPT_iPUSH: {
 				vm_int_t integer;
 				integer.Int = 0;
-				integer.Chars[3] = *++code;
-				integer.Chars[2] = *++code;
-				integer.Chars[1] = *++code;
-				integer.Chars[0] = *++code;
+
+				StaticAssignment<4>::assign(integer.Chars, code);
 				PUSH(integer.Int);
 			}
 			break;
@@ -419,14 +398,7 @@ public:
 			case vm_inst::OPT_dPUSH: {
 				vm_double_t d;
 				d.Double = 0.0;
-				d.Chars[7] = *++code;
-				d.Chars[6] = *++code;
-				d.Chars[5] = *++code;
-				d.Chars[4] = *++code;
-				d.Chars[3] = *++code;
-				d.Chars[2] = *++code;
-				d.Chars[1] = *++code;
-				d.Chars[0] = *++code;
+				StaticAssignment<8>::assign(d.Chars, code);
 				PUSH(d.Double);
 			}
 				break;
@@ -434,6 +406,21 @@ public:
 
 			case vm_inst::OPT_bPUSH:
 				PUSH((bool)*++code);
+				break;
+
+			case vm_inst::OPT_sPUSH: {
+				vm_int_t integer;
+				integer.Int = 0;
+				StaticAssignment<4>::assign(integer.Chars, code);
+				integer.Int;
+
+				char * chars = new char[integer.Int + 1];
+				for (int i = integer.Int - 1; i >= 0; i--)
+					chars[i] = *++code;
+				
+				chars[integer.Int] = '\0';
+				PUSH(chars);
+			}
 				break;
 
 			case vm_inst::OPT_PRINT:
@@ -508,10 +495,7 @@ public:
                 {
 					vm_int_t integer;
 					integer.Int = 0;
-					integer.Chars[3] = *++code;
-					integer.Chars[2] = *++code;
-                    integer.Chars[1] = *++code;
-                    integer.Chars[0] = *++code;
+					StaticAssignment<4>::assign(integer.Chars, code);
                     console_out << _T(" ") << integer.Int;
                     index += 2;
                 }
@@ -521,14 +505,7 @@ public:
                 {
 					vm_double_t d;
 					d.Double = 0;
-                    d.Chars[7] = *++code;
-                    d.Chars[6] = *++code;
-                    d.Chars[5] = *++code;
-                    d.Chars[4] = *++code;
-                    d.Chars[3] = *++code;
-                    d.Chars[2] = *++code;
-                    d.Chars[1] = *++code;
-                    d.Chars[0] = *++code;
+					StaticAssignment<8>::assign(d.Chars, code);
 
                     console_out << _T(" ") << d.Double;
                     index += 8;

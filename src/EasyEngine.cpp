@@ -51,10 +51,10 @@ public:
 			delete tokens->at(i);
 		
 		tokens.reset();
-
+/*
 		size_t totalAsts = asts->size();
 		for (size_t i = 0; i < totalAsts; ++i)
-			delete asts->at(i);
+			delete asts->at(i);*/
 
 		asts.reset();
 	}

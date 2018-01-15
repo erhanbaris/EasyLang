@@ -23,8 +23,8 @@ template <typename T> class vm_stack;
 typedef void(*VmMethodCallback)(vm_system* vm, size_t totalArgs);
 typedef char vm_char_t;
 typedef union vm_double_u { vm_char_t Chars[8];  double Double; } vm_double_t;
-typedef union vm_long_u { vm_char_t Chars[4];  long Long; } vm_long_t;
-typedef union vm_int_u { vm_char_t Chars[2];  int Int; } vm_int_t;
+typedef union vm_long_u { vm_char_t Chars[8];  long Long; } vm_long_t;
+typedef union vm_int_u { vm_char_t Chars[4];  int Int; } vm_int_t;
 typedef bool vm_bool_t;
 
 class vm_object
@@ -63,6 +63,12 @@ public:
 		Type = vm_object_type::BOOL;
 	}
 
+	vm_object(char* b)
+	{
+		String = b;
+		Type = vm_object_type::STR;
+	}
+
 	vm_object& operator=(int right) {
 		Int = right;
 		Type = vm_object_type::INT;
@@ -81,6 +87,12 @@ public:
 		return *this;
 	}
 
+	vm_object& operator=(char* right) {
+		String = right;
+		Type = vm_object_type::STR;
+		return *this;
+	}
+
 	operator int()
 	{
 		return Int;
@@ -92,7 +104,7 @@ public:
 		bool Bool;
 		int Int;
 		double Double;
-		string_type* String{nullptr};
+		char* String{nullptr};
 		VmMethodCallback Method;
 	};
 };
