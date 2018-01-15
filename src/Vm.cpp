@@ -202,7 +202,10 @@ public:
 
 			case vm_inst::OPT_JMP:
 			{
-				vm_int_t integer = {.Int = 0};
+				vm_int_t integer;
+				integer.Int = 0;
+				integer.Chars[3] = *++code;
+				integer.Chars[2] = *++code;
 				integer.Chars[1] = *++code;
 				integer.Chars[0] = *++code;
 
@@ -216,7 +219,10 @@ public:
 					++code;
 				else
 				{
-					vm_int_t integer = {.Int = 0};
+					vm_int_t integer;
+					integer.Int = 0;
+					integer.Chars[3] = *++code;
+					integer.Chars[2] = *++code;
 					integer.Chars[1] = *++code;
 					integer.Chars[0] = *++code;
 
@@ -231,7 +237,10 @@ public:
 					++code;
 				else
 				{
-					vm_int_t integer = {.Int = 0};
+					vm_int_t integer;
+					integer.Int = 0;
+					integer.Chars[3] = *++code;
+					integer.Chars[2] = *++code;
 					integer.Chars[1] = *++code;
 					integer.Chars[0] = *++code;
 
@@ -244,7 +253,10 @@ public:
 			{
 				if (!TO_BOOL(POP().Int))
 				{
-					vm_int_t integer = {.Int = 0};
+					vm_int_t integer;
+					integer.Int = 0;
+					integer.Chars[3] = *++code;
+					integer.Chars[2] = *++code;
 					integer.Chars[1] = *++code;
 					integer.Chars[0] = *++code;
 
@@ -321,7 +333,10 @@ public:
 				break;
 
 			case vm_inst::OPT_GLOAD_0:
+			{
+				auto item = GLOAD(0);
 				PUSH(GLOAD(0));
+			}
 				break;
 
 			case vm_inst::OPT_GLOAD_1:
@@ -341,23 +356,23 @@ public:
 				break;
 
 			case vm_inst::OPT_GSTORE:
-				GSTORE(*++code, POP().Int);
+				GSTORE(*++code, POP());
 				break;
 
 			case vm_inst::OPT_GSTORE_0:
-				GSTORE(0, POP().Int);
+				GSTORE(0, POP());
 				break;
 
 			case vm_inst::OPT_GSTORE_1:
-				GSTORE(1, POP().Int);
+				GSTORE(1, POP());
 				break;
 
 			case vm_inst::OPT_GSTORE_2:
-				GSTORE(2, POP().Int);
+				GSTORE(2, POP());
 				break;
 
 			case vm_inst::OPT_GSTORE_3:
-				GSTORE(3, POP().Int);
+				GSTORE(3, POP());
 				break;
 
 			case vm_inst::OPT_GSTORE_4:
@@ -368,7 +383,10 @@ public:
 			{
 				currentStore = stores[++storesCount];
 				currentStore->startAddress = (code - startPoint) + 1;
-                vm_int_t integer = {.Int = 0};
+				vm_int_t integer;
+				integer.Int = 0;
+				integer.Chars[3] = *++code;
+				integer.Chars[2] = *++code;
                 integer.Chars[1] = *++code;
                 integer.Chars[0] = *++code;
 
@@ -388,7 +406,10 @@ public:
 				break;
 
 			case vm_inst::OPT_iPUSH: {
-				vm_int_t integer = {.Int = 0};
+				vm_int_t integer;
+				integer.Int = 0;
+				integer.Chars[3] = *++code;
+				integer.Chars[2] = *++code;
 				integer.Chars[1] = *++code;
 				integer.Chars[0] = *++code;
 				PUSH(integer.Int);
@@ -396,7 +417,8 @@ public:
 			break;
 
 			case vm_inst::OPT_dPUSH: {
-				vm_double_t d = {.Double = 0};
+				vm_double_t d;
+				d.Double = 0.0;
 				d.Chars[7] = *++code;
 				d.Chars[6] = *++code;
 				d.Chars[5] = *++code;
@@ -484,7 +506,10 @@ public:
                 case vm_inst::OPT_JNIF:
                 case vm_inst ::OPT_iPUSH:
                 {
-                    vm_int_t integer = {.Int = 0};
+					vm_int_t integer;
+					integer.Int = 0;
+					integer.Chars[3] = *++code;
+					integer.Chars[2] = *++code;
                     integer.Chars[1] = *++code;
                     integer.Chars[0] = *++code;
                     console_out << _T(" ") << integer.Int;
@@ -494,7 +519,8 @@ public:
 
                 case vm_inst ::OPT_dPUSH:
                 {
-                    vm_double_t d = {.Double = 0};
+					vm_double_t d;
+					d.Double = 0;
                     d.Chars[7] = *++code;
                     d.Chars[6] = *++code;
                     d.Chars[5] = *++code;

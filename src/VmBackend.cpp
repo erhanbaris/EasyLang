@@ -40,17 +40,21 @@ public:
     ByteOptVar(int data)
     {
         Type = INT;
-        vm_int_t i = { .Int = data };
-        Data = new char[2];
+		vm_int_t i;
+		i.Int = data;
+        Data = new char[4];
         Data[0] = i.Chars[0];
         Data[1] = i.Chars[1];
-        Length = 2;
+		Data[2] = i.Chars[2];
+		Data[3] = i.Chars[3];
+        Length = 4;
     }
 
     ByteOptVar(double data)
     {
         Type = DOUBLE;
-        vm_double_t i = { .Double = data };
+		vm_double_t i;
+		i.Double = data;
         Data = new char[8];
         Data[0] = i.Chars[0];
         Data[1] = i.Chars[1];
@@ -735,7 +739,7 @@ void VmBackend::visit(IfStatementAst* ast)
 	}
 
 	this->impl->intermediateCode.push_back(condition);
-	ADD_OPCODE(3);
+	ADD_OPCODE(5);
 	this->getAstItem(ast->True);
     condition->Opt = new ByteOptVar(this->impl->opCodeIndex);
 
@@ -751,7 +755,7 @@ void VmBackend::visit(IfStatementAst* ast)
 
 		auto* trueStmt = new OpcodeItem(vm_inst::OPT_JMP);
 		this->impl->intermediateCode.push_back(trueStmt);
-		ADD_OPCODE(3);
+		ADD_OPCODE(5);
 		this->getAstItem(ast->False);
         trueStmt->Opt = new ByteOptVar(this->impl->opCodeIndex);
 	}
@@ -764,7 +768,7 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     impl->variables = impl->variablesList[impl->variablesList.size() - 1];
 
     auto* jpmAddress = new OpcodeItem(vm_inst::OPT_JMP);
-	ADD_OPCODE(3);
+	ADD_OPCODE(5);
     this->impl->intermediateCode.push_back(jpmAddress);
 
 	if (this->impl->methods.find(_T("::") + ast->Name) != this->impl->methods.end())
@@ -904,7 +908,8 @@ void VmBackend::visit(PrimativeAst* ast) {
 	{
         case PrimativeValue::Type::PRI_DOUBLE:
         {
-            vm_double_t doubleConvert = { .Double = ast->Value->Double };
+			vm_double_t doubleConvert;
+			doubleConvert.Double = ast->Value->Double;
             this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_dPUSH, new ByteOptVar(ast->Value->Double)));
 			ADD_OPCODE(8);
         }
@@ -916,7 +921,7 @@ void VmBackend::visit(PrimativeAst* ast) {
 
 	case PrimativeValue::Type::PRI_INTEGER:
 		this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_iPUSH, new ByteOptVar(ast->Value->Integer)));
-		ADD_OPCODE(2)
+		ADD_OPCODE(4)
 		break;
 
 	case PrimativeValue::Type::PRI_STRING:
@@ -1096,7 +1101,7 @@ void VmBackend::visit(FunctionCallAst* ast)
 	}
 
     this->impl->intermediateCode.push_back(new OpcodeItem(vm_inst::OPT_CALL, new ByteOptVar(static_cast<int>(this->impl->methods[ast->Package + _T("::") + ast->Function]->Index))));
-	ADD_OPCODE(3);
+	ADD_OPCODE(5);
 
 }
 
