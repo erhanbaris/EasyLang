@@ -437,7 +437,7 @@ Type VmBackend::detectType(Ast* ast)
 			break;
 
 		case EASY_AST_TYPE::CONTROL_OPERATION:
-			//static_cast<ControlAst*>(ast)->accept(this);
+			return Type::BOOL;
 			break;
 
 		case EASY_AST_TYPE::NONE:

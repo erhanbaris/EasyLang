@@ -86,6 +86,11 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 	target_compile_definitions(EasyLang PUBLIC _DEBUG=1)
 endif()
 
+add_compile_options(
+		-std=c++11
+		#        -D_DEBUG
+		#        -g
+)
 
 # llvm_map_components_to_libnames(llvm_libs Core
 # 		ExecutionEngine

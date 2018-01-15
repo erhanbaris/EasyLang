@@ -10,27 +10,16 @@
 #define GLOAD(index) *(globalStore.variables + index)
 
 #if _DEBUG
-#define PEEK() currentStack[stackIndex - 1]
-#define POP() currentStack[--stackIndex]
-#define PUSH(obj) currentStack[stackIndex++] = obj;
+#define PEEK() (currentStack[stackIndex - 1])
+#define POP() (currentStack[--stackIndex])
+#define PUSH(obj) currentStack[stackIndex++] = (obj)
 #define SET(obj) currentStack[stackIndex - 1] = obj
-
-#define iPEEK() (( PEEK() << 8) | (PEEK() & 0x00FF))
-#define iPOP() (( POP() << 8) | (POP() & 0x00FF))
-#define iPUSH(obj1, obj2) *currentStack = obj1; ++currentStack; *currentStack = obj2; ++currentStack;
-#define iSET(obj) (*(currentStack - 1)) = obj
 
 #else 
 #define PEEK() (*(currentStack - 1))
 #define POP() (*(--currentStack))
-#define PUSH(obj) *currentStack = obj; ++currentStack;
+#define PUSH(obj) *currentStack = obj; ++currentStack
 #define SET(obj) (*(currentStack - 1)) = obj
-
-#define iPEEK() (( PEEK() << 8) | (PEEK() & 0x00FF))
-#define iPOP() (( POP() << 8) | (POP() & 0x00FF))
-#define iPUSH(obj1, obj2) *currentStack = obj1; ++currentStack; *currentStack = obj2; ++currentStack;
-#define iSET(obj) (*(currentStack - 1)) = obj
-
 #endif
 
 #define TO_INT(code) code ? 1 : 0;
@@ -49,6 +38,113 @@ struct StaticAssignment<1> {
 	static void assign(vm_char_t * data, char* & code)
 	{
 		data[0] = *++code;
+	}
+};
+
+struct Operations {
+	template<typename T>
+	static void Add(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 1] + (T)currentStack[stackIndex - 2];
+		--stackIndex;
+	}
+
+	template<typename T>
+	static void Mul(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 1] * (T)currentStack[stackIndex - 2];
+		--stackIndex;
+	}
+
+	template<typename T>
+	static void Sub(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] - (T)currentStack[stackIndex - 1];
+		--stackIndex;
+	}
+
+	template<typename T>
+	static void Div(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] / (T)currentStack[stackIndex - 1];
+		--stackIndex;
+	}
+
+	static void And(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 2] = currentStack[stackIndex - 2].Bool && currentStack[stackIndex - 1].Bool;
+		--stackIndex;
+	}
+
+	static void Or(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 2] = currentStack[stackIndex - 2].Bool || currentStack[stackIndex - 1].Bool;
+		--stackIndex;
+	}
+
+	template<typename T>
+	static void Lt(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] < (T)currentStack[stackIndex - 1];
+		--stackIndex;
+	}
+
+	template<typename T>
+	static void Lte(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] <= (T)currentStack[stackIndex - 1];
+		--stackIndex;
+	}
+
+	template<typename T>
+	static void Gt(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] > (T)currentStack[stackIndex - 1];
+		--stackIndex;
+	}
+
+	template<typename T>
+	static void Gte(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] >= (T)currentStack[stackIndex - 1];
+		--stackIndex;
+	}
+
+	template<typename T>
+	static void Eq(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] == (T)currentStack[stackIndex - 1];
+		--stackIndex;
+	}
+
+	static void Dup(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex] = currentStack[stackIndex];
+		++stackIndex;
+	}
+
+	template<typename T>
+	static void Inc(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 1] = ((T)currentStack[stackIndex - 1]) + 1;
+	}
+
+	template<typename T>
+	static void Dinc(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 1] = ((T)currentStack[stackIndex - 1]) -1;
+	}
+
+	template<typename T>
+	static void Neg(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 1] = (T)currentStack[stackIndex - 1] * -1;
+	}
+
+	template<typename From, typename To>
+	static void Convert(vm_object * currentStack, size_t & stackIndex)
+	{
+		currentStack[stackIndex - 1] = static_cast<To>((From)currentStack[stackIndex - 1]);
 	}
 };
 
@@ -118,85 +214,67 @@ public:
 			switch ((vm_inst)*code)
 			{
 			case vm_inst::OPT_iADD:
-				PUSH(POP().Int + POP().Int);
+				Operations::Add<int>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_iSUB:
-				PUSH(-POP().Int + POP().Int);
+				Operations::Sub<int>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_iMUL:
-                PUSH(POP().Int * POP().Int);
+				Operations::Mul<int>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_iDIV:
-			{
-				int a = POP().Int;
-				int b = POP().Int;
-				PUSH(b / a);
-			}
-			break;
-
+				Operations::Div<int>(currentStack, stackIndex);
+				break;
 
 			case vm_inst::OPT_dADD:
-				PUSH(POP().Double * POP().Double);
+				Operations::Add<double>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_dSUB:
-			{
-				double a = POP().Double;
-				double b = POP().Double;
-				PUSH(b - a);
-			}
+				Operations::Sub<double>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_dMUL:
-			{
-				double a = POP().Double;
-				double b = POP().Double;
-				double c = a * b;
-				PUSH(c);
-			}
+				Operations::Mul<double>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_dDIV:
-			{
-				double a = POP().Double;
-				double b = POP().Double;
-				PUSH(b / a);
-			}
+				Operations::Div<double>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_EQ:
-				PUSH(TO_INT(POP().Bool == POP().Bool));
+				Operations::Eq<int>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_LT:
-				PUSH(POP().Int > POP().Int ? 1 : 0);
+				Operations::Lt<int>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_LTE:
-				PUSH(POP().Int >= POP().Int ? 1 : 0);
+				Operations::Lte<int>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_GT:
-				PUSH(POP().Int < POP().Int ? 1 : 0);
+				Operations::Gt<int>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_GTE:
-				PUSH(POP().Int <= POP().Int ? 1 : 0);
+				Operations::Gte<int>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_AND:
-				PUSH(TO_INT(TO_BOOL(POP().Int) && TO_BOOL(POP().Int)));
+				Operations::And(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_OR:
-				PUSH(TO_INT(TO_BOOL(POP().Int) || TO_BOOL(POP().Int)));
+				Operations::Or(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_DUP:
-				PUSH(POP().Int);
+				Operations::Dup(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_JMP:
@@ -250,15 +328,15 @@ public:
 			break;
 
 			case vm_inst::OPT_INC:
-				SET(PEEK().Int + 1);
+				Operations::Inc<int>(currentStack, stackIndex);
 				break;
 			
 			case vm_inst::OPT_NEG:
-				SET(PEEK().Int * -1);
+				Operations::Neg<int>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_DINC:
-				SET(PEEK().Int - 1);
+				Operations::Dinc<int>(currentStack, stackIndex);
 				break;
 
 			case vm_inst::OPT_LOAD:
@@ -386,7 +464,6 @@ public:
 			case vm_inst::OPT_iPUSH: {
 				vm_int_t integer;
 				integer.Int = 0;
-
 				StaticAssignment<4>::assign(integer.Chars, code);
 				PUSH(integer.Int);
 			}
@@ -432,33 +509,28 @@ public:
 			case OPT_lMUL:break;
 			case OPT_lDIV:break;
 
-
 			case OPT_I2D:
-			{
-				int a = POP().Int;
-				double b = static_cast<double>(a);
-				PUSH(b);
-			}
+				Operations::Convert<int, double>(currentStack, stackIndex);
                 break;
 
             case OPT_D2I:
-                PUSH(static_cast<int>(POP().Double));
+				Operations::Convert<double, int>(currentStack, stackIndex);
                 break;
 
             case OPT_I2B:
-                PUSH(POP().Int == 0.0 ? false : true);
+				Operations::Convert<int, bool>(currentStack, stackIndex);
                 break;
 
             case OPT_B2I:
-                PUSH(POP().Bool ? 1 : 0);
+				Operations::Convert<bool, int>(currentStack, stackIndex);
                 break;
 
             case OPT_D2B:
-                PUSH(POP().Double == 0.0 ? false : true);
+				Operations::Convert<double, bool>(currentStack, stackIndex);
                 break;
 
             case OPT_B2D:
-                PUSH(POP().Bool ? 1.0 : 0.0);
+				Operations::Convert<bool, double>(currentStack, stackIndex);
                 break;
 			}
 

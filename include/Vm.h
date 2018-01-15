@@ -93,10 +93,20 @@ public:
 		return *this;
 	}
 
-	operator int()
-	{
-		return Int;
-	}
+    operator int()
+    {
+        return Int;
+    }
+
+    operator double()
+    {
+        return Double;
+    }
+
+    operator bool()
+    {
+        return Bool;
+    }
 
 	vm_object_type Type;
 
