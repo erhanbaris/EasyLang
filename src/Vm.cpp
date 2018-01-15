@@ -217,7 +217,6 @@ public:
 				{
 					vm_int_t integer;
 					StaticAssignment<4>::assign(integer.Chars, code);
-
 					code = startPoint + (integer.Int + 1);
 				}
 			}
@@ -231,7 +230,6 @@ public:
 				{
 					vm_int_t integer;
 					StaticAssignment<4>::assign(integer.Chars, code);
-
 					code = startPoint + (integer.Int + 1);
 				}
 			}
@@ -244,7 +242,6 @@ public:
 					vm_int_t integer;
 					integer.Int = 0;
 					StaticAssignment<4>::assign(integer.Chars, code);
-
 					code = startPoint + (integer.Int + 1);
 				}
 				else

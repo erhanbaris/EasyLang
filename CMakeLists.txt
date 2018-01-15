@@ -4,6 +4,13 @@ project(EasyLang)
 set(PROJECT_NAME EasyLang)
 set(CMAKE_CXX_STANDARD 11)
 
+include_directories (
+	deps/memory-allocators/includes/
+)
+
+
+
+
 # find_package(LLVM REQUIRED CONFIG)
 # message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 # message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
@@ -65,6 +72,13 @@ add_executable(EasyLang
 		include/VmBackend.h
 		include/termcolor.hpp
 		include/Console.h
+
+		deps/memory-allocators/src/Allocator.cpp 
+		deps/memory-allocators/src/CAllocator.cpp 
+		deps/memory-allocators/src/LinearAllocator.cpp 
+		deps/memory-allocators/src/StackAllocator 
+		deps/memory-allocators/src/PoolAllocator 
+		deps/memory-allocators/src/FreeListAllocator.cpp 
         )
 
 
