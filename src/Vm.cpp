@@ -102,8 +102,7 @@ struct Operations {
 	template<typename T>
 	inline static void Eq(vm_object * currentStack, size_t & stackIndex)
 	{
-		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] == (T)currentStack[stackIndex - 1];
-		--stackIndex;
+		currentStack[stackIndex - 3] = Pop<T>(currentStack, stackIndex) == Pop<T>(currentStack, stackIndex);
 	}
 
 	inline static void Dup(vm_object * currentStack, size_t & stackIndex)
@@ -157,6 +156,12 @@ struct Operations {
     {
         currentStack[stackIndex] = obj;
         stackIndex++;
+    }
+    
+    template<typename T>
+    inline static T Pop(vm_object * currentStack, size_t & stackIndex)
+    {
+        return (T)currentStack[--stackIndex];
     }
 };
 
