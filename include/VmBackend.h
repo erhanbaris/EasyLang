@@ -44,7 +44,6 @@ public:
 
 	void Prepare(std::shared_ptr<std::vector<Ast*>> pAsts) override;
 	PrimativeValue* getPrimative(Ast* ast);
-	void Generate(std::vector<char> & opcodes);
 	PrimativeValue* getAstItem(Ast* ast);
 	Type detectType(Ast* ast);
     void addConvertOpcode(Type from, Type to);
@@ -70,6 +69,7 @@ public:
 	void visit(ExprStatementAst* ast) override;
 
 private:
+	std::vector<char> opcodes;
 	std::vector<Ast*> asts;
 	std::vector<Ast*> temporaryAsts;
 	std::unordered_map<string_type, PrimativeValue*> variables;

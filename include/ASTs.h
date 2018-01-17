@@ -85,6 +85,7 @@ public:
     virtual R visit(UnaryAst* ast) = 0;
     virtual R visit(FunctionCallAst* ast) = 0;
 	virtual R visit(AssignmentAst* ast) = 0;
+	virtual ~ExprVisitor() {}
 };
 
 template <typename R = void>
@@ -103,12 +104,14 @@ public:
 	virtual R visit(ForStatementAst* ast) = 0;
 	virtual R visit(ExprStatementAst* ast) = 0;
 	virtual R visit(ReturnAst* ast) = 0;
+	virtual ~StmtVisitor() {}
 };
 
 class Ast
 {
 public:
 	EASY_AST_TYPE GetType() { return Type; }
+    virtual ~Ast() { }
 
 protected:
 	EASY_AST_TYPE Type;
@@ -119,6 +122,7 @@ class StmtAst : public Ast
 public:
 	virtual string_type print(StmtVisitor<string_type>*) = 0;
 	virtual void accept(StmtVisitor<void>*) = 0;
+    virtual ~StmtAst() { }
 };
 
 class ExprAst : public Ast
@@ -126,6 +130,7 @@ class ExprAst : public Ast
 public:
     virtual string_type print(ExprVisitor<string_type>*) = 0;
 	virtual void accept(ExprVisitor<void>*) = 0;
+    virtual ~ExprAst() { }
 };
 
 class AssignmentAst : public ExprAst {

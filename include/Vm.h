@@ -209,7 +209,8 @@ public:
     vm_system();
     ~vm_system();
 	void execute(char* code, size_t len, size_t startIndex);
-	void dump(char* code, size_t len);
+	void dumpOpcode(char* code, size_t len);
+    void dump(char* code, size_t len);
 	size_t getUInt();
 	vm_object getObject();
 

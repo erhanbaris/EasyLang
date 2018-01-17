@@ -9,22 +9,14 @@
 #define GSTORE(index, obj) *(globalStore.variables + index) = obj
 #define GLOAD(index) *(globalStore.variables + index)
 
-#if _DEBUG
 #define PEEK() (currentStack[stackIndex - 1])
 #define POP() (currentStack[--stackIndex])
 #define PUSH(obj) currentStack[stackIndex++] = (obj)
 #define SET(obj) currentStack[stackIndex - 1] = obj
 
-#else 
-#define PEEK() (*(currentStack - 1))
-#define POP() (*(--currentStack))
-#define PUSH(obj) *currentStack = obj; ++currentStack
-#define SET(obj) (*(currentStack - 1)) = obj
-#endif
-
 template <int N>
 struct StaticAssignment {
-	static void assign(vm_char_t * data, char*& code)
+	inline static void assign(vm_char_t * data, char*& code)
 	{
 		data[N - 1] = *++code;
 		StaticAssignment<N - 1>::assign(data, code);
@@ -32,7 +24,7 @@ struct StaticAssignment {
 };
 template <>
 struct StaticAssignment<1> {
-	static void assign(vm_char_t * data, char* & code)
+	inline static void assign(vm_char_t * data, char* & code)
 	{
 		data[0] = *++code;
 	}
@@ -40,126 +32,132 @@ struct StaticAssignment<1> {
 
 struct Operations {
 	template<typename T>
-	static void Add(vm_object * currentStack, size_t & stackIndex)
+	inline static void Add(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 1] + (T)currentStack[stackIndex - 2];
 		--stackIndex;
 	}
 
 	template<typename T>
-	static void Mul(vm_object * currentStack, size_t & stackIndex)
+	inline static void Mul(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 1] * (T)currentStack[stackIndex - 2];
 		--stackIndex;
 	}
 
 	template<typename T>
-	static void Sub(vm_object * currentStack, size_t & stackIndex)
+	inline static void Sub(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] - (T)currentStack[stackIndex - 1];
 		--stackIndex;
 	}
 
 	template<typename T>
-	static void Div(vm_object * currentStack, size_t & stackIndex)
+	inline static void Div(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] / (T)currentStack[stackIndex - 1];
 		--stackIndex;
 	}
 
-	static void And(vm_object * currentStack, size_t & stackIndex)
+	inline static void And(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 2] = currentStack[stackIndex - 2].Bool && currentStack[stackIndex - 1].Bool;
 		--stackIndex;
 	}
 
-	static void Or(vm_object * currentStack, size_t & stackIndex)
+	inline static void Or(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 2] = currentStack[stackIndex - 2].Bool || currentStack[stackIndex - 1].Bool;
 		--stackIndex;
 	}
 
 	template<typename T>
-	static void Lt(vm_object * currentStack, size_t & stackIndex)
+	inline static void Lt(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] < (T)currentStack[stackIndex - 1];
 		--stackIndex;
 	}
 
 	template<typename T>
-	static void Lte(vm_object * currentStack, size_t & stackIndex)
+	inline static void Lte(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] <= (T)currentStack[stackIndex - 1];
 		--stackIndex;
 	}
 
 	template<typename T>
-	static void Gt(vm_object * currentStack, size_t & stackIndex)
+	inline static void Gt(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] > (T)currentStack[stackIndex - 1];
 		--stackIndex;
 	}
 
 	template<typename T>
-	static void Gte(vm_object * currentStack, size_t & stackIndex)
+	inline static void Gte(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] >= (T)currentStack[stackIndex - 1];
 		--stackIndex;
 	}
 
 	template<typename T>
-	static void Eq(vm_object * currentStack, size_t & stackIndex)
+	inline static void Eq(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] == (T)currentStack[stackIndex - 1];
 		--stackIndex;
 	}
 
-	static void Dup(vm_object * currentStack, size_t & stackIndex)
+	inline static void Dup(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex] = currentStack[stackIndex];
 		++stackIndex;
 	}
 
 	template<typename T>
-	static void Inc(vm_object * currentStack, size_t & stackIndex)
+	inline static void Inc(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 1] = ((T)currentStack[stackIndex - 1]) + 1;
 	}
 
 	template<typename T>
-	static void Dinc(vm_object * currentStack, size_t & stackIndex)
+	inline static void Dinc(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 1] = ((T)currentStack[stackIndex - 1]) -1;
 	}
 
 	template<typename T>
-	static void Neg(vm_object * currentStack, size_t & stackIndex)
+	inline static void Neg(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 1] = (T)currentStack[stackIndex - 1] * -1;
 	}
 
 	template<typename From, typename To>
-	static void Convert(vm_object * currentStack, size_t & stackIndex)
+	inline static void Convert(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 1] = static_cast<To>((From)currentStack[stackIndex - 1]);
 	}
 
-	static vm_object& Pop(vm_object * currentStack, size_t & stackIndex)
+	inline static vm_object& Pop(vm_object * currentStack, size_t & stackIndex)
 	{
 		return currentStack[--stackIndex];
 	}
 
 	template<typename  T>
-	static T PopAs(vm_object * currentStack, size_t & stackIndex)
+	inline static T PopAs(vm_object * currentStack, size_t & stackIndex)
 	{
 		return (T)currentStack[--stackIndex];
 	}
 
 	template<typename T>
-	static bool IsEqual(vm_object * currentStack, size_t & stackIndex)
+	inline static bool IsEqual(vm_object * currentStack, size_t & stackIndex)
 	{
 		return (T)currentStack[--stackIndex] == (T)currentStack[--stackIndex];
 	}
+    
+    inline static void Push(vm_object * currentStack, size_t & stackIndex, vm_object & obj)
+    {
+        currentStack[stackIndex] = obj;
+        stackIndex++;
+    }
 };
 
 template <typename T>
@@ -168,7 +166,7 @@ class vm_store
 public:
 	vm_store()
 	{
-		variables = new T[64];
+		variables = new T[256];
 	}
 
 	~vm_store()
@@ -196,9 +194,7 @@ public:
 
 		stores[0] = currentStore;
 		storesCount = 0;
-#if _DEBUG
 		stackIndex = 0;
-#endif
 	}
 
 	~vm_system_impl()
@@ -216,9 +212,8 @@ public:
 	vm_store<vm_object> globalStore;
 
 	vm_object* currentStack{nullptr};
-#if _DEBUG
 	size_t stackIndex;
-#endif
+
 
 	void execute(char* code, size_t len, size_t startIndex)
 	{
@@ -297,19 +292,19 @@ public:
 				integer.Int = 0;
 				StaticAssignment<4>::assign(integer.Chars, code);
 
-				code = startPoint + (integer.Int + 1);
+				code = startPoint + (integer.Int - 1);
 			}
 				break;
 
 			case vm_inst::OPT_JIF:
 			{
 				if (Operations::PopAs<bool>(currentStack, stackIndex))
-					++code;
+					code += 4;
 				else
 				{
 					vm_int_t integer;
 					StaticAssignment<4>::assign(integer.Chars, code);
-					code = startPoint + (integer.Int + 1);
+					code = startPoint + (integer.Int - 1);
 				}
 			}
 			break;
@@ -317,12 +312,12 @@ public:
 			case vm_inst::OPT_IF_EQ:
 			{
 				if (Operations::IsEqual<bool>(currentStack, stackIndex))
-					++code;
+					code += 4;
 				else
 				{
 					vm_int_t integer;
 					StaticAssignment<4>::assign(integer.Chars, code);
-					code = startPoint + (integer.Int + 1);
+					code = startPoint + (integer.Int - 1);
 				}
 			}
 			break;
@@ -334,10 +329,10 @@ public:
 					vm_int_t integer;
 					integer.Int = 0;
 					StaticAssignment<4>::assign(integer.Chars, code);
-					code = startPoint + (integer.Int + 1);
+					code = startPoint + (integer.Int - 1);
 				}
 				else
-					++code;
+					code += 4;
 			}
 			break;
 
@@ -408,8 +403,7 @@ public:
 
 			case vm_inst::OPT_GLOAD_0:
 			{
-				auto item = GLOAD(0);
-				PUSH(GLOAD(0));
+                PUSH(GLOAD(0));
 			}
 				break;
 
@@ -552,7 +546,7 @@ public:
 		}
 	}
 
-	void dump(char* code, size_t len)
+	void dumpOpcode(char* code, size_t len)
 	{
 		size_t index = 0;
 		while (index < len) {
@@ -566,8 +560,13 @@ public:
 				case vm_inst::OPT_GLOAD:
 				case vm_inst::OPT_GSTORE:
 				case vm_inst::OPT_CALL:
-					console_out << _T(" ") << (int)*++code;
-					++index;
+				{
+					vm_int_t integer;
+					integer.Int = 0;
+					StaticAssignment<4>::assign(integer.Chars, code);
+					console_out << _T(" ") << integer.Int;
+					index += 4;
+				}
 					break;
 
                 case vm_inst::OPT_JMP:
@@ -580,7 +579,7 @@ public:
 					integer.Int = 0;
 					StaticAssignment<4>::assign(integer.Chars, code);
                     console_out << _T(" ") << integer.Int;
-                    index += 2;
+                    index += 4;
                 }
                     break;
 
@@ -597,10 +596,27 @@ public:
 
                 case vm_inst::OPT_bPUSH:
                     console_out << _T(" ") << (bool)*++code;
+					++index;
                     break;
 
-                case OPT_sPUSH:
-                    break;
+				case vm_inst::OPT_sPUSH:
+				{
+					vm_int_t integer;
+					integer.Int = 0;
+					StaticAssignment<4>::assign(integer.Chars, code);
+					integer.Int;
+					index += 4;
+					index += integer.Int;
+
+					char * chars = new char[integer.Int + 1];
+					for (int i = integer.Int - 1; i >= 0; i--)
+						chars[i] = *++code;
+
+					chars[integer.Int] = '\0';
+
+					console_out << _T(" \"") << chars << _T("\"");
+				}
+				break;
             }
 
 			console_out << '\n';
@@ -609,6 +625,19 @@ public:
 
 		console_out << '\n';
 	}
+    
+    void dump(char* code, size_t len)
+    {
+        size_t index = 0;
+        while (index < len) {
+            console_out << _T(">>> ") << index++ << _T(". ");
+            console_out << int(*code);
+            console_out << '\n';
+            ++code;
+        }
+        
+        console_out << '\n';
+    }
 };
 
 vm_system::vm_system()
@@ -628,23 +657,20 @@ void vm_system::execute(char* code, size_t len, size_t startIndex)
 
 void vm_system::dump(char* code, size_t len)
 {
-	impl->dump(code, len);
+    impl->dump(code, len);
+}
+
+void vm_system::dumpOpcode(char* code, size_t len)
+{
+    impl->dumpOpcode(code, len);
 }
 
 size_t vm_system::getUInt()
 {
-#if _DEBUG
 	return impl->currentStack[impl->stackIndex - 1].Int;
-#else
-	return *(impl->currentStack - 1);
-#endif
 }
 
 vm_object vm_system::getObject()
 {
-#if _DEBUG
     return impl->currentStack[impl->stackIndex - 1];
-#else
-    return *(impl->currentStack - 1);
-#endif
 }
