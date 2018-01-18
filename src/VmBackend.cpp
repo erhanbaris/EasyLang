@@ -576,6 +576,7 @@ void VmBackend::Compile(std::vector<char> & pOpcode)
 	for (int i = 0; i < totalAst; ++i) {
 		getAstItem(temporaryAsts[i]);
 	}
+	this->opcodes.push_back(vm_inst::OPT_HALT);
 
 	temporaryAsts.clear();
 	pOpcode.assign(this->opcodes.begin(), this->opcodes.end());
@@ -620,8 +621,9 @@ PrimativeValue* VmBackend::Execute()
 			break;
 	}
 
+	if (result != nullptr)
+		console_out << result->Describe() << '\n';
 
-	console_out << result->Describe() << '\n';
 	return result;
 }
 
@@ -1071,12 +1073,26 @@ void VmBackend::visit(FunctionCallAst* ast)
 		impl->system.dumpOpcode(&impl->codes[0], impl->codes.size());
 		return;
     }
-    
-    if (ast->Package == _T("core") && ast->Function == _T("dump"))
-    {
-        impl->system.dump(&impl->codes[0], impl->codes.size());
-        return;
-    }
+
+	else if (ast->Package == _T("core") && ast->Function == _T("dump"))
+	{
+		impl->system.dump(&impl->codes[0], impl->codes.size());
+		return;
+	}
+
+	else if (ast->Package == _T("core") && ast->Function == _T("dumpStack"))
+	{
+		impl->system.dumpStack();
+		return;
+	}
+
+	else if (ast->Package == _T("core") && ast->Function == _T("dumpAll"))
+	{
+		impl->system.dumpOpcode(&impl->codes[0], impl->codes.size());
+		impl->system.dump(&impl->codes[0], impl->codes.size());
+		impl->system.dumpStack();
+		return;
+	}
     
     std::unordered_map<string_type, VariableInfo*>* variables = nullptr;
 

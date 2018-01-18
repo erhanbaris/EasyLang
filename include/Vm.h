@@ -210,6 +210,7 @@ public:
     ~vm_system();
 	void execute(char* code, size_t len, size_t startIndex);
 	void dumpOpcode(char* code, size_t len);
+	void dumpStack();
     void dump(char* code, size_t len);
 	size_t getUInt();
 	vm_object getObject();

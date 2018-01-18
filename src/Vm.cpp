@@ -1,7 +1,6 @@
 #include "Vm.h"
 #include "Console.h"
 
-#define BYTES_TO_INT(one,two) (one + ( 256 * two ))
 
 #define STORE(index, obj) *(currentStore->variables + index) = obj
 #define LOAD(index) *(currentStore->variables + index)
@@ -11,8 +10,28 @@
 
 #define PEEK() (currentStack[stackIndex - 1])
 #define POP() (currentStack[--stackIndex])
-#define PUSH(obj) currentStack[stackIndex++] = (obj)
 #define SET(obj) currentStack[stackIndex - 1] = obj
+
+
+
+template <typename T>
+class vm_store
+{
+public:
+	vm_store()
+	{
+		variables = new T[256];
+	}
+
+	~vm_store()
+	{
+		if (variables != nullptr)
+			delete[] variables;
+	}
+
+	size_t startAddress;
+	T* variables{ nullptr };
+};
 
 template <int N>
 struct StaticAssignment {
@@ -102,7 +121,8 @@ struct Operations {
 	template<typename T>
 	inline static void Eq(vm_object * currentStack, size_t & stackIndex)
 	{
-		currentStack[stackIndex - 3] = Pop<T>(currentStack, stackIndex) == Pop<T>(currentStack, stackIndex);
+		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] == (T)currentStack[stackIndex - 1];
+		--stackIndex;
 	}
 
 	inline static void Dup(vm_object * currentStack, size_t & stackIndex)
@@ -151,37 +171,34 @@ struct Operations {
 	{
 		return (T)currentStack[--stackIndex] == (T)currentStack[--stackIndex];
 	}
-    
-    inline static void Push(vm_object * currentStack, size_t & stackIndex, vm_object & obj)
-    {
-        currentStack[stackIndex] = obj;
-        stackIndex++;
-    }
-    
-    template<typename T>
-    inline static T Pop(vm_object * currentStack, size_t & stackIndex)
-    {
-        return (T)currentStack[--stackIndex];
-    }
-};
 
-template <typename T>
-class vm_store
-{
-public:
-	vm_store()
+	inline static void Push(vm_object * currentStack, size_t & stackIndex, vm_object & obj)
 	{
-		variables = new T[256];
+		currentStack[stackIndex] = obj;
+		stackIndex++;
 	}
 
-	~vm_store()
+	inline static void Push(vm_object * currentStack, size_t & stackIndex, vm_object && obj)
 	{
-		if (variables != nullptr)
-			delete[] variables;
+		currentStack[stackIndex] = obj;
+		stackIndex++;
 	}
 
-	size_t startAddress;
-	T* variables{nullptr};
+	template<typename T>
+	inline static T Pop(vm_object * currentStack, size_t & stackIndex)
+	{
+		return (T)currentStack[--stackIndex];
+	}
+
+	inline static vm_object* Load(vm_store<vm_object>* currentStore, size_t index)
+	{
+		return (currentStore->variables + index);
+	}
+
+	/*inline static vm_object Store(vm_store<vm_object>* currentStore, size_t index)
+	{
+		return *(currentStore->variables + index);
+	}*/
 };
 
 class vm_system_impl
@@ -354,27 +371,27 @@ public:
 				break;
 
 			case vm_inst::OPT_LOAD:
-				PUSH(LOAD(*++code));
+				Operations::Push(currentStack, stackIndex, LOAD(*++code));
 				break;
 
 			case vm_inst::OPT_LOAD_0:
-				PUSH(LOAD(0));
+				Operations::Push(currentStack, stackIndex, LOAD(0));
 				break;
 
 			case vm_inst::OPT_LOAD_1:
-				PUSH(LOAD(1));
+				Operations::Push(currentStack, stackIndex, LOAD(1));
 				break;
 
 			case vm_inst::OPT_LOAD_2:
-				PUSH(LOAD(2));
+				Operations::Push(currentStack, stackIndex, LOAD(2));
 				break;
 
 			case vm_inst::OPT_LOAD_3:
-				PUSH(LOAD(3));
+				Operations::Push(currentStack, stackIndex, LOAD(3));
 				break;
 
 			case vm_inst::OPT_LOAD_4:
-				PUSH(LOAD(4));
+				Operations::Push(currentStack, stackIndex, LOAD(4));
 				break;
 
 			case vm_inst::OPT_STORE:
@@ -403,29 +420,27 @@ public:
 
 
 			case vm_inst::OPT_GLOAD:
-				PUSH(GLOAD(*++code));
+				Operations::Push(currentStack, stackIndex, GLOAD(*++code));
 				break;
 
 			case vm_inst::OPT_GLOAD_0:
-			{
-                PUSH(GLOAD(0));
-			}
+				Operations::Push(currentStack, stackIndex, GLOAD(0));
 				break;
 
 			case vm_inst::OPT_GLOAD_1:
-				PUSH(GLOAD(1));
+				Operations::Push(currentStack, stackIndex, GLOAD(1));
 				break;
 
 			case vm_inst::OPT_GLOAD_2:
-				PUSH(GLOAD(2));
+				Operations::Push(currentStack, stackIndex, GLOAD(2));
 				break;
 
 			case vm_inst::OPT_GLOAD_3:
-				PUSH(GLOAD(3));
+				Operations::Push(currentStack, stackIndex, GLOAD(3));
 				break;
 
 			case vm_inst::OPT_GLOAD_4:
-				PUSH(GLOAD(4));
+				Operations::Push(currentStack, stackIndex, GLOAD(4));
 				break;
 
 			case vm_inst::OPT_GSTORE:
@@ -478,7 +493,7 @@ public:
 				vm_int_t integer;
 				integer.Int = 0;
 				StaticAssignment<4>::assign(integer.Chars, code);
-				PUSH(integer.Int);
+				Operations::Push(currentStack, stackIndex, integer.Int);
 			}
 			break;
 
@@ -486,13 +501,13 @@ public:
 				vm_double_t d;
 				d.Double = 0.0;
 				StaticAssignment<8>::assign(d.Chars, code);
-				PUSH(d.Double);
+				Operations::Push(currentStack, stackIndex, d.Double);
 			}
 				break;
 
 
 			case vm_inst::OPT_bPUSH:
-				PUSH((bool)*++code);
+				Operations::Push(currentStack, stackIndex, (bool)*++code);
 				break;
 
 			case vm_inst::OPT_sPUSH: {
@@ -506,7 +521,7 @@ public:
 					chars[i] = *++code;
 				
 				chars[integer.Int] = '\0';
-				PUSH(chars);
+				Operations::Push(currentStack, stackIndex, chars);
 			}
 				break;
 
@@ -630,19 +645,60 @@ public:
 
 		console_out << '\n';
 	}
-    
-    void dump(char* code, size_t len)
-    {
-        size_t index = 0;
-        while (index < len) {
-            console_out << _T(">>> ") << index++ << _T(". ");
-            console_out << int(*code);
-            console_out << '\n';
-            ++code;
-        }
-        
-        console_out << '\n';
-    }
+
+	void dumpStack()
+	{
+		int index = stackIndex;
+		while (index > 0) {
+			console_out << _T(">>> ") << index << _T(". ");
+			vm_object item = currentStack[index];
+			switch (item.Type)
+			{
+			case vm_object::vm_object_type::INT:
+				console_out << _T(" INT: ");
+				console_out << item.Int;
+				break;
+
+			case vm_object::vm_object_type::DOUBLE:
+				console_out << _T(" DOUBLE: ");
+				console_out << item.Double;
+				break;
+
+			case vm_object::vm_object_type::BOOL:
+				console_out << _T(" BOOL: ");
+				console_out << item.Bool;
+				break;
+
+			case vm_object::vm_object_type::STR:
+				console_out << _T(" STR: ");
+				console_out << string_type(item.String);
+				break;
+
+			default:
+				console_out << _T(" EMPTY: ");
+				break;
+			}
+
+			console_out << '\n';
+
+			--index;
+		}
+
+		console_out << '\n';
+
+	}
+	void dump(char* code, size_t len)
+	{
+		size_t index = 0;
+		while (index < len) {
+			console_out << _T(">>> ") << index++ << _T(". ");
+			console_out << int(*code);
+			console_out << '\n';
+			++code;
+		}
+
+		console_out << '\n';
+	}
 };
 
 vm_system::vm_system()
@@ -667,7 +723,12 @@ void vm_system::dump(char* code, size_t len)
 
 void vm_system::dumpOpcode(char* code, size_t len)
 {
-    impl->dumpOpcode(code, len);
+	impl->dumpOpcode(code, len);
+}
+
+void vm_system::dumpStack()
+{
+	impl->dumpStack();
 }
 
 size_t vm_system::getUInt()
@@ -677,5 +738,8 @@ size_t vm_system::getUInt()
 
 vm_object vm_system::getObject()
 {
-    return impl->currentStack[impl->stackIndex - 1];
+	if (impl->stackIndex > 0)
+		return impl->currentStack[--impl->stackIndex];
+
+	return vm_object();
 }
