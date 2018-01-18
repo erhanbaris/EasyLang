@@ -740,6 +740,8 @@ void VmBackend::visit(IfStatementAst* ast)
 
 	this->opcodes.push_back(vm_inst::OPT_JIF);
     size_t ifPoint = this->opcodes.size();
+    size_t jumpPoint = 0;
+    vm_int_t i;
     this->opcodes.push_back(0);
     this->opcodes.push_back(0);
     this->opcodes.push_back(0);
@@ -756,12 +758,7 @@ void VmBackend::visit(IfStatementAst* ast)
         this->opcodes.push_back(0);
         this->opcodes.push_back(0);
         
-		vm_int_t i;
-		i.Int = this->opcodes.size();
-		this->opcodes[ifPoint] = i.Chars[3];
-		this->opcodes[ifPoint + 1] = i.Chars[2];
-		this->opcodes[ifPoint + 2] = i.Chars[1];
-		this->opcodes[ifPoint + 3] = i.Chars[0];
+        jumpPoint = this->opcodes.size();
 		this->getAstItem(ast->False) - 1;
 
 		i.Int = this->opcodes.size();
@@ -770,6 +767,14 @@ void VmBackend::visit(IfStatementAst* ast)
 		this->opcodes[elsePoint + 2] = i.Chars[1];
 		this->opcodes[elsePoint + 3] = i.Chars[0];
 	}
+    else
+        jumpPoint = this->opcodes.size();
+    
+    i.Int = this->opcodes.size();
+    this->opcodes[ifPoint] = i.Chars[3];
+    this->opcodes[ifPoint + 1] = i.Chars[2];
+    this->opcodes[ifPoint + 2] = i.Chars[1];
+    this->opcodes[ifPoint + 3] = i.Chars[0];
 }
 
 void VmBackend::visit(FunctionDefinetionAst* ast)
@@ -779,6 +784,11 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     impl->variables = impl->variablesList[impl->variablesList.size() - 1];
 
     this->opcodes.push_back(vm_inst::OPT_JMP);
+    size_t funcDeclPoint = this->opcodes.size();
+    this->opcodes.push_back(0);
+    this->opcodes.push_back(0);
+    this->opcodes.push_back(0);
+    this->opcodes.push_back(0);
 
 	if (this->impl->methods.find(_T("::") + ast->Name) != this->impl->methods.end())
 	{
@@ -788,7 +798,7 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 	}
 
     MethodInfo* methodInfo = new MethodInfo;
-    // fix : methodInfo->Index = static_cast<unsigned long>(this->impl->opCodeIndex); 
+    methodInfo->Index = this->opcodes.size();
     switch (ast->ReturnType)
     {
         case TYPE_BOOL:
@@ -860,13 +870,32 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     }
 
     ast->Body->accept(this);
-
+    
+    vm_int_t i;
+    i.Int = this->opcodes.size();
+    this->opcodes[funcDeclPoint] = i.Chars[3];
+    this->opcodes[funcDeclPoint + 1] = i.Chars[2];
+    this->opcodes[funcDeclPoint + 2] = i.Chars[1];
+    this->opcodes[funcDeclPoint + 3] = i.Chars[0];
+    
     this->impl->variablesList.erase(impl->variablesList.begin() + (impl->variablesList.size() - 1));
 	--this->impl->inFunctionCounter;
     delete impl->variables;
 }
 
-void VmBackend::visit(ForStatementAst* ast) { }
+void VmBackend::visit(ForStatementAst* ast)
+{
+    ++this->impl->inFunctionCounter;
+    this->impl->variablesList.push_back(new std::unordered_map<string_type, VariableInfo*>());
+    impl->variables = impl->variablesList[impl->variablesList.size() - 1];
+    
+    
+    
+    this->impl->variablesList.erase(impl->variablesList.begin() + (impl->variablesList.size() - 1));
+    --this->impl->inFunctionCounter;
+    delete impl->variables;
+}
+
 void VmBackend::visit(VariableAst* ast)
 {
     if (this->impl->inFunctionCounter > 0 && this->impl->variables->find(ast->Value) == this->impl->variables->end())
