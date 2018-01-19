@@ -497,7 +497,7 @@ public:
 				vm_int_t integer;
 				integer.Int = 0;
 				StaticAssignment<4>::assign(integer.Chars, code);
-                currentStore->startAddress = (code - startPoint) + 1;
+                currentStore->startAddress = (code - startPoint);
 				code = startPoint + (integer.Int - 1);
 			}
 			break;
@@ -505,7 +505,6 @@ public:
 			case vm_inst::OPT_RETURN:
 			{
 				code = startPoint + currentStore->startAddress;
-                console_out << _T("OPT_RETURN : ") << currentStore->startAddress << '\n';
 				currentStore = stores[--storesCount];
 			}
 			break;
@@ -596,7 +595,7 @@ public:
 	{
 		size_t index = 0;
 		while (index < len) {
-			// console_out << _T(">>> ") << index++ << _T(". ");
+			console_out << _T(">>> ") << index++ << _T(". ");
 			COLOR_RED(vm_instToString((vm_inst)*code));
 
 			switch ((vm_inst)*code)
@@ -610,7 +609,7 @@ public:
 					vm_int_t integer;
 					integer.Int = 0;
 					StaticAssignment<4>::assign(integer.Chars, code);
-					// console_out << _T(" ") << integer.Int;
+					console_out << _T(" ") << integer.Int;
 					index += 4;
 				}
 					break;
@@ -624,7 +623,7 @@ public:
 					vm_int_t integer;
 					integer.Int = 0;
 					StaticAssignment<4>::assign(integer.Chars, code);
-                    // console_out << _T(" ") << integer.Int;
+                    console_out << _T(" ") << integer.Int;
                     index += 4;
                 }
                     break;
@@ -635,7 +634,7 @@ public:
 					d.Double = 0;
 					StaticAssignment<8>::assign(d.Chars, code);
 
-                    // console_out << _T(" ") << d.Double;
+                    console_out << _T(" ") << d.Double;
                     index += 8;
                 }
                     break;
@@ -660,70 +659,70 @@ public:
 
 					chars[integer.Int] = '\0';
 
-					// console_out << _T(" \"") << chars << _T("\"");
+					console_out << _T(" \"") << chars << _T("\"");
 				}
 				break;
             }
 
-			// console_out << '\n';
+			console_out << '\n';
 			++code;
 		}
 
-		// console_out << '\n';
+		console_out << '\n';
 	}
 
 	void dumpStack()
 	{
 		int index = stackIndex;
 		while (index > 0) {
-			// console_out << _T(">>> ") << index << _T(". ");
+			console_out << _T(">>> ") << index << _T(". ");
 			vm_object item = currentStack[index];
 			switch (item.Type)
 			{
 			case vm_object::vm_object_type::INT:
-				// console_out << _T(" INT: ");
-				// console_out << item.Int;
+				console_out << _T(" INT: ");
+				console_out << item.Int;
 				break;
 
 			case vm_object::vm_object_type::DOUBLE:
-				// console_out << _T(" DOUBLE: ");
-				// console_out << item.Double;
+				console_out << _T(" DOUBLE: ");
+				console_out << item.Double;
 				break;
 
 			case vm_object::vm_object_type::BOOL:
-				// console_out << _T(" BOOL: ");
-				// console_out << item.Bool;
+				console_out << _T(" BOOL: ");
+				console_out << item.Bool;
 				break;
 
 			case vm_object::vm_object_type::STR:
-				// console_out << _T(" STR: ");
-				// console_out << string_type(item.String);
+				console_out << _T(" STR: ");
+				console_out << string_type(item.String);
 				break;
 
 			default:
-				// console_out << _T(" EMPTY: ");
+				console_out << _T(" EMPTY: ");
 				break;
 			}
 
-			// console_out << '\n';
+			console_out << '\n';
 
 			--index;
 		}
 
-		// console_out << '\n';
+		console_out << '\n';
 
 	}
 	void dump(char* code, size_t len)
 	{
 		size_t index = 0;
 		while (index < len) {
-			// console_out << _T(">>> ") << index++ << _T(". ");
-			// console_out << int(*code);
-			// console_out << '\n';
+			console_out << _T(">>> ") << index++ << _T(". ");
+			console_out << int(*code);
+			console_out << '\n';
 			++code;
 		}
 
-		// console_out << '\n';
+		console_out << '\n';
 	}
 };
 
