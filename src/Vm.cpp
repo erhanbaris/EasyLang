@@ -522,6 +522,54 @@ public:
 			}
 			break;
 
+            case vm_inst::OPT_iPUSH_0:
+                Operations::Push(currentStack, stackIndex, 0);
+                break;
+
+            case vm_inst::OPT_iPUSH_1:
+                Operations::Push(currentStack, stackIndex, 1);
+                break;
+
+            case vm_inst::OPT_iPUSH_2:
+                Operations::Push(currentStack, stackIndex, 2);
+                break;
+
+            case vm_inst::OPT_iPUSH_3:
+                Operations::Push(currentStack, stackIndex, 3);
+                break;
+
+            case vm_inst::OPT_iPUSH_4:
+                Operations::Push(currentStack, stackIndex, 4);
+                break;
+
+            case vm_inst::OPT_dPUSH_0:
+                Operations::Push(currentStack, stackIndex, 0.0);
+                break;
+
+            case vm_inst::OPT_dPUSH_1:
+                Operations::Push(currentStack, stackIndex, 1.0);
+                break;
+
+            case vm_inst::OPT_dPUSH_2:
+                Operations::Push(currentStack, stackIndex, 2.0);
+                break;
+
+            case vm_inst::OPT_dPUSH_3:
+                Operations::Push(currentStack, stackIndex, 3.0);
+                break;
+
+            case vm_inst::OPT_dPUSH_4:
+                Operations::Push(currentStack, stackIndex, 4.0);
+                break;
+
+            case vm_inst::OPT_bPUSH_0:
+                Operations::Push(currentStack, stackIndex, false);
+                break;
+
+            case vm_inst::OPT_bPUSH_1:
+                Operations::Push(currentStack, stackIndex, true);
+                break;
+
 			case vm_inst::OPT_dPUSH: {
 				vm_double_t d;
 				d.Double = 0.0;

@@ -222,52 +222,95 @@ Easy Language source code is interpreting but not converting opcode (yet). I am 
 
 ##### VM Instruction Set
 ```
-iADD    : Sum last 2 item
-iSUB    : Subtract last 2 item
-iMUL    : Multiply the last two item
-iDIV    : Divide the last two item
+iADD    : Sum last 2 int item
+iSUB    : Subtract last 2 int item
+iMUL    : Multiply the last two int item
+iDIV    : Divide the last two int item
+
+dADD    : Sum last 2 double item
+dSUB    : Subtract last 2 double item
+dMUL    : Multiply the last two double item
+dDIV    : Divide the last two double item
 
 //LOGIC
-iEQ     : Is the last two item equal
-iLT     : Little control for last two item
-iLTE    : Little or equal control for last two item
-iGT     : Greater control for last two item
-iGTE    : Greater or equal control for last two item
-iAND    : And operator
-iOR     : Or operator
+EQ      : Is the last two item equal
+LT      : Little control for last two item
+LTE     : Little or equal control for last two item
+GT      : Greater control for last two item
+GTE     : Greater or equal control for last two item
+AND     : And operator
+OR      : Or operator
 
-iDUP    : Dublicate last item
-iPUSH   : Push to stack
-iPOP    : Remove last item
+DUP     : Dublicate last item
+POP     : Remove last item
+
+iPUSH   : Push int
+dPUSH   : Push double
+bPUSH   : Push bool
+sPUSH   : Push string
+iPUSH_0 : Push int 0
+iPUSH_1 : Push int 1
+iPUSH_2 : Push int 2
+iPUSH_3 : Push int 3
+iPUSH_4 : Push int 4
+dPUSH_0 : Push double 0
+dPUSH_1 : Push double 1
+dPUSH_2 : Push double 2
+dPUSH_3 : Push double 3
+dPUSH_4 : Push double 4
+bPUSH_0 : Push false
+bPUSH_1 : Push true
 
 // JUMP AND IF
-iJMP    : Jump to address
-iJIF    : If last item true then jump to address
-iIF_EQ  : If last two items are equal then jump to address
-iJNIF   : If last item false then jump to address
+JMP     : Jump to address
+JIF     : If last item true then jump to address
+IF_EQ   : If last two items are equal then jump to address
+JNIF    : If last item false then jump to address
 
-iINC    : Increment last item
-iDEC    : Decrement last item
+INC     : Increment last item
+DEC     : Decrement last item
 
 //FOR LOCAL VARIABLE 
-iLOAD   : Load item from memory and push to stack
-iLOAD_0 : Load item 0 from memory and push to stack
-iLOAD_1 : Load item 1 from memory and push to stack
-iLOAD_2 : Load item 2 from memory and push to stack
-iLOAD_3 : Load item 3 from memory and push to stack
-iLOAD_4 : Load item 4 from memory and push to stack
-iSTORE  : Save item to memory and pop from stack
-iSTORE_0: Save item 0 to memory and pop from stack
-iSTORE_1: Save item 1 to memory and pop from stack
-iSTORE_2: Save item 2 to memory and pop from stack
-iSTORE_3: Save item 3 to memory and pop from stack
-iSTORE_4: Save item 4 to memory and pop from stack
+LOAD    : Load item from memory and push to stack
+LOAD_0  : Load item 0 from memory and push to stack
+LOAD_1  : Load item 1 from memory and push to stack
+LOAD_2  : Load item 2 from memory and push to stack
+LOAD_3  : Load item 3 from memory and push to stack
+LOAD_4  : Load item 4 from memory and push to stack
+STORE   : Save item to memory and pop from stack
+STORE_0 : Save item 0 to memory and pop from stack
+STORE_1 : Save item 1 to memory and pop from stack
+STORE_2 : Save item 2 to memory and pop from stack
+STORE_3 : Save item 3 to memory and pop from stack
+STORE_4 : Save item 4 to memory and pop from stack
 
-iCALL   : Create new stack and jump to address
-iRETURN : Dispose current stack and jump to last CALL instruction address
+//FOR GLOBAL VARIABLE 
+GLOAD   : Load item from global memory and push to stack
+GLOAD_0 : Load item 0 from global memory and push to stack
+GLOAD_1 : Load item 1 from global memory and push to stack
+GLOAD_2 : Load item 2 from global memory and push to stack
+GLOAD_3 : Load item 3 from global memory and push to stack
+GLOAD_4 : Load item 4 from global memory and push to stack
+GSTORE  : Save item to global memory and pop from stack
+GSTORE_0: Save item 0 to global memory and pop from stack
+GSTORE_1: Save item 1 to global memory and pop from stack
+GSTORE_2: Save item 2 to global memory and pop from stack
+GSTORE_3: Save item 3 to global memory and pop from stack
+GSTORE_4: Save item 4 to global memory and pop from stack
 
-iPRINT  : Print last item
-iHALT   : Stop system
+//CONVERT
+I2D     : Int to double
+D2I     : Double to int
+I2B     : Int to bool
+B2I     : Bool to int
+D2B     : Double do bool
+B2D     : Bool to double
+
+CALL    : Create new stack and jump to address
+RETURN  : Dispose current stack and jump to last CALL instruction address
+
+PRINT   : Print last item
+HALT    : Stop system
 ```
 
 ##### Vm Usage Example (Fibonacci)

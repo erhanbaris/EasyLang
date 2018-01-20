@@ -72,7 +72,7 @@ TEST_CASE("Interpreter tests") {
 	}
 
 	SECTION("fibonacci test") {
-		tokinizer->Parse(_T("func fibonacci(num:int):int { if num <= 1 then return 1 left = fibonacci(num - 1) right = fibonacci(num - 2) return left + right }"), tokens);
+		tokinizer->Parse(_T("func fibonacci(num:int):int { if num <= 1 then return num left = fibonacci(num - 1) right = fibonacci(num - 2) return left + right }"), tokens);
 		astParser->Parse(tokens, asts);
 		backend->Prepare(asts);
 		backend->Execute();
@@ -83,7 +83,7 @@ TEST_CASE("Interpreter tests") {
 		PrimativeValue* result = backend->Execute();
 		REQUIRE(result != nullptr);
 		REQUIRE(result->IsInteger());
-		REQUIRE(result->Integer == 89);
+		REQUIRE(result->Integer == 55);
 	}
 
 	SECTION("sum test 1") {

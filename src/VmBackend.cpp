@@ -770,7 +770,7 @@ void VmBackend::visit(IfStatementAst* ast)
     else
         jumpPoint = this->opcodes.size();
     
-    i.Int = this->opcodes.size();
+    i.Int = jumpPoint;
     this->opcodes[ifPoint] = i.Chars[3];
     this->opcodes[ifPoint + 1] = i.Chars[2];
     this->opcodes[ifPoint + 2] = i.Chars[1];
@@ -921,33 +921,78 @@ void VmBackend::visit(PrimativeAst* ast) {
 	{
         case PrimativeValue::Type::PRI_DOUBLE:
         {
-			vm_double_t i;
-			i.Double = ast->Value->Double;
-            this->opcodes.push_back(vm_inst::OPT_dPUSH);
-            this->opcodes.push_back(i.Chars[7]);
-            this->opcodes.push_back(i.Chars[6]);
-            this->opcodes.push_back(i.Chars[5]);
-            this->opcodes.push_back(i.Chars[4]);
-            this->opcodes.push_back(i.Chars[3]);
-            this->opcodes.push_back(i.Chars[2]);
-            this->opcodes.push_back(i.Chars[1]);
-            this->opcodes.push_back(i.Chars[0]);
+            if (ast->Value->Double == 0.0)
+                this->opcodes.push_back(vm_inst::OPT_dPUSH_0);
+            else if (ast->Value->Double == 1.0)
+                this->opcodes.push_back(vm_inst::OPT_dPUSH_1);
+            else if (ast->Value->Double == 2.0)
+                this->opcodes.push_back(vm_inst::OPT_dPUSH_2);
+            else if (ast->Value->Double == 3.0)
+                this->opcodes.push_back(vm_inst::OPT_dPUSH_3);
+            else if (ast->Value->Double == 4.0)
+                this->opcodes.push_back(vm_inst::OPT_dPUSH_4);
+            else
+            {
+                vm_double_t i;
+                i.Double = ast->Value->Double;
+                this->opcodes.push_back(vm_inst::OPT_dPUSH);
+                this->opcodes.push_back(i.Chars[7]);
+                this->opcodes.push_back(i.Chars[6]);
+                this->opcodes.push_back(i.Chars[5]);
+                this->opcodes.push_back(i.Chars[4]);
+                this->opcodes.push_back(i.Chars[3]);
+                this->opcodes.push_back(i.Chars[2]);
+                this->opcodes.push_back(i.Chars[1]);
+            }
         }
             break;
 
         case PrimativeValue::Type::PRI_BOOL:
-            this->opcodes.push_back(vm_inst::OPT_bPUSH);
-            this->opcodes.push_back((int)ast->Value->Bool);
+            switch (ast->Value->Bool)
+            {
+                case true:
+                    this->opcodes.push_back(vm_inst::OPT_bPUSH_1);
+                    break;
+
+                case false:
+                    this->opcodes.push_back(vm_inst::OPT_bPUSH_0);
+                    break;
+            }
             break;
 
 	case PrimativeValue::Type::PRI_INTEGER:
-            this->opcodes.push_back(vm_inst::OPT_iPUSH);
-            vm_int_t i;
-            i.Int = ast->Value->Integer;
-            this->opcodes.push_back(i.Chars[3]);
-            this->opcodes.push_back(i.Chars[2]);
-            this->opcodes.push_back(i.Chars[1]);
-            this->opcodes.push_back(i.Chars[0]);
+            switch (ast->Value->Integer)
+            {
+                case 0:
+                    this->opcodes.push_back(vm_inst::OPT_iPUSH_0);
+                    break;
+
+                case 1:
+                    this->opcodes.push_back(vm_inst::OPT_iPUSH_1);
+                    break;
+
+                case 2:
+                    this->opcodes.push_back(vm_inst::OPT_iPUSH_2);
+                    break;
+
+                case 3:
+                    this->opcodes.push_back(vm_inst::OPT_iPUSH_3);
+                    break;
+
+                case 4:
+                    this->opcodes.push_back(vm_inst::OPT_iPUSH_4);
+                    break;
+
+                default:
+                    this->opcodes.push_back(vm_inst::OPT_iPUSH);
+                    vm_int_t i;
+                    i.Int = ast->Value->Integer;
+                    this->opcodes.push_back(i.Chars[3]);
+                    this->opcodes.push_back(i.Chars[2]);
+                    this->opcodes.push_back(i.Chars[1]);
+                    this->opcodes.push_back(i.Chars[0]);
+                    break;
+            }
 		break;
 
 	case PrimativeValue::Type::PRI_STRING:
@@ -1083,7 +1128,6 @@ void VmBackend::visit(BinaryAst* ast)
 			break;
 	}
 }
-//if data == 123 then { data = 111 } else {data = 999}
 
 void VmBackend::visit(StructAst* ast) { }
 void VmBackend::visit(ReturnAst* ast)
