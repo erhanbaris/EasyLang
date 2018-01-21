@@ -15,11 +15,13 @@ public:
     }
 };
 
+class vm_object;
 class vm_system;
 class vm_system_impl;
 template <typename T> class vm_store;
 template <typename T> class vm_stack;
 
+typedef vm_object*(*VmMethod)(vm_system* vm);
 typedef void(*VmMethodCallback)(vm_system* vm, size_t totalArgs);
 typedef char vm_char_t;
 typedef union vm_double_u { vm_char_t Chars[8];  double Double; } vm_double_t;
@@ -62,12 +64,19 @@ public:
 		Bool = b;
 		Type = vm_object_type::BOOL;
 	}
-
-	vm_object(char* b)
-	{
-		String = b;
-		Type = vm_object_type::STR;
-	}
+    
+    vm_object(char* b)
+    {
+        String = b;
+        Type = vm_object_type::STR;
+    }
+    
+    vm_object(string_type const & b)
+    {
+        String = new char[b.size()];
+        memcpy(String, b.c_str(), b.size());
+        Type = vm_object_type::STR;
+    }
 
 	vm_object& operator=(int right) {
 		Int = right;
@@ -211,7 +220,8 @@ OPT_dPUSH_2,
 OPT_dPUSH_3,
 OPT_dPUSH_4,
 OPT_bPUSH_0,
-OPT_bPUSH_1
+OPT_bPUSH_1,
+OPT_INVOKE
 )
 
 
@@ -220,12 +230,13 @@ class vm_system
 public:
     vm_system();
     ~vm_system();
-	void execute(char* code, size_t len, size_t startIndex);
+    void execute(char* code, size_t len, size_t startIndex);
+    void addMethod(string_type const & name, VmMethod method);
 	void dumpOpcode(char* code, size_t len);
 	void dumpStack();
     void dump(char* code, size_t len);
 	size_t getUInt();
-	vm_object getObject();
+	vm_object* getObject();
 
 private:
 	vm_system_impl* impl;

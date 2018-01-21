@@ -152,11 +152,11 @@ public:
 	bool dumpOpcode;
 
 	size_t inClassCounter;
-	//size_t inFunctionCounter;
+	size_t inFunctionCounter;
 
 	VmBackendImpl()
 	{
-		//inFunctionCounter = 0;
+		inFunctionCounter = 0;
 		dumpOpcode = false;
 		globalVariables = new std::unordered_map<string_type, VariableInfo*>();
 		variables = new std::unordered_map<string_type, VariableInfo*>();
@@ -592,30 +592,31 @@ PrimativeValue* VmBackend::Execute()
 	
 	this->Compile(this->impl->codes);
 	impl->system.execute(&impl->codes[0], impl->codes.size(), codeStart);	
-	auto lastItem = impl->system.getObject();
+	auto* lastItem = impl->system.getObject();
 
-	switch (lastItem.Type)
-	{
-		case vm_object::vm_object_type::INT:
-			result = new PrimativeValue(lastItem.Int);
-			break;
+	if (lastItem != nullptr)
+		switch (lastItem->Type)
+		{
+			case vm_object::vm_object_type::INT:
+				result = new PrimativeValue(lastItem->Int);
+				break;
 
-		case vm_object::vm_object_type::DOUBLE:
-			result = new PrimativeValue(lastItem.Double);
-			break;
+			case vm_object::vm_object_type::DOUBLE:
+				result = new PrimativeValue(lastItem->Double);
+				break;
 
-		case vm_object::vm_object_type::BOOL:
-			result = new PrimativeValue(lastItem.Bool);
-			break;
+			case vm_object::vm_object_type::BOOL:
+				result = new PrimativeValue(lastItem->Bool);
+				break;
 
-		case vm_object::vm_object_type::EMPTY:
-			result = new PrimativeValue();
-			break;
+			case vm_object::vm_object_type::EMPTY:
+				result = new PrimativeValue();
+				break;
 
-		case vm_object::vm_object_type::STR:
-			result = new PrimativeValue(string_type((char_type*)lastItem.String));
-			break;
-	}
+			case vm_object::vm_object_type::STR:
+				result = new PrimativeValue(string_type((char_type*)lastItem->String));
+				break;
+		}
 
 	if (result != nullptr)
 		console_out << result->Describe() << '\n';
@@ -638,17 +639,53 @@ VmBackend::~VmBackend()
 	delete impl;
 	delete Scope::GlobalScope;
 }
-// data = (123 * 23) + 123 - 2
+
+vm_object* print(vm_system* vm)
+{
+    auto* item = vm->getObject();
+    if (item != nullptr)
+		switch (item->Type) {
+			case vm_object::vm_object_type::BOOL:
+				console_out << item->Bool << '\n';
+				break;
+
+			case vm_object::vm_object_type::INT:
+				console_out << item->Int << '\n';
+				break;
+
+			case vm_object::vm_object_type::DOUBLE:
+				console_out << item->Double << '\n';
+				break;
+
+			case vm_object::vm_object_type::STR:
+				console_out << item->String << '\n';
+				break;
+		}
+    
+    return nullptr;
+}
+
+vm_object* readLine(vm_system* vm)
+{
+    string_type text;
+    std::getline(console_in, text);
+    
+    vm_object* returnValue = new vm_object(text);
+    return returnValue;
+}
+
 VmBackend::VmBackend()
 {
 	impl = new VmBackendImpl;
-	Scope::GlobalScope = new Scope;
+    Scope::GlobalScope = new Scope;
+    this->impl->system.addMethod(_T("io::print"), print);
+    this->impl->system.addMethod(_T("io::readLine"), readLine);
 }
 
 void VmBackend::visit(AssignmentAst* ast)
 {
 	std::unordered_map<string_type, VariableInfo*>* variables = nullptr;
-	if (this->impl->variables->find(ast->Name) != this->impl->variables->end())
+	if (this->impl->inFunctionCounter > 0 || this->impl->variables->find(ast->Name) != this->impl->variables->end())
 		variables = this->impl->variables;
 	else
 		variables = this->impl->globalVariables;
@@ -704,7 +741,7 @@ void VmBackend::visit(AssignmentAst* ast)
     
     
     
-    if (this->impl->variables->find(ast->Name) != this->impl->variables->end())
+    if (this->impl->inFunctionCounter > 0 || this->impl->variables->find(ast->Name) != this->impl->variables->end())
 		this->impl->generateStore(this->opcodes, static_cast<int>((*this->impl->variables)[ast->Name]->Index));
 	else
 		this->impl->generateGlobalStore(this->opcodes, static_cast<int>((*this->impl->globalVariables)[ast->Name]->Index));
@@ -778,7 +815,7 @@ void VmBackend::visit(IfStatementAst* ast)
 
 void VmBackend::visit(FunctionDefinetionAst* ast)
 {
-	//++this->impl->inFunctionCounter;
+	++this->impl->inFunctionCounter;
     this->impl->variablesList.push_back(new std::unordered_map<string_type, VariableInfo*>());
     impl->variables = impl->variablesList[impl->variablesList.size() - 1];
 
@@ -878,13 +915,13 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     this->opcodes[funcDeclPoint + 3] = i.Chars[0];
     
     this->impl->variablesList.erase(impl->variablesList.begin() + (impl->variablesList.size() - 1));
-	//--this->impl->inFunctionCounter;
+	--this->impl->inFunctionCounter;
     delete impl->variables;
 }
 
 void VmBackend::visit(ForStatementAst* ast)
 {
-    //++this->impl->inFunctionCounter;
+    ++this->impl->inFunctionCounter;
     this->impl->variablesList.push_back(new std::unordered_map<string_type, VariableInfo*>());
     impl->variables = impl->variablesList[impl->variablesList.size() - 1];
 
@@ -935,7 +972,7 @@ void VmBackend::visit(ForStatementAst* ast)
     
     
     this->impl->variablesList.erase(impl->variablesList.begin() + (impl->variablesList.size() - 1));
-    //--this->impl->inFunctionCounter;
+    --this->impl->inFunctionCounter;
     delete impl->variables;
 }
 
@@ -1039,6 +1076,7 @@ void VmBackend::visit(PrimativeAst* ast) {
         auto* text = ast->Value->String->c_str();
         vm_int_t i;
         i.Int = ast->Value->String->size();
+        this->opcodes.push_back(vm_inst::OPT_sPUSH);
         this->opcodes.push_back(i.Chars[3]);
         this->opcodes.push_back(i.Chars[2]);
         this->opcodes.push_back(i.Chars[1]);
@@ -1207,30 +1245,50 @@ void VmBackend::visit(FunctionCallAst* ast)
 	}
 
 	auto* function = this->impl->methods[ast->Package + _T("::") + ast->Function];
-	if (function == nullptr)
-		throw ParseError(_T("'") + ast->Function + _T("' Not Found"));
+	if (function != nullptr)
+    {
+        if (function->Args.size() != ast->Args.size())
+            throw ParseError(_T("Argument type matched."));
 
-	if (function->Args.size() != ast->Args.size())
-		throw ParseError(_T("Argument type matched."));
+        size_t totalParameters = ast->Args.size();
+        for (size_t i = totalParameters; i > 0; --i)
+        {
+            Type type = detectType(ast->Args[i - 1]);
+            if (type != function->Args[i - 1])
+                throw ParseError(_T("Argument not type matched."));
 
-	size_t totalParameters = ast->Args.size();
-    for (size_t i = totalParameters; i > 0; --i)
-	{
-		Type type = detectType(ast->Args[i - 1]);
-		if (type != function->Args[i - 1])
-			throw ParseError(_T("Argument not type matched."));
+            getAstItem(ast->Args[i - 1]);
+        }
 
-		getAstItem(ast->Args[i - 1]);
-	}
+        this->opcodes.push_back(vm_inst::OPT_CALL);
+        vm_int_t len;
+        len.Int = static_cast<int>(this->impl->methods[ast->Package + _T("::") + ast->Function]->Index);
+        opcodes.push_back(len.Chars[3]);
+        opcodes.push_back(len.Chars[2]);
+        opcodes.push_back(len.Chars[1]);
+        opcodes.push_back(len.Chars[0]);
+    }
+    else
+    {
+        size_t totalParameters = ast->Args.size();
+        for (size_t i = totalParameters; i > 0; --i)
+        {
+            Type type = detectType(ast->Args[i - 1]);
+            getAstItem(ast->Args[i - 1]);
+        }
+      
+        string_type funcName = ast->Package + _T("::") + ast->Function;
 
-    this->opcodes.push_back(vm_inst::OPT_CALL);
-    vm_int_t len;
-    len.Int = static_cast<int>(this->impl->methods[ast->Package + _T("::") + ast->Function]->Index);
-    opcodes.push_back(len.Chars[3]);
-    opcodes.push_back(len.Chars[2]);
-    opcodes.push_back(len.Chars[1]);
-    opcodes.push_back(len.Chars[0]);
+        this->opcodes.push_back(vm_inst::OPT_INVOKE);
+        vm_int_t len;
+        len.Int = static_cast<int>(funcName.size());
+        opcodes.push_back(len.Chars[0]);
 
+        for (int j = 0; j < len.Int; ++j)
+            opcodes.push_back(funcName[(len.Int - j) - 1]);
+    }
+
+    // throw ParseError(_T("'") + ast->Function + _T("' Not Found"));
 }
 
 void VmBackend::visit(UnaryAst* ast)

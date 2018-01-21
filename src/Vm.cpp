@@ -1,5 +1,6 @@
 #include "Vm.h"
 #include "Console.h"
+#include <unordered_map>
 
 
 #define STORE(index, obj) *(currentStore->variables + index) = obj
@@ -222,7 +223,7 @@ struct Operations {
 class vm_system_impl
 {
 public:
-	vm_system_impl()
+	vm_system_impl(vm_system* pSystem)
 	{
 		const int STORE_SIZE = 1024;
 		currentStack = new vm_object[1024 * 512];
@@ -235,6 +236,8 @@ public:
 		stores[0] = currentStore;
 		storesCount = 0;
 		stackIndex = 0;
+        system = pSystem;
+        methodsEnd = methods.end();
 	}
 
 	~vm_system_impl()
@@ -249,10 +252,13 @@ public:
 	size_t storesCount;
 	vm_store<vm_object>** stores{nullptr};
 	vm_store<vm_object>* currentStore{ nullptr };
-	vm_store<vm_object> globalStore;
+    vm_store<vm_object> globalStore;
+    std::unordered_map<string_type, VmMethod> methods;
+    std::unordered_map<string_type, VmMethod>::iterator methodsEnd;
 
 	vm_object* currentStack{nullptr};
 	size_t stackIndex;
+    vm_system* system {nullptr};
 
 
 	void execute(char* code, size_t len, size_t startIndex)
@@ -582,12 +588,28 @@ public:
 			case vm_inst::OPT_bPUSH:
 				Operations::Push(currentStack, stackIndex, (bool)*++code);
 				break;
+                    
+            case vm_inst::OPT_INVOKE: {
+                vm_int_t integer;
+                integer.Int = 0;
+                StaticAssignment<1>::assign(integer.Chars, code);
+                
+                char * chars = new char[integer.Int + 1];
+                for (int i = integer.Int - 1; i >= 0; i--)
+                    chars[i] = *++code;
+                    
+                chars[integer.Int] = '\0';
+                if (methods.find(chars) != methods.end())
+                    methods[chars](system);
+                else
+                    console_out << _T("ERROR : Method '") << chars << _T("' Not Found\n");
+            }
+                break;
 
 			case vm_inst::OPT_sPUSH: {
 				vm_int_t integer;
 				integer.Int = 0;
 				StaticAssignment<4>::assign(integer.Chars, code);
-				integer.Int;
 
 				char * chars = new char[integer.Int + 1];
 				for (int i = integer.Int - 1; i >= 0; i--)
@@ -691,13 +713,30 @@ public:
                     // console_out << _T(" ") << (bool)*++code;
 					++index;
                     break;
-
+                    
+                case vm_inst::OPT_INVOKE:
+                {
+                    vm_int_t integer;
+                    integer.Int = 0;
+                    StaticAssignment<1>::assign(integer.Chars, code);
+                    index += 1;
+                    index += integer.Int;
+                    
+                    char * chars = new char[integer.Int + 1];
+                    for (int i = integer.Int - 1; i >= 0; i--)
+                        chars[i] = *++code;
+                    
+                    chars[integer.Int] = '\0';
+                    
+                    console_out << _T(" \"") << chars << _T("\"");
+                }
+                    break;
+                    
 				case vm_inst::OPT_sPUSH:
 				{
 					vm_int_t integer;
 					integer.Int = 0;
 					StaticAssignment<4>::assign(integer.Chars, code);
-					integer.Int;
 					index += 4;
 					index += integer.Int;
 
@@ -776,7 +815,7 @@ public:
 
 vm_system::vm_system()
 {
-	this->impl = new vm_system_impl();
+	this->impl = new vm_system_impl(this);
 }
 
 vm_system::~vm_system()
@@ -809,10 +848,16 @@ size_t vm_system::getUInt()
 	return impl->currentStack[impl->stackIndex - 1].Int;
 }
 
-vm_object vm_system::getObject()
+vm_object* vm_system::getObject()
 {
 	if (impl->stackIndex > 0)
-		return impl->currentStack[--impl->stackIndex];
+		return &impl->currentStack[--impl->stackIndex];
 
-	return vm_object();
+	return nullptr;
+}
+
+void vm_system::addMethod(string_type const & name, VmMethod method)
+{
+    this->impl->methods[name] = method;
+    this->impl->methodsEnd = this->impl->methods.end();
 }
