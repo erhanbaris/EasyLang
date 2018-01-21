@@ -152,11 +152,11 @@ public:
 	bool dumpOpcode;
 
 	size_t inClassCounter;
-	size_t inFunctionCounter;
+	//size_t inFunctionCounter;
 
 	VmBackendImpl()
 	{
-		inFunctionCounter = 0;
+		//inFunctionCounter = 0;
 		dumpOpcode = false;
 		globalVariables = new std::unordered_map<string_type, VariableInfo*>();
 		variables = new std::unordered_map<string_type, VariableInfo*>();
@@ -424,17 +424,13 @@ Type VmBackend::detectType(Ast* ast)
 		case EASY_AST_TYPE::VARIABLE:
         {
             auto* var = static_cast<VariableAst*>(ast);
-            std::unordered_map<string_type, VariableInfo*>* variables = nullptr;
-
-            if (this->impl->inFunctionCounter > 0)
-                variables = this->impl->variables;
-            else
-                variables = this->impl->globalVariables;
-
-            if (variables->find(var->Value) == variables->end())
-                throw ParseError(_T("'") + var->Value + _T("' Not Found"));
-
-			return variables->find(var->Value)->second->Type;
+            if (this->impl->variables->find(var->Value) != this->impl->variables->end())
+                return this->impl->variables->find(var->Value)->second->Type;
+            
+            if (this->impl->globalVariables->find(var->Value) != this->impl->globalVariables->end())
+                return this->impl->globalVariables->find(var->Value)->second->Type;
+            
+            throw ParseError(_T("'") + var->Value + _T("' Not Found"));
         }
 			break;
 
@@ -652,7 +648,7 @@ VmBackend::VmBackend()
 void VmBackend::visit(AssignmentAst* ast)
 {
 	std::unordered_map<string_type, VariableInfo*>* variables = nullptr;
-	if (this->impl->inFunctionCounter > 0)
+	if (this->impl->variables->find(ast->Name) != this->impl->variables->end())
 		variables = this->impl->variables;
 	else
 		variables = this->impl->globalVariables;
@@ -705,7 +701,10 @@ void VmBackend::visit(AssignmentAst* ast)
 
 
 	this->getAstItem(ast->Data);
-	if (this->impl->inFunctionCounter > 0)
+    
+    
+    
+    if (this->impl->variables->find(ast->Name) != this->impl->variables->end())
 		this->impl->generateStore(this->opcodes, static_cast<int>((*this->impl->variables)[ast->Name]->Index));
 	else
 		this->impl->generateGlobalStore(this->opcodes, static_cast<int>((*this->impl->globalVariables)[ast->Name]->Index));
@@ -779,7 +778,7 @@ void VmBackend::visit(IfStatementAst* ast)
 
 void VmBackend::visit(FunctionDefinetionAst* ast)
 {
-	++this->impl->inFunctionCounter;
+	//++this->impl->inFunctionCounter;
     this->impl->variablesList.push_back(new std::unordered_map<string_type, VariableInfo*>());
     impl->variables = impl->variablesList[impl->variablesList.size() - 1];
 
@@ -879,41 +878,81 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     this->opcodes[funcDeclPoint + 3] = i.Chars[0];
     
     this->impl->variablesList.erase(impl->variablesList.begin() + (impl->variablesList.size() - 1));
-	--this->impl->inFunctionCounter;
+	//--this->impl->inFunctionCounter;
     delete impl->variables;
 }
 
 void VmBackend::visit(ForStatementAst* ast)
 {
-    ++this->impl->inFunctionCounter;
+    //++this->impl->inFunctionCounter;
     this->impl->variablesList.push_back(new std::unordered_map<string_type, VariableInfo*>());
     impl->variables = impl->variablesList[impl->variablesList.size() - 1];
+
+    auto* varInfo = new VariableInfo;
+    varInfo->Index = impl->variables->size();
+    varInfo->Name = ast->Variable;
+    varInfo->Type = Type::INT;
+    
+    (*impl->variables)[ast->Variable] = varInfo;
+
+    this->getAstItem(ast->Start);
+    this->opcodes.push_back(vm_inst::OPT_STORE_0);
+    
+    size_t forPoint = this->opcodes.size();
+    this->opcodes.push_back(vm_inst::OPT_LOAD_0);
+    this->getAstItem(ast->End);
+    this->opcodes.push_back(vm_inst::OPT_LTE);
+   
+    this->opcodes.push_back(vm_inst::OPT_JIF);
+    size_t funcDeclPoint = this->opcodes.size();
+    this->opcodes.push_back(0);
+    this->opcodes.push_back(0);
+    this->opcodes.push_back(0);
+    this->opcodes.push_back(0);
+    
+    this->getAstItem(ast->Repeat);
+    
+    this->opcodes.push_back(vm_inst::OPT_LOAD_0);
+    this->opcodes.push_back(vm_inst::OPT_INC);
+    this->opcodes.push_back(vm_inst::OPT_STORE_0);
+    
+    
+    this->opcodes.push_back(vm_inst::OPT_JMP);
+    vm_int_t i;
+    i.Int = forPoint;
+    
+    this->opcodes.push_back(i.Chars[3]);
+    this->opcodes.push_back(i.Chars[2]);
+    this->opcodes.push_back(i.Chars[1]);
+    this->opcodes.push_back(i.Chars[0]);
+    
+    i.Int = this->opcodes.size();
+    this->opcodes[funcDeclPoint] = i.Chars[3];
+    this->opcodes[funcDeclPoint + 1] = i.Chars[2];
+    this->opcodes[funcDeclPoint + 2] = i.Chars[1];
+    this->opcodes[funcDeclPoint + 3] = i.Chars[0];
     
     
     
     this->impl->variablesList.erase(impl->variablesList.begin() + (impl->variablesList.size() - 1));
-    --this->impl->inFunctionCounter;
+    //--this->impl->inFunctionCounter;
     delete impl->variables;
 }
 
 void VmBackend::visit(VariableAst* ast)
 {
-    if (this->impl->inFunctionCounter > 0 && this->impl->variables->find(ast->Value) == this->impl->variables->end())
-        throw ParseError(ast->Value + _T(" Not Found"));
-
-	if (this->impl->inFunctionCounter == 0 && this->impl->globalVariables->find(ast->Value) == this->impl->globalVariables->end())
-		throw ParseError(ast->Value + _T(" Not Found"));
-
-	if (this->impl->inFunctionCounter == 0)
+	if (this->impl->globalVariables->find(ast->Value) != this->impl->globalVariables->end())
 	{
 		size_t index = (*this->impl->globalVariables)[ast->Value]->Index;
 		this->impl->generateGlobalLoad(this->opcodes, index);
 	}
-	else
+	else if (this->impl->variables->find(ast->Value) != this->impl->variables->end())
 	{
 		size_t index = (*this->impl->variables)[ast->Value]->Index;
 		this->impl->generateLoad(this->opcodes, index);
 	}
+    else
+        throw ParseError(ast->Value + _T(" Not Found"));
 }
 
 void VmBackend::visit(PrimativeAst* ast) {
@@ -1166,13 +1205,6 @@ void VmBackend::visit(FunctionCallAst* ast)
 		impl->system.dumpStack();
 		return;
 	}
-    
-    std::unordered_map<string_type, VariableInfo*>* variables = nullptr;
-
-	if (this->impl->inFunctionCounter > 0)
-		variables = this->impl->variables;
-	else
-		variables = this->impl->globalVariables;
 
 	auto* function = this->impl->methods[ast->Package + _T("::") + ast->Function];
 	if (function == nullptr)
