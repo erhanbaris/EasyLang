@@ -685,10 +685,10 @@ VmBackend::VmBackend()
 void VmBackend::visit(AssignmentAst* ast)
 {
 	std::unordered_map<string_type, VariableInfo*>* variables = nullptr;
-	if (this->impl->inFunctionCounter > 0 || this->impl->variables->find(ast->Name) != this->impl->variables->end())
-		variables = this->impl->variables;
+	if (this->impl->inFunctionCounter == 0 || this->impl->globalVariables->find(ast->Name) != this->impl->globalVariables->end())
+		variables = this->impl->globalVariables; 
 	else
-		variables = this->impl->globalVariables;
+		variables = this->impl->variables;
 
 	if (variables->find(ast->Name) == variables->end())
 	{
@@ -741,10 +741,10 @@ void VmBackend::visit(AssignmentAst* ast)
     
     
     
-    if (this->impl->inFunctionCounter > 0 || this->impl->variables->find(ast->Name) != this->impl->variables->end())
-		this->impl->generateStore(this->opcodes, static_cast<int>((*this->impl->variables)[ast->Name]->Index));
+    if (this->impl->inFunctionCounter == 0 || this->impl->globalVariables->find(ast->Name) != this->impl->globalVariables->end())
+		this->impl->generateGlobalStore(this->opcodes, static_cast<int>((*this->impl->globalVariables)[ast->Name]->Index)); 
 	else
-		this->impl->generateGlobalStore(this->opcodes, static_cast<int>((*this->impl->globalVariables)[ast->Name]->Index));
+		this->impl->generateStore(this->opcodes, static_cast<int>((*this->impl->variables)[ast->Name]->Index));
 }
 
 void VmBackend::visit(BlockAst* ast)
@@ -825,6 +825,19 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     this->opcodes.push_back(0);
     this->opcodes.push_back(0);
     this->opcodes.push_back(0);
+
+	this->opcodes.push_back(vm_inst::OPT_METHOD);
+	
+	auto* functionName = ast->Name.c_str();
+	vm_int_t i;
+	i.Int = ast->Name.size();
+	this->opcodes.push_back(i.Chars[3]);
+	this->opcodes.push_back(i.Chars[2]);
+	this->opcodes.push_back(i.Chars[1]);
+	this->opcodes.push_back(i.Chars[0]);
+
+	for (int j = 0; j < i.Int; ++j)
+		opcodes.push_back(functionName[(i.Int - j) - 1]);
 
 	if (this->impl->methods.find(_T("::") + ast->Name) != this->impl->methods.end())
 	{
@@ -907,7 +920,6 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 
     ast->Body->accept(this);
     
-    vm_int_t i;
     i.Int = this->opcodes.size();
     this->opcodes[funcDeclPoint] = i.Chars[3];
     this->opcodes[funcDeclPoint + 1] = i.Chars[2];

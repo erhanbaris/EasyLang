@@ -237,7 +237,7 @@ public:
 		storesCount = 0;
 		stackIndex = 0;
         system = pSystem;
-        methodsEnd = methods.end();
+		nativeMethodsEnd = nativeMethods.end();
 	}
 
 	~vm_system_impl()
@@ -253,8 +253,10 @@ public:
 	vm_store<vm_object>** stores{nullptr};
 	vm_store<vm_object>* currentStore{ nullptr };
     vm_store<vm_object> globalStore;
-    std::unordered_map<string_type, VmMethod> methods;
-    std::unordered_map<string_type, VmMethod>::iterator methodsEnd;
+    std::unordered_map<string_type, VmMethod> nativeMethods;
+    std::unordered_map<string_type, VmMethod>::iterator nativeMethodsEnd;
+	std::unordered_map<string_type, size_t> methods;
+	std::unordered_map<string_type, size_t>::iterator methodsEnd;
 
 	vm_object* currentStack{nullptr};
 	size_t stackIndex;
@@ -342,6 +344,15 @@ public:
 				StaticAssignment<4>::assign(integer.Chars, code);
 
 				code = startPoint + (integer.Int - 1);
+			}
+				break;
+
+			case vm_inst::OPT_METHOD:
+			{
+				vm_int_t integer;
+				integer.Int = 0;
+				StaticAssignment<4>::assign(integer.Chars, code);
+				methods[integer.Chars] = startPoint - code;
 			}
 				break;
 
@@ -599,8 +610,8 @@ public:
                     chars[i] = *++code;
                     
                 chars[integer.Int] = '\0';
-                if (methods.find(chars) != methods.end())
-                    methods[chars](system);
+                if (nativeMethods.find(chars) != nativeMethodsEnd)
+					nativeMethods[chars](system);
                 else
                     console_out << _T("ERROR : Method '") << chars << _T("' Not Found\n");
             }
@@ -732,6 +743,24 @@ public:
                 }
                     break;
                     
+				case vm_inst::OPT_METHOD:
+				{
+					vm_int_t integer;
+					integer.Int = 0;
+					StaticAssignment<4>::assign(integer.Chars, code);
+					index += 4;
+					index += integer.Int;
+
+					char * chars = new char[integer.Int + 1];
+					for (int i = integer.Int - 1; i >= 0; i--)
+						chars[i] = *++code;
+
+					chars[integer.Int] = '\0';
+
+					console_out << _T(" \"") << chars << _T("\"");
+				}
+					break;
+
 				case vm_inst::OPT_sPUSH:
 				{
 					vm_int_t integer;
@@ -858,6 +887,6 @@ vm_object* vm_system::getObject()
 
 void vm_system::addMethod(string_type const & name, VmMethod method)
 {
-    this->impl->methods[name] = method;
-    this->impl->methodsEnd = this->impl->methods.end();
+    this->impl->nativeMethods[name] = method;
+    this->impl->nativeMethodsEnd = this->impl->nativeMethods.end();
 }
