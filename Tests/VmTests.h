@@ -23,7 +23,8 @@ using namespace std::chrono;
 TEST_CASE("VM Fibonacci tests 2") {
 	auto* engine = new VmEasyEngine;
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
-	auto* result = engine->Execute(_T("func fibonacci(num:int):int { if num <= 1 then return num left = fibonacci(num - 1) right = fibonacci(num - 2) return left + right } fibonacci(25)"));
+	engine->Execute(_T("func fibonacci(num:int):int { if num <= 1 then return num left = fibonacci(num - 1) right = fibonacci(num - 2) return left + right }"));
+	auto* result = engine->Execute(_T("fibonacci(25)"));
 
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 	duration<double> time_span = duration_cast<duration<double>>(t2 - t1);

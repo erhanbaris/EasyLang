@@ -343,7 +343,7 @@ public:
 				integer.Int = 0;
 				StaticAssignment<4>::assign(integer.Chars, code);
 
-				code = startPoint + (integer.Int - 1);
+				code += integer.Int;
 			}
 				break;
 
@@ -364,7 +364,7 @@ public:
 				{
 					vm_int_t integer;
 					StaticAssignment<4>::assign(integer.Chars, code);
-					code = startPoint + (integer.Int - 1);
+					code += integer.Int;
 				}
 			}
 			break;
@@ -377,7 +377,7 @@ public:
 				{
 					vm_int_t integer;
 					StaticAssignment<4>::assign(integer.Chars, code);
-					code = startPoint + (integer.Int - 1);
+					code += integer.Int;
 				}
 			}
 			break;
@@ -389,7 +389,7 @@ public:
 					vm_int_t integer;
 					integer.Int = 0;
 					StaticAssignment<4>::assign(integer.Chars, code);
-					code = startPoint + (integer.Int - 1);
+					code += integer.Int;
 				}
 				else
 					code += 4;
@@ -515,7 +515,7 @@ public:
 				integer.Int = 0;
 				StaticAssignment<4>::assign(integer.Chars, code);
                 currentStore->startAddress = (code - startPoint);
-				code = startPoint + (integer.Int - 1);
+				code += integer.Int;
 			}
 			break;
 

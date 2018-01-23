@@ -795,9 +795,9 @@ void VmBackend::visit(IfStatementAst* ast)
         this->opcodes.push_back(0);
         
         jumpPoint = this->opcodes.size();
-		this->getAstItem(ast->False) - 1;
+		this->getAstItem(ast->False);
 
-		i.Int = this->opcodes.size();
+		i.Int = this->opcodes.size() - (elsePoint + 4);
 		this->opcodes[elsePoint] = i.Chars[3];
 		this->opcodes[elsePoint + 1] = i.Chars[2];
 		this->opcodes[elsePoint + 2] = i.Chars[1];
@@ -806,7 +806,7 @@ void VmBackend::visit(IfStatementAst* ast)
     else
         jumpPoint = this->opcodes.size();
     
-    i.Int = jumpPoint;
+    i.Int = jumpPoint - (ifPoint + 4);
     this->opcodes[ifPoint] = i.Chars[3];
     this->opcodes[ifPoint + 1] = i.Chars[2];
     this->opcodes[ifPoint + 2] = i.Chars[1];
@@ -818,9 +818,9 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 	++this->impl->inFunctionCounter;
     this->impl->variablesList.push_back(new std::unordered_map<string_type, VariableInfo*>());
     impl->variables = impl->variablesList[impl->variablesList.size() - 1];
-
+	
+	size_t funcDeclPoint = this->opcodes.size();
     this->opcodes.push_back(vm_inst::OPT_JMP);
-    size_t funcDeclPoint = this->opcodes.size();
     this->opcodes.push_back(0);
     this->opcodes.push_back(0);
     this->opcodes.push_back(0);
@@ -920,11 +920,11 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 
     ast->Body->accept(this);
     
-    i.Int = this->opcodes.size();
-    this->opcodes[funcDeclPoint] = i.Chars[3];
-    this->opcodes[funcDeclPoint + 1] = i.Chars[2];
-    this->opcodes[funcDeclPoint + 2] = i.Chars[1];
-    this->opcodes[funcDeclPoint + 3] = i.Chars[0];
+    i.Int = this->opcodes.size() - (funcDeclPoint + 1);
+    this->opcodes[funcDeclPoint + 1] = i.Chars[3];
+    this->opcodes[funcDeclPoint + 2] = i.Chars[2];
+    this->opcodes[funcDeclPoint + 3] = i.Chars[1];
+    this->opcodes[funcDeclPoint + 4] = i.Chars[0];
     
     this->impl->variablesList.erase(impl->variablesList.begin() + (impl->variablesList.size() - 1));
 	--this->impl->inFunctionCounter;
@@ -968,14 +968,14 @@ void VmBackend::visit(ForStatementAst* ast)
     
     this->opcodes.push_back(vm_inst::OPT_JMP);
     vm_int_t i;
-    i.Int = forPoint;
+    i.Int = forPoint - (this->opcodes.size() + 4);
     
     this->opcodes.push_back(i.Chars[3]);
     this->opcodes.push_back(i.Chars[2]);
     this->opcodes.push_back(i.Chars[1]);
     this->opcodes.push_back(i.Chars[0]);
     
-    i.Int = this->opcodes.size();
+    i.Int = this->opcodes.size() - (funcDeclPoint + 4);
     this->opcodes[funcDeclPoint] = i.Chars[3];
     this->opcodes[funcDeclPoint + 1] = i.Chars[2];
     this->opcodes[funcDeclPoint + 2] = i.Chars[1];
@@ -1274,7 +1274,7 @@ void VmBackend::visit(FunctionCallAst* ast)
 
         this->opcodes.push_back(vm_inst::OPT_CALL);
         vm_int_t len;
-        len.Int = static_cast<int>(this->impl->methods[ast->Package + _T("::") + ast->Function]->Index);
+        len.Int = static_cast<int>(this->impl->methods[ast->Package + _T("::") + ast->Function]->Index) - (this->opcodes.size() + 4);
         opcodes.push_back(len.Chars[3]);
         opcodes.push_back(len.Chars[2]);
         opcodes.push_back(len.Chars[1]);
