@@ -812,7 +812,7 @@ public:
 
 			case vm_object::vm_object_type::STR:
 				console_out << _T(" STR: ");
-				console_out << string_type(item.String);
+				console_out << string_type(static_cast<char*>(item.Pointer));
 				break;
 
 			default:

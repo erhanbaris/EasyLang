@@ -614,7 +614,7 @@ PrimativeValue* VmBackend::Execute()
 				break;
 
 			case vm_object::vm_object_type::STR:
-				result = new PrimativeValue(string_type((char_type*)lastItem->String));
+				result = new PrimativeValue(string_type(static_cast<char*>(lastItem->Pointer)));
 				break;
 		}
 
@@ -658,7 +658,7 @@ vm_object* print(vm_system* vm)
 				break;
 
 			case vm_object::vm_object_type::STR:
-				console_out << item->String << '\n';
+				console_out << static_cast<char*>(item->Pointer) << '\n';
 				break;
 		}
     

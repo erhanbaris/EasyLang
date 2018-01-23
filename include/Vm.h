@@ -38,6 +38,8 @@ public:
 		DOUBLE,
 		BOOL,
 		STR,
+        ARRAY,
+        DICT,
 		NATIVE_CALL,
 		CALL
 	};
@@ -67,14 +69,14 @@ public:
     
     vm_object(char* b)
     {
-        String = b;
+        Pointer = b;
         Type = vm_object_type::STR;
     }
     
     vm_object(string_type const & b)
     {
-        String = new char[b.size()];
-        memcpy(String, b.c_str(), b.size());
+        Pointer = new char[b.size()];
+        memcpy(Pointer, b.c_str(), b.size());
         Type = vm_object_type::STR;
     }
 
@@ -97,7 +99,7 @@ public:
 	}
 
 	vm_object& operator=(char* right) {
-		String = right;
+		Pointer = right;
 		Type = vm_object_type::STR;
 		return *this;
 	}
@@ -123,9 +125,15 @@ public:
 		bool Bool;
 		int Int;
 		double Double;
-		char* String{nullptr};
+		void* Pointer{nullptr};
 		VmMethodCallback Method;
 	};
+};
+
+class vm_array{
+public:
+    size_t Length{0};
+    void* Array {nullptr};
 };
 
 DECLARE_ENUM(vm_inst,
