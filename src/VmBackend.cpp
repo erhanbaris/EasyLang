@@ -613,6 +613,10 @@ PrimativeValue* VmBackend::Execute()
 				result = new PrimativeValue();
 				break;
 
+			case vm_object::vm_object_type::ARRAY:
+				console_out << _T("(ARRAY) Size: ") << static_cast<vm_array*>(lastItem->Pointer)->Indicator << '\n';
+				break;
+
 			case vm_object::vm_object_type::STR:
 				result = new PrimativeValue(string_type(static_cast<char*>(lastItem->Pointer)));
 				break;
@@ -1004,110 +1008,124 @@ void VmBackend::visit(VariableAst* ast)
         throw ParseError(ast->Value + _T(" Not Found"));
 }
 
-void VmBackend::visit(PrimativeAst* ast) {
-	switch (ast->Value->Type)
+void VmBackend::visit(PrimativeValue* value) {
+	switch (value->Type)
 	{
-        case PrimativeValue::Type::PRI_DOUBLE:
-        {
-            if (ast->Value->Double == 0.0)
-                this->opcodes.push_back(vm_inst::OPT_dPUSH_0);
-            else if (ast->Value->Double == 1.0)
-                this->opcodes.push_back(vm_inst::OPT_dPUSH_1);
-            else if (ast->Value->Double == 2.0)
-                this->opcodes.push_back(vm_inst::OPT_dPUSH_2);
-            else if (ast->Value->Double == 3.0)
-                this->opcodes.push_back(vm_inst::OPT_dPUSH_3);
-            else if (ast->Value->Double == 4.0)
-                this->opcodes.push_back(vm_inst::OPT_dPUSH_4);
-            else
-            {
-                vm_double_t i;
-                i.Double = ast->Value->Double;
-                this->opcodes.push_back(vm_inst::OPT_dPUSH);
-                this->opcodes.push_back(i.Chars[7]);
-                this->opcodes.push_back(i.Chars[6]);
-                this->opcodes.push_back(i.Chars[5]);
-                this->opcodes.push_back(i.Chars[4]);
-                this->opcodes.push_back(i.Chars[3]);
-                this->opcodes.push_back(i.Chars[2]);
-                this->opcodes.push_back(i.Chars[1]);
-            }
-        }
-            break;
+	case PrimativeValue::Type::PRI_ARRAY:
+	{
+		this->opcodes.push_back(vm_inst::OPT_INITARRAY);
+		if (value != nullptr)
+		{
+			size_t arrayLength = value->Array->size();
+			for (size_t i = 0; i < arrayLength; ++i)
+			{
+				visit(value->Array->at(i));
+				this->opcodes.push_back(vm_inst::OPT_aPUSH);
+			}
+		}
+	}
+	break;
 
-        case PrimativeValue::Type::PRI_BOOL:
-            switch (ast->Value->Bool)
-            {
-                case true:
-                    this->opcodes.push_back(vm_inst::OPT_bPUSH_1);
-                    break;
+	case PrimativeValue::Type::PRI_DOUBLE:
+	{
+		if (value->Double == 0.0)
+			this->opcodes.push_back(vm_inst::OPT_dPUSH_0);
+		else if (value->Double == 1.0)
+			this->opcodes.push_back(vm_inst::OPT_dPUSH_1);
+		else if (value->Double == 2.0)
+			this->opcodes.push_back(vm_inst::OPT_dPUSH_2);
+		else if (value->Double == 3.0)
+			this->opcodes.push_back(vm_inst::OPT_dPUSH_3);
+		else if (value->Double == 4.0)
+			this->opcodes.push_back(vm_inst::OPT_dPUSH_4);
+		else
+		{
+			vm_double_t i;
+			i.Double = value->Double;
+			this->opcodes.push_back(vm_inst::OPT_dPUSH);
+			this->opcodes.push_back(i.Chars[7]);
+			this->opcodes.push_back(i.Chars[6]);
+			this->opcodes.push_back(i.Chars[5]);
+			this->opcodes.push_back(i.Chars[4]);
+			this->opcodes.push_back(i.Chars[3]);
+			this->opcodes.push_back(i.Chars[2]);
+			this->opcodes.push_back(i.Chars[1]);
+		}
+	}
+	break;
 
-                case false:
-                    this->opcodes.push_back(vm_inst::OPT_bPUSH_0);
-                    break;
-            }
-            break;
+	case PrimativeValue::Type::PRI_BOOL:
+		switch (value->Bool)
+		{
+		case true:
+			this->opcodes.push_back(vm_inst::OPT_bPUSH_1);
+			break;
+
+		case false:
+			this->opcodes.push_back(vm_inst::OPT_bPUSH_0);
+			break;
+		}
+		break;
 
 	case PrimativeValue::Type::PRI_INTEGER:
-            switch (ast->Value->Integer)
-            {
-                case 0:
-                    this->opcodes.push_back(vm_inst::OPT_iPUSH_0);
-                    break;
+		switch (value->Integer)
+		{
+		case 0:
+			this->opcodes.push_back(vm_inst::OPT_iPUSH_0);
+			break;
 
-                case 1:
-                    this->opcodes.push_back(vm_inst::OPT_iPUSH_1);
-                    break;
+		case 1:
+			this->opcodes.push_back(vm_inst::OPT_iPUSH_1);
+			break;
 
-                case 2:
-                    this->opcodes.push_back(vm_inst::OPT_iPUSH_2);
-                    break;
+		case 2:
+			this->opcodes.push_back(vm_inst::OPT_iPUSH_2);
+			break;
 
-                case 3:
-                    this->opcodes.push_back(vm_inst::OPT_iPUSH_3);
-                    break;
+		case 3:
+			this->opcodes.push_back(vm_inst::OPT_iPUSH_3);
+			break;
 
-                case 4:
-                    this->opcodes.push_back(vm_inst::OPT_iPUSH_4);
-                    break;
+		case 4:
+			this->opcodes.push_back(vm_inst::OPT_iPUSH_4);
+			break;
 
-                default:
-                    this->opcodes.push_back(vm_inst::OPT_iPUSH);
-                    vm_int_t i;
-                    i.Int = ast->Value->Integer;
-                    this->opcodes.push_back(i.Chars[3]);
-                    this->opcodes.push_back(i.Chars[2]);
-                    this->opcodes.push_back(i.Chars[1]);
-                    this->opcodes.push_back(i.Chars[0]);
-                    break;
-            }
+		default:
+			this->opcodes.push_back(vm_inst::OPT_iPUSH);
+			vm_int_t i;
+			i.Int = value->Integer;
+			this->opcodes.push_back(i.Chars[3]);
+			this->opcodes.push_back(i.Chars[2]);
+			this->opcodes.push_back(i.Chars[1]);
+			this->opcodes.push_back(i.Chars[0]);
+			break;
+		}
 		break;
 
 	case PrimativeValue::Type::PRI_STRING:
-    {
-        auto* text = ast->Value->String->c_str();
-        vm_int_t i;
-        i.Int = ast->Value->String->size();
-        this->opcodes.push_back(vm_inst::OPT_sPUSH);
-        this->opcodes.push_back(i.Chars[3]);
-        this->opcodes.push_back(i.Chars[2]);
-        this->opcodes.push_back(i.Chars[1]);
-        this->opcodes.push_back(i.Chars[0]);
-        
-        for (int j = 0; j < i.Int; ++j)
-            opcodes.push_back(text[(i.Int - j) - 1]);
-    }
-		break;
+	{
+		auto* text = value->String->c_str();
+		vm_int_t i;
+		i.Int = value->String->size();
+		this->opcodes.push_back(vm_inst::OPT_sPUSH);
+		this->opcodes.push_back(i.Chars[3]);
+		this->opcodes.push_back(i.Chars[2]);
+		this->opcodes.push_back(i.Chars[1]);
+		this->opcodes.push_back(i.Chars[0]);
+
+		for (int j = 0; j < i.Int; ++j)
+			opcodes.push_back(text[(i.Int - j) - 1]);
+	}
+	break;
 
 
 	default:
 		break;
 	}
+}
 
-    /*if (this->opcodes[this->opcodes.size() - 1]->Opt != nullptr) {
-		this->impl->opCodeIndex += this->opcodes[this->opcodes.size() - 1]->Opt->Size();
-		console_out << _T("OPCODE : ") << this->impl->opCodeIndex << _T(" ") << __LINE__ << '\n';
-	}*/
+void VmBackend::visit(PrimativeAst* ast) {
+	this->visit(ast->Value);
 }
 
 void VmBackend::visit(ControlAst* ast)
@@ -1168,11 +1186,41 @@ void VmBackend::visit(BinaryAst* ast)
 	switch (ast->Op)
 	{
 		case PLUS:
-			this->opcodes.push_back(vm_inst::OPT_iADD);
+		{
+			switch (binaryResultType)
+			{
+			case Type::INT:
+				this->opcodes.push_back(vm_inst::OPT_iADD);
+				break;
+
+			case Type::DOUBLE:
+				this->opcodes.push_back(vm_inst::OPT_dADD);
+				break;
+
+			case Type::BOOL:
+				this->opcodes.push_back(vm_inst::OPT_bADD);
+				break;
+			}
+		}
 			break;
 
 		case MINUS:
-			this->opcodes.push_back(vm_inst::OPT_iSUB);
+		{
+			switch (binaryResultType)
+			{
+			case Type::INT:
+				this->opcodes.push_back(vm_inst::OPT_iSUB);
+				break;
+
+			case Type::DOUBLE:
+				this->opcodes.push_back(vm_inst::OPT_dSUB);
+				break;
+
+			case Type::BOOL:
+				this->opcodes.push_back(vm_inst::OPT_bSUB);
+				break;
+			}
+		}
 			break;
 
 		case MULTIPLICATION:
@@ -1187,38 +1235,54 @@ void VmBackend::visit(BinaryAst* ast)
 					this->opcodes.push_back(vm_inst::OPT_dMUL);
 					break;
 
-				case Type::STRING:
-					break;
-
 				case Type::BOOL:
-					this->opcodes.push_back(vm_inst::OPT_AND);
-					break;
-
-				default:
+					this->opcodes.push_back(vm_inst::OPT_bMUL);
 					break;
 			}
 		}
 			break;
 
 		case DIVISION:
-			this->opcodes.push_back(vm_inst::OPT_iDIV);
-			break;
+		{
+			switch (binaryResultType)
+			{
+			case Type::INT:
+				this->opcodes.push_back(vm_inst::OPT_iDIV);
+				break;
 
-		case ASSIGN:
-			break;
+			case Type::DOUBLE:
+				this->opcodes.push_back(vm_inst::OPT_dDIV);
+				break;
 
-		case APPEND:
-			break;
-
-		case INDEXER:
-			break;
-
-		default:
+			case Type::BOOL:
+				this->opcodes.push_back(vm_inst::OPT_bDIV);
+				break;
+			}
+		}
 			break;
 	}
 }
 
-void VmBackend::visit(StructAst* ast) { }
+void VmBackend::visit(StructAst* ast) 
+{
+	getAstItem(ast->Target);
+	getAstItem(ast->Source1);
+
+	switch (ast->Op)
+	{
+	case APPEND:
+		this->opcodes.push_back(vm_inst::OPT_aPUSH);
+		break;
+
+	case INDEXER:
+		this->opcodes.push_back(vm_inst::OPT_aGET);
+		break;
+
+	default:
+		break;
+	}
+}
+
 void VmBackend::visit(ReturnAst* ast)
 {
 	if (ast->Data != nullptr)

@@ -15,6 +15,7 @@ public:
     }
 };
 
+class vm_array;
 class vm_object;
 class vm_system;
 class vm_system_impl;
@@ -72,13 +73,19 @@ public:
         Pointer = b;
         Type = vm_object_type::STR;
     }
-    
-    vm_object(string_type const & b)
-    {
-        Pointer = new char[b.size()];
-        memcpy(Pointer, b.c_str(), b.size());
-        Type = vm_object_type::STR;
-    }
+
+	vm_object(string_type const & b)
+	{
+		Pointer = new char[b.size()];
+		memcpy(Pointer, b.c_str(), b.size());
+		Type = vm_object_type::STR;
+	}
+
+	vm_object(vm_array const * array)
+	{
+		Pointer = const_cast<void*>((void*)array);
+		Type = vm_object_type::ARRAY;
+	}
 
 	vm_object& operator=(int right) {
 		Int = right;
@@ -114,10 +121,15 @@ public:
         return Double;
     }
 
-    operator bool()
-    {
-        return Bool;
-    }
+	operator bool()
+	{
+		return Bool;
+	}
+
+	operator vm_array*()
+	{
+		return static_cast<vm_array*>(Pointer);
+	}
 
 	vm_object_type Type;
 
@@ -132,8 +144,46 @@ public:
 
 class vm_array{
 public:
-    size_t Length{0};
-    void* Array {nullptr};
+	mutable size_t Length{16};
+	mutable size_t Indicator{0};
+	mutable vm_object* Array {nullptr};
+
+	void push(vm_object && obj)
+	{
+		Array[Indicator++] = std::move(obj);
+		if (Indicator == Length)
+			resizeTo(Length * 2);
+	}
+
+	void push(vm_object & obj)
+	{
+		Array[Indicator++] = obj;
+		if (Indicator == Length)
+			resizeTo(Length * 2);
+	}
+
+	vm_object* get(size_t index) const
+	{
+		return &Array[index];
+	}
+
+	void resizeTo(size_t newSize) const
+	{
+		auto* tmpNewArray = new vm_object[newSize];
+		memcpy(tmpNewArray, Array, Length);
+		Length = newSize;
+	}
+
+	vm_array()
+	{
+		Array = new vm_object[Length];
+	}
+	
+	~vm_array()
+	{
+		/*if (Array != nullptr)
+			delete[] Array;*/
+	}
 };
 
 DECLARE_ENUM(vm_inst,
@@ -230,7 +280,17 @@ OPT_dPUSH_4,
 OPT_bPUSH_0,
 OPT_bPUSH_1,
 OPT_INVOKE,
-OPT_METHOD
+OPT_METHOD,
+OPT_INITARRAY,
+OPT_INITDICT,
+OPT_aPUSH,
+OPT_diPUSH,
+OPT_bADD,
+OPT_bSUB,
+OPT_bDIV,
+OPT_bMUL,
+OPT_aGET,
+OPT_diGET
 )
 
 

@@ -254,6 +254,8 @@ public:
 	ExprAst* Source2{ nullptr };
 	EASY_OPERATOR_TYPE Op;
     StructAst() : Target(nullptr), Source1(nullptr), Source2(nullptr) { Type = EASY_AST_TYPE::STRUCT_OPERATION; Op = EASY_OPERATOR_TYPE::OPERATOR_NONE; }
+	StructAst(ExprAst* target, EASY_OPERATOR_TYPE opt, ExprAst* source1) : Source2(nullptr) { Type = EASY_AST_TYPE::STRUCT_OPERATION; Op = opt; Target = target; Source1 = source1; }
+	StructAst(ExprAst* target, EASY_OPERATOR_TYPE opt, ExprAst* source1, ExprAst* source2) : Source2(nullptr) { Type = EASY_AST_TYPE::STRUCT_OPERATION; Op = opt; Target = target; Source1 = source1; Source2 = source2; }
     string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(ExprVisitor<void>* visitor) override { visitor->visit(this); }
 	

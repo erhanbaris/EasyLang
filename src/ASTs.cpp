@@ -477,10 +477,19 @@ public:
             EASY_OPERATOR_TYPE opt = static_cast<OperatorToken*>(previous())->Value;
             ExprAst* value = orExpr();
             if (expr->GetType() == EASY_AST_TYPE::VARIABLE)
-                return new BinaryAst(expr, opt, value);
+                return new StructAst(expr, opt, value);
             
             throw ParseError(_T("Invalid append"));
         }
+		else if (match({ EASY_OPERATOR_TYPE::INDEXER }))
+		{
+			EASY_OPERATOR_TYPE opt = static_cast<OperatorToken*>(previous())->Value;
+			ExprAst* value = orExpr();
+			if (expr->GetType() == EASY_AST_TYPE::VARIABLE)
+				return new StructAst(expr, opt, value);
+
+			throw ParseError(_T("Invalid append"));
+		}
         
 
 		return expr;

@@ -68,6 +68,8 @@ public:
 	void visit(UnaryAst* ast) override;
 	void visit(ExprStatementAst* ast) override;
 
+	void visit(PrimativeValue* ast);
+
 private:
 	std::vector<char> opcodes;
 	std::vector<Ast*> asts;

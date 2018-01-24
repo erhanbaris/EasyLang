@@ -356,6 +356,28 @@ public:
 			}
 				break;
 
+			case vm_inst::OPT_INITARRAY:
+			{
+				Operations::Push(currentStack, stackIndex, new vm_array);
+			}
+			break;
+
+			case vm_inst::OPT_aPUSH:
+			{
+				vm_object& data = Operations::Pop(currentStack, stackIndex);
+				vm_array* array = Operations::Peek<vm_array*>(currentStack, stackIndex);
+				array->push(data);
+			}
+			break;
+
+			case vm_inst::OPT_aGET:
+			{
+				vm_object& data = Operations::Pop(currentStack, stackIndex);
+				vm_array* array = Operations::Peek<vm_array*>(currentStack, stackIndex);
+				Operations::Push(currentStack, stackIndex, array->Array[data.Int]);
+			}
+			break;
+			
 			case vm_inst::OPT_JIF:
 			{
 				if (Operations::PopAs<bool>(currentStack, stackIndex))
