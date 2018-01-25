@@ -11,9 +11,53 @@
 
 #define PEEK() (currentStack[stackIndex - 1])
 #define POP() (currentStack[--stackIndex])
+#define POP_AS(type) (currentStack[--stackIndex]. type )
 #define SET(obj) currentStack[stackIndex - 1] = obj
 
 
+#define OPERATION(currentStack, stackIndex, op, type) currentStack [ stackIndex - 2]. type = currentStack [ stackIndex - 2]. type ##op currentStack [ stackIndex - 1]. type ;\
+					if (stackIndex == 0) __asm { int 3 } -- stackIndex ;
+
+#define PUSH_WITH_TYPE(currentStack, stackIndex, type, obj) currentStack [ stackIndex ]. type = obj . type ; stackIndex ++;
+#define PUSH(currentStack, stackIndex, type, obj) currentStack [ stackIndex ]. type = obj ; stackIndex ++;
+#define INC(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type = currentStack [ stackIndex - 1]. type + 1;
+#define DINC(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type = currentStack [ stackIndex - 1]. type - 1;
+#define NEG(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type =  currentStack [ stackIndex - 1]. type * -1;
+#define LOAD_AND_PUSH(index) { currentStack[stackIndex].Double = (currentStore->variables + index )->Double;\
+	stackIndex++; }
+
+
+#define ASSIGN_8(data, code)\
+	data [7] = *( code + 1);\
+	data [6] = *( code + 2);\
+	data [5] = *( code + 3);\
+	data [4] = *( code + 4);\
+	data [3] = *( code + 5);\
+	data [2] = *( code + 6);\
+	data [1] = *( code + 7);\
+	data [0] = *( code + 8);\
+	code += 8;
+
+#define ASSIGN_4(data, code)\
+	data [3] = *( code + 1);\
+	data [2] = *( code + 2);\
+	data [1] = *( code + 3);\
+	data [0] = *( code + 4);\
+	code += 4;
+
+#define ASSIGN_3(data, code)\
+	data [2] = *( code + 1);\
+	data [1] = *( code + 2);\
+	data [0] = *( code + 3);\
+	code += 3;
+
+#define ASSIGN_2(data, code)\
+	data [1] = *( code + 1);\
+	data [0] = *( code + 2);\
+	code += 2;
+
+#define ASSIGN_1(data, code)\
+	data [0] = *code++;
 
 template <typename T>
 class vm_store
@@ -34,137 +78,28 @@ public:
 	T* variables{ nullptr };
 };
 
-template <int N>
-struct StaticAssignment {
-	inline static void assign(vm_char_t * data, char*& code)
-	{
-		data[N - 1] = *++code;
-		StaticAssignment<N - 1>::assign(data, code);
-	}
-};
-template <>
-struct StaticAssignment<1> {
-	inline static void assign(vm_char_t * data, char* & code)
-	{
-		data[0] = *++code;
-	}
-};
+//template <int N>
+//struct StaticAssignment {
+//	inline static void assign(vm_char_t * data, char*& code)
+//	{
+//		data[N - 1] = *++code;
+//		StaticAssignment<N - 1>::assign(data, code);
+//	}
+//};
+//template <>
+//struct StaticAssignment<1> {
+//	inline static void assign(vm_char_t * data, char* & code)
+//	{
+//		data[0] = *++code;
+//	}
+//};
 
 struct Operations {
-	template<typename T>
-	inline static void Add(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 1] + (T)currentStack[stackIndex - 2];
-		--stackIndex;
-	}
-
-	template<typename T>
-	inline static void Mul(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 1] * (T)currentStack[stackIndex - 2];
-		--stackIndex;
-	}
-
-	template<typename T>
-	inline static void Sub(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] - (T)currentStack[stackIndex - 1];
-		--stackIndex;
-	}
-
-	template<typename T>
-	inline static void Div(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] / (T)currentStack[stackIndex - 1];
-		--stackIndex;
-	}
-
-	inline static void And(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 2] = currentStack[stackIndex - 2].Bool && currentStack[stackIndex - 1].Bool;
-		--stackIndex;
-	}
-
-	inline static void Or(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 2] = currentStack[stackIndex - 2].Bool || currentStack[stackIndex - 1].Bool;
-		--stackIndex;
-	}
-
-	template<typename T>
-	inline static void Lt(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] < (T)currentStack[stackIndex - 1];
-		--stackIndex;
-	}
-
-	template<typename T>
-	inline static void Lte(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] <= (T)currentStack[stackIndex - 1];
-		--stackIndex;
-	}
-
-	template<typename T>
-	inline static void Gt(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] > (T)currentStack[stackIndex - 1];
-		--stackIndex;
-	}
-
-	template<typename T>
-	inline static void Gte(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] >= (T)currentStack[stackIndex - 1];
-		--stackIndex;
-	}
-
-	template<typename T>
-	inline static void Eq(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 2] = (T)currentStack[stackIndex - 2] == (T)currentStack[stackIndex - 1];
-		--stackIndex;
-	}
-
-	inline static void Dup(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex] = currentStack[stackIndex];
-		++stackIndex;
-	}
-
-	template<typename T>
-	inline static void Inc(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 1] = ((T)currentStack[stackIndex - 1]) + 1;
-	}
-
-	template<typename T>
-	inline static void Dinc(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 1] = ((T)currentStack[stackIndex - 1]) -1;
-	}
-
-	template<typename T>
-	inline static void Neg(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 1] = (T)currentStack[stackIndex - 1] * -1;
-	}
 
 	template<typename From, typename To>
 	inline static void Convert(vm_object * currentStack, size_t & stackIndex)
 	{
 		currentStack[stackIndex - 1] = static_cast<To>((From)currentStack[stackIndex - 1]);
-	}
-
-	inline static vm_object& Pop(vm_object * currentStack, size_t & stackIndex)
-	{
-		return currentStack[--stackIndex];
-	}
-
-	template<typename  T>
-	inline static T PopAs(vm_object * currentStack, size_t & stackIndex)
-	{
-		return (T)currentStack[--stackIndex];
 	}
 
 	template<typename T>
@@ -173,12 +108,6 @@ struct Operations {
 		return (T)currentStack[--stackIndex] == (T)currentStack[--stackIndex];
 	}
     
-    inline static void LoadAndPush(vm_object * currentStack, size_t & stackIndex, vm_store<vm_object>* currentStore, size_t index)
-    {
-        currentStack[stackIndex] = *(currentStore->variables + index);
-        stackIndex++;
-    }
-    //*(currentStore->variables + index) = obj
     inline static void PopAndStore(vm_store<vm_object>* currentStore, size_t index, vm_object * currentStack, size_t & stackIndex)
     {
         --stackIndex;
@@ -213,11 +142,6 @@ struct Operations {
 	{
 		return (currentStore->variables + index);
 	}
-
-	/*inline static vm_object Store(vm_store<vm_object>* currentStore, size_t index)
-	{
-		return *(currentStore->variables + index);
-	}*/
 };
 
 class vm_system_impl
@@ -271,77 +195,104 @@ public:
 			switch ((vm_inst)*code)
 			{
 			case vm_inst::OPT_iADD:
-				Operations::Add<int>(currentStack, stackIndex);
-                // console_out << _T("ADD : ") << Operations::Peek<int>(currentStack, stackIndex) << '\n';
+				OPERATION(currentStack, stackIndex, +, Int);
 				break;
 
 			case vm_inst::OPT_iSUB:
-				Operations::Sub<int>(currentStack, stackIndex);
+				OPERATION(currentStack, stackIndex, -, Int);
                 // console_out << _T("SUB : ") << Operations::Peek<int>(currentStack, stackIndex) << '\n';
 				break;
 
 			case vm_inst::OPT_iMUL:
-				Operations::Mul<int>(currentStack, stackIndex);
+				OPERATION(currentStack, stackIndex, *, Int);
 				break;
 
 			case vm_inst::OPT_iDIV:
-				Operations::Div<int>(currentStack, stackIndex);
+				OPERATION(currentStack, stackIndex, /, Int);
 				break;
 
 			case vm_inst::OPT_dADD:
-				Operations::Add<double>(currentStack, stackIndex);
+				OPERATION(currentStack, stackIndex, +, Double);
 				break;
 
 			case vm_inst::OPT_dSUB:
-				Operations::Sub<double>(currentStack, stackIndex);
+				OPERATION(currentStack, stackIndex, -, Double);
 				break;
 
 			case vm_inst::OPT_dMUL:
-				Operations::Mul<double>(currentStack, stackIndex);
+				OPERATION(currentStack, stackIndex, *, Double);
 				break;
 
 			case vm_inst::OPT_dDIV:
-				Operations::Div<double>(currentStack, stackIndex);
+				OPERATION(currentStack, stackIndex, /, Double);
 				break;
 
 			case vm_inst::OPT_EQ:
-				Operations::Eq<int>(currentStack, stackIndex);
+				OPERATION(currentStack, stackIndex, ==, Int);
 				break;
 
 			case vm_inst::OPT_LT:
-				Operations::Lt<int>(currentStack, stackIndex);
+				OPERATION(currentStack, stackIndex, <, Int);
 				break;
 
 			case vm_inst::OPT_LTE:
-				Operations::Lte<int>(currentStack, stackIndex);
-                // console_out << _T("LTE : ") << Operations::Peek<int>(currentStack, stackIndex) << '\n';
+				OPERATION(currentStack, stackIndex, <=, Int);
 				break;
 
 			case vm_inst::OPT_GT:
-				Operations::Gt<int>(currentStack, stackIndex);
+				OPERATION(currentStack, stackIndex, >, Int);
 				break;
 
 			case vm_inst::OPT_GTE:
-				Operations::Gte<int>(currentStack, stackIndex);
+				OPERATION(currentStack, stackIndex, >=, Int);
 				break;
 
 			case vm_inst::OPT_AND:
-				Operations::And(currentStack, stackIndex);
+				OPERATION(currentStack, stackIndex, &&, Bool);
 				break;
 
 			case vm_inst::OPT_OR:
-				Operations::Or(currentStack, stackIndex);
+				OPERATION(currentStack, stackIndex, ||, Bool);
 				break;
 
 			case vm_inst::OPT_DUP:
-				Operations::Dup(currentStack, stackIndex);
+				switch (currentStack[stackIndex - 1].Type)
+				{
+				case vm_object::vm_object_type::ARRAY:
+					// todo : implement
+					break;
+
+				case vm_object::vm_object_type::STR:
+				{
+					string_type* newStr = new string_type(*static_cast<string_type*>(currentStack[stackIndex - 1].Pointer));
+					PUSH(currentStack, stackIndex, Pointer, newStr);
+				}
+					break;
+
+				case vm_object::vm_object_type::DICT:
+					break;
+
+				case vm_object::vm_object_type::INT:
+					PUSH_WITH_TYPE(currentStack, stackIndex, Int, currentStack[stackIndex - 1]);
+					break;
+
+				case vm_object::vm_object_type::DOUBLE:
+					PUSH_WITH_TYPE(currentStack, stackIndex, Double, currentStack[stackIndex - 1]);
+					break;
+
+				case vm_object::vm_object_type::BOOL:
+					PUSH_WITH_TYPE(currentStack, stackIndex, Bool, currentStack[stackIndex - 1]);
+					break;
+				}
+				
 				break;
 
 			case vm_inst::OPT_JMP:
 			{
 				vm_int_t integer;
 				integer.Int = 0;
-				StaticAssignment<4>::assign(integer.Chars, code);
+
+				ASSIGN_4(integer.Chars, code);
 
 				code += integer.Int;
 			}
@@ -351,7 +302,7 @@ public:
 			{
 				vm_int_t integer;
 				integer.Int = 0;
-				StaticAssignment<4>::assign(integer.Chars, code);
+				ASSIGN_4(integer.Chars, code);
 				methods[integer.Chars] = startPoint - code;
 			}
 				break;
@@ -364,7 +315,7 @@ public:
 
 			case vm_inst::OPT_aPUSH:
 			{
-				vm_object& data = Operations::Pop(currentStack, stackIndex);
+				vm_object& data = POP();
 				vm_array* array = Operations::Peek<vm_array*>(currentStack, stackIndex);
 				array->push(data);
 			}
@@ -372,7 +323,7 @@ public:
 
 			case vm_inst::OPT_aGET:
 			{
-				vm_object& data = Operations::Pop(currentStack, stackIndex);
+				vm_object& data = POP();
 				vm_array* array = Operations::Peek<vm_array*>(currentStack, stackIndex);
 				Operations::Push(currentStack, stackIndex, array->Array[data.Int]);
 			}
@@ -380,12 +331,12 @@ public:
 			
 			case vm_inst::OPT_JIF:
 			{
-				if (Operations::PopAs<bool>(currentStack, stackIndex))
+				if (POP_AS(Bool))
 					code += 4;
 				else
 				{
 					vm_int_t integer;
-					StaticAssignment<4>::assign(integer.Chars, code);
+					ASSIGN_4(integer.Chars, code);
 					code += integer.Int;
 				}
 			}
@@ -398,7 +349,7 @@ public:
 				else
 				{
 					vm_int_t integer;
-					StaticAssignment<4>::assign(integer.Chars, code);
+					ASSIGN_4(integer.Chars, code);
 					code += integer.Int;
 				}
 			}
@@ -410,7 +361,7 @@ public:
 				{
 					vm_int_t integer;
 					integer.Int = 0;
-					StaticAssignment<4>::assign(integer.Chars, code);
+					ASSIGN_4(integer.Chars, code);
 					code += integer.Int;
 				}
 				else
@@ -419,42 +370,42 @@ public:
 			break;
 
 			case vm_inst::OPT_INC:
-				Operations::Inc<int>(currentStack, stackIndex);
+				INC(currentStack, stackIndex, Int);
 				break;
 			
 			case vm_inst::OPT_NEG:
-				Operations::Neg<int>(currentStack, stackIndex);
+				NEG(currentStack, stackIndex, Int);
 				break;
 
 			case vm_inst::OPT_DINC:
-				Operations::Dinc<int>(currentStack, stackIndex);
+				DINC(currentStack, stackIndex, Int);
 				break;
 
 			case vm_inst::OPT_LOAD:
-                Operations::LoadAndPush(currentStack, stackIndex, currentStore, *++code);
+			{
+				int data = *++code;
+				LOAD_AND_PUSH(data);
+			}
 				break;
 
 			case vm_inst::OPT_LOAD_0:
-				Operations::LoadAndPush(currentStack, stackIndex, currentStore, 0);
-                // console_out << _T("LOAD_0 : ") << Operations::Peek<int>(currentStack, stackIndex) << '\n';
+				LOAD_AND_PUSH(0);
 				break;
 
 			case vm_inst::OPT_LOAD_1:
-                Operations::LoadAndPush(currentStack, stackIndex, currentStore, 1);
-                // console_out << _T("LOAD_1 : ") << Operations::Peek<int>(currentStack, stackIndex) << '\n';
+				LOAD_AND_PUSH(1);
 				break;
 
 			case vm_inst::OPT_LOAD_2:
-				Operations::LoadAndPush(currentStack, stackIndex, currentStore, 2);
-                // console_out << _T("LOAD_2 : ") << Operations::Peek<int>(currentStack, stackIndex) << '\n';
+				LOAD_AND_PUSH(2);
 				break;
 
 			case vm_inst::OPT_LOAD_3:
-				Operations::LoadAndPush(currentStack, stackIndex, currentStore, 3);
+				LOAD_AND_PUSH(3);
 				break;
 
 			case vm_inst::OPT_LOAD_4:
-				Operations::LoadAndPush(currentStack, stackIndex, currentStore, 4);
+				LOAD_AND_PUSH(4);
 				break;
 
 			case vm_inst::OPT_STORE:
@@ -535,7 +486,7 @@ public:
 				currentStore = stores[++storesCount];
 				vm_int_t integer;
 				integer.Int = 0;
-				StaticAssignment<4>::assign(integer.Chars, code);
+				ASSIGN_4(integer.Chars, code);
                 currentStore->startAddress = (code - startPoint);
 				code += integer.Int;
 			}
@@ -555,7 +506,7 @@ public:
 			case vm_inst::OPT_iPUSH: {
 				vm_int_t integer;
 				integer.Int = 0;
-				StaticAssignment<4>::assign(integer.Chars, code);
+				ASSIGN_4(integer.Chars, code);
 				Operations::Push(currentStack, stackIndex, integer.Int);
                 // console_out << _T("PUSH : ") << Operations::Peek<int>(currentStack, stackIndex) << '\n';
 			}
@@ -612,7 +563,7 @@ public:
 			case vm_inst::OPT_dPUSH: {
 				vm_double_t d;
 				d.Double = 0.0;
-				StaticAssignment<8>::assign(d.Chars, code);
+				ASSIGN_8(d.Chars, code);
 				Operations::Push(currentStack, stackIndex, d.Double);
 			}
 				break;
@@ -625,7 +576,7 @@ public:
             case vm_inst::OPT_INVOKE: {
                 vm_int_t integer;
                 integer.Int = 0;
-                StaticAssignment<1>::assign(integer.Chars, code);
+				ASSIGN_1(integer.Chars, code);
                 
                 char * chars = new char[integer.Int + 1];
                 for (int i = integer.Int - 1; i >= 0; i--)
@@ -642,7 +593,7 @@ public:
 			case vm_inst::OPT_sPUSH: {
 				vm_int_t integer;
 				integer.Int = 0;
-				StaticAssignment<4>::assign(integer.Chars, code);
+				ASSIGN_4(integer.Chars, code);
 
 				char * chars = new char[integer.Int + 1];
 				for (int i = integer.Int - 1; i >= 0; i--)
@@ -711,7 +662,7 @@ public:
 				{
 					vm_int_t integer;
 					integer.Int = 0;
-					StaticAssignment<4>::assign(integer.Chars, code);
+					ASSIGN_4(integer.Chars, code);
 					console_out << _T(" ") << integer.Int;
 					index += 4;
 				}
@@ -725,7 +676,7 @@ public:
                 {
 					vm_int_t integer;
 					integer.Int = 0;
-					StaticAssignment<4>::assign(integer.Chars, code);
+					ASSIGN_4(integer.Chars, code);
                     console_out << _T(" ") << integer.Int;
                     index += 4;
                 }
@@ -735,7 +686,7 @@ public:
                 {
 					vm_double_t d;
 					d.Double = 0;
-					StaticAssignment<8>::assign(d.Chars, code);
+					ASSIGN_8(d.Chars, code);
 
                     console_out << _T(" ") << d.Double;
                     index += 8;
@@ -751,7 +702,7 @@ public:
                 {
                     vm_int_t integer;
                     integer.Int = 0;
-                    StaticAssignment<1>::assign(integer.Chars, code);
+					ASSIGN_1(integer.Chars, code);
                     index += 1;
                     index += integer.Int;
                     
@@ -769,7 +720,7 @@ public:
 				{
 					vm_int_t integer;
 					integer.Int = 0;
-					StaticAssignment<4>::assign(integer.Chars, code);
+					ASSIGN_4(integer.Chars, code);
 					index += 4;
 					index += integer.Int;
 
@@ -787,7 +738,7 @@ public:
 				{
 					vm_int_t integer;
 					integer.Int = 0;
-					StaticAssignment<4>::assign(integer.Chars, code);
+					ASSIGN_4(integer.Chars, code);
 					index += 4;
 					index += integer.Int;
 
@@ -834,7 +785,7 @@ public:
 
 			case vm_object::vm_object_type::STR:
 				console_out << _T(" STR: ");
-				console_out << string_type(static_cast<char*>(item.Pointer));
+				console_out << string_type(*static_cast<string_type*>(item.Pointer));
 				break;
 
 			default:
@@ -902,7 +853,10 @@ size_t vm_system::getUInt()
 vm_object* vm_system::getObject()
 {
 	if (impl->stackIndex > 0)
+	{
+		console_out << impl->stackIndex << '\n';
 		return &impl->currentStack[--impl->stackIndex];
+	}
 
 	return nullptr;
 }
