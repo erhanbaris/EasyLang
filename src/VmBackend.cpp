@@ -924,7 +924,7 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 
     ast->Body->accept(this);
     
-    i.Int = this->opcodes.size() - (funcDeclPoint + 1);
+    i.Int = this->opcodes.size() - (funcDeclPoint + 5);
     this->opcodes[funcDeclPoint + 1] = i.Chars[3];
     this->opcodes[funcDeclPoint + 2] = i.Chars[2];
     this->opcodes[funcDeclPoint + 3] = i.Chars[1];
