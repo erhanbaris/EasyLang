@@ -87,50 +87,6 @@ public:
 		Type = vm_object_type::ARRAY;
 	}
 
-	vm_object& operator=(int right) {
-		Int = right;
-		Type = vm_object_type::INT;
-		return *this;
-	}
-
-	vm_object& operator=(double right) {
-		Double = right;
-		Type = vm_object_type::DOUBLE;
-		return *this;
-	}
-
-	vm_object& operator=(bool right) {
-		Bool = right;
-		Type = vm_object_type::BOOL;
-		return *this;
-	}
-
-	vm_object& operator=(char* right) {
-		Pointer = right;
-		Type = vm_object_type::STR;
-		return *this;
-	}
-
-    operator int()
-    {
-        return Int;
-    }
-
-    operator double()
-    {
-        return Double;
-    }
-
-	operator bool()
-	{
-		return Bool;
-	}
-
-	operator vm_array*()
-	{
-		return static_cast<vm_array*>(Pointer);
-	}
-
 	vm_object_type Type;
 
 	union {

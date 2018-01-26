@@ -4,6 +4,7 @@
 
 
 #define PRINT_ACTIVE 0
+#define PERFORMANCE_MODE 1
 
 #if PRINT_ACTIVE == 1
 #define PRINT_OPCODE() console_out << _T(" > ") << vm_instToString((vm_inst)*code) << '\n';
@@ -15,11 +16,19 @@
 #define PRINT_AND_CHECK_STACK()
 #endif
 
-#define STORE(index, obj) *(currentStore->variables + index) = obj
-#define LOAD(index) *(currentStore->variables + index)
+#if PERFORMANCE_MODE == 0
+#define FUNC_BEGIN() [&]{
+#define FUNC_END() }();
+#else 
+#define FUNC_BEGIN()
+#define FUNC_END()
+#endif
 
-#define GSTORE(index, obj) *(globalStore.variables + index) = obj
-#define GLOAD(index) *(globalStore.variables + index)
+#define STORE(index, obj) FUNC_BEGIN() *(currentStore->variables + (index)) = obj; FUNC_END()
+#define LOAD(index) currentStore->variables + index
+
+#define GSTORE(index, obj) FUNC_BEGIN() *(globalStore.variables + (index)) = obj; FUNC_END()
+#define GLOAD(index) globalStore.variables + index
 
 #define PEEK() (currentStack[stackIndex - 1])
 #define POP() (currentStack[--stackIndex])
@@ -28,31 +37,32 @@
 
 #define OPERATION(currentStack, stackIndex, op, type) currentStack [ stackIndex - 2]. type = currentStack [ stackIndex - 2]. type ##op currentStack [ stackIndex - 1]. type ;\
     PRINT_AND_CHECK_STACK();\
-    -- stackIndex ;
+    -- stackIndex ; 
 
-#define PUSH_WITH_TYPE(currentStack, stackIndex, type, obj) currentStack [ stackIndex ]. type = obj . type ; PRINT_STACK(); stackIndex ++;
-#define PUSH(type, obj) currentStack [ stackIndex ]. type = obj ; PRINT_STACK(); stackIndex ++;
+#define PUSH_WITH_TYPE(currentStack, stackIndex, type, obj) FUNC_BEGIN() currentStack [ stackIndex ]. type = obj . type ; PRINT_STACK(); ++ stackIndex; FUNC_END()
+#define PUSH(type, obj) currentStack [ stackIndex ]. type = obj ; PRINT_STACK(); ++ stackIndex;
 #define INC(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type = currentStack [ stackIndex - 1]. type + 1;
 #define DINC(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type = currentStack [ stackIndex - 1]. type - 1;
 #define NEG(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type =  currentStack [ stackIndex - 1]. type * -1;
-#define LOAD_AND_PUSH(index) { currentStack[stackIndex].Double = (currentStore->variables + index )->Double;\
+#define LOAD_AND_PUSH(index) FUNC_BEGIN() { currentStack[stackIndex].Double = (currentStore->variables + index )->Double;\
 	PRINT_STACK(); \
-    stackIndex++; }
+    ++ stackIndex; } FUNC_END()
 
 #define STACK_DINC() PRINT_AND_CHECK_STACK(); -- stackIndex ;
 #define GET_ITEM(index, type) currentStack[stackIndex - index ]. type
-#define OPERATION_ADD(type) GET_ITEM(2, type) = GET_ITEM(2, type) +  GET_ITEM(1, type) ; STACK_DINC()
-#define OPERATION_SUB(type) GET_ITEM(2, type) = GET_ITEM(2, type) -  GET_ITEM(1, type) ; STACK_DINC()
-#define OPERATION_MUL(type) GET_ITEM(2, type) = GET_ITEM(2, type) *  GET_ITEM(1, type) ; STACK_DINC()
-#define OPERATION_DIV(type) GET_ITEM(2, type) = GET_ITEM(2, type) /  GET_ITEM(1, type) ; STACK_DINC()
-#define OPERATION_EQ(type)  GET_ITEM(2, type) = GET_ITEM(2, type) == GET_ITEM(1, type) ; STACK_DINC()
-#define OPERATION_LT(type)  GET_ITEM(2, type) = GET_ITEM(2, type) <  GET_ITEM(1, type) ; STACK_DINC()
-#define OPERATION_LTE(type) GET_ITEM(2, type) = GET_ITEM(2, type) <= GET_ITEM(1, type) ; STACK_DINC()
-#define OPERATION_GT(type)  GET_ITEM(2, type) = GET_ITEM(2, type) >  GET_ITEM(1, type) ; STACK_DINC()
-#define OPERATION_GTE(type) GET_ITEM(2, type) = GET_ITEM(2, type) >= GET_ITEM(1, type) ; STACK_DINC()
-#define OPERATION_AND(type) GET_ITEM(2, type) = GET_ITEM(2, type) && GET_ITEM(1, type) ; STACK_DINC()
-#define OPERATION_OR(type)  GET_ITEM(2, type) = GET_ITEM(2, type) || GET_ITEM(1, type) ; STACK_DINC()
-#define IS_EQUAL() GET_ITEM(2, Double) == GET_ITEM(1, Double)
+#define OPERATION_ADD(var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) +  GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
+#define OPERATION_SUB(var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) -  GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
+#define OPERATION_MUL(var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) *  GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
+#define OPERATION_DIV(var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) /  GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
+#define OPERATION_EQ( var, type, condType) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, condType) == GET_ITEM(1, condType); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
+#define OPERATION_LT( var, type, condType) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, condType) <  GET_ITEM(1, condType); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
+#define OPERATION_LTE(var, type, condType) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, condType) <= GET_ITEM(1, condType); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
+#define OPERATION_GT( var, type, condType) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, condType) >  GET_ITEM(1, condType); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
+#define OPERATION_GTE(var, type, condType) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, condType) >= GET_ITEM(1, condType); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
+#define OPERATION_AND(var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) && GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
+#define OPERATION_OR( var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) || GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
+#define IS_EQUAL(condType) GET_ITEM(2, condType) == GET_ITEM(1, condType)
+#define CONVERT(from, to, toType) currentStack[stackIndex - 1]. to = currentStack[stackIndex - 1]. from ; currentStack[stackIndex - 1].Type = toType ;
 
 #define ASSIGN_8(data, code)\
 	data [7] = *( code + 1);\
@@ -121,33 +131,6 @@ public:
 //	}
 //};
 
-struct Operations {
-
-	template<typename From, typename To>
-	inline static void Convert(vm_object * currentStack, size_t & stackIndex)
-	{
-		currentStack[stackIndex - 1] = static_cast<To>((From)currentStack[stackIndex - 1]);
-	}
-
-    inline static void PopAndStore(vm_store<vm_object>* currentStore, size_t index, vm_object * currentStack, size_t & stackIndex)
-    {
-        //PRINT_STACK();
-        --stackIndex;
-        *(currentStore->variables + index) = currentStack[stackIndex];
-    }
-    
-    template<typename T>
-    inline static T Peek(vm_object * currentStack, size_t & stackIndex)
-    {
-        return (T)currentStack[stackIndex - 1];
-    }
-
-	inline static vm_object* Load(vm_store<vm_object>* currentStore, size_t index)
-	{
-		return (currentStore->variables + index);
-	}
-};
-
 class vm_system_impl
 {
 public:
@@ -200,77 +183,77 @@ public:
 			{
 			case vm_inst::OPT_iADD:
                 PRINT_OPCODE();
-                OPERATION_ADD(Int);
+                OPERATION_ADD(Int, vm_object::vm_object_type::INT);
 				break;
 
 			case vm_inst::OPT_iSUB:
                 PRINT_OPCODE();
-				OPERATION_SUB(Int);
+				OPERATION_SUB(Int, vm_object::vm_object_type::INT);
 				break;
 
 			case vm_inst::OPT_iMUL:
                 PRINT_OPCODE();
-				OPERATION_MUL(Int);
+				OPERATION_MUL(Int, vm_object::vm_object_type::INT);
 				break;
 
 			case vm_inst::OPT_iDIV:
                 PRINT_OPCODE();
-				OPERATION_DIV(Int);
+				OPERATION_DIV(Int, vm_object::vm_object_type::INT);
 				break;
 
 			case vm_inst::OPT_dADD:
                 PRINT_OPCODE();
-				OPERATION_ADD(Double);
+				OPERATION_ADD(Double, vm_object::vm_object_type::DOUBLE);
 				break;
 
 			case vm_inst::OPT_dSUB:
                 PRINT_OPCODE();
-				OPERATION_SUB(Double);
+				OPERATION_SUB(Double, vm_object::vm_object_type::DOUBLE);
 				break;
 
 			case vm_inst::OPT_dMUL:
                 PRINT_OPCODE();
-				OPERATION_MUL(Double);
+				OPERATION_MUL(Double, vm_object::vm_object_type::DOUBLE);
 				break;
 
 			case vm_inst::OPT_dDIV:
                 PRINT_OPCODE();
-				OPERATION_DIV(Double);
+				OPERATION_DIV(Double, vm_object::vm_object_type::DOUBLE);
 				break;
 
 			case vm_inst::OPT_EQ:
                 PRINT_OPCODE();
-				OPERATION_EQ(Int);
+				OPERATION_EQ(Bool, vm_object::vm_object_type::BOOL, Int);
 				break;
 
 			case vm_inst::OPT_LT:
                 PRINT_OPCODE();
-				OPERATION_LT(Int);
+				OPERATION_LT(Bool, vm_object::vm_object_type::BOOL, Int);
 				break;
 
 			case vm_inst::OPT_LTE:
                 PRINT_OPCODE();
-				OPERATION_LTE(Int);
+				OPERATION_LTE(Bool, vm_object::vm_object_type::BOOL, Int);
 				break;
 
 			case vm_inst::OPT_GT:
                 PRINT_OPCODE();
-				OPERATION_GT(Int);
+				OPERATION_GT(Bool, vm_object::vm_object_type::BOOL, Int);
 				break;
 
 			case vm_inst::OPT_GTE:
                 PRINT_OPCODE();
-				OPERATION_GTE(Int);
+				OPERATION_GTE(Bool, vm_object::vm_object_type::BOOL, Int);
 				break;
 
 			case vm_inst::OPT_AND:
                 PRINT_OPCODE();
-				OPERATION_AND(Bool);
+				OPERATION_AND(Bool, vm_object::vm_object_type::BOOL);
 				break;
 
 			case vm_inst::OPT_OR:
                 PRINT_OPCODE();
-				OPERATION_OR(Bool);
+				OPERATION_OR(Bool, vm_object::vm_object_type::BOOL);
 				break;
 
 			case vm_inst::OPT_DUP:
@@ -309,54 +292,62 @@ public:
 			case vm_inst::OPT_JMP:
 			{
                 PRINT_OPCODE();
+				FUNC_BEGIN()
 				vm_int_t integer;
 				integer.Int = 0;
 
 				ASSIGN_4(integer.Chars, code);
 
 				code += integer.Int;
-                int index = code - startPoint;
-                
-                console_out << _T("OPT_JUMP number : ") << integer.Int << '\n';
+				FUNC_END()
 			}
 				break;
 
 			case vm_inst::OPT_METHOD:
 			{
                 PRINT_OPCODE();
+				FUNC_BEGIN()
 				vm_int_t integer;
 				integer.Int = 0;
 				ASSIGN_4(integer.Chars, code);
 				methods[integer.Chars] = startPoint - code;
+				FUNC_END()
 			}
 				break;
 
 			case vm_inst::OPT_INITARRAY:
                 PRINT_OPCODE();
+				FUNC_BEGIN()
 				PUSH(Pointer, new vm_array);
+				FUNC_END()
                 break;
 
 			case vm_inst::OPT_aPUSH:
 			{
                 PRINT_OPCODE();
+				FUNC_BEGIN()
 				vm_object& data = POP();
-				vm_array* array = Operations::Peek<vm_array*>(currentStack, stackIndex);
+				vm_array* array = static_cast<vm_array*>(PEEK().Pointer);
 				array->push(data);
+				FUNC_END()
 			}
 			break;
 
 			case vm_inst::OPT_aGET:
 			{
                 PRINT_OPCODE();
+				FUNC_BEGIN()
 				vm_object& data = POP();
-				vm_array* array = Operations::Peek<vm_array*>(currentStack, stackIndex);
-				PUSH(Double, array->Array[data.Int]);
+				vm_array* array = static_cast<vm_array*>(PEEK().Pointer);
+				PUSH(Pointer, &array->Array[data.Int]);
+				FUNC_END()
 			}
 			break;
 			
 			case vm_inst::OPT_JIF:
 			{
                 PRINT_OPCODE();
+				FUNC_BEGIN()
 				if (POP_AS(Bool))
 					code += 4;
 				else
@@ -365,13 +356,15 @@ public:
 					ASSIGN_4(integer.Chars, code);
 					code += integer.Int;
 				}
+				FUNC_END()
 			}
 			break;
 
 			case vm_inst::OPT_IF_EQ:
 			{
                 PRINT_OPCODE();
-				if (IS_EQUAL())
+				FUNC_BEGIN()
+				if (IS_EQUAL(Int))
 					code += 4;
 				else
 				{
@@ -379,15 +372,17 @@ public:
 					ASSIGN_4(integer.Chars, code);
 					code += integer.Int;
 				}
-                
+
                 stackIndex -= 2;
+				FUNC_END()
 			}
 			break;
 
 			case vm_inst::OPT_JNIF:
 			{
                 PRINT_OPCODE();
-				if (!IS_EQUAL())
+				FUNC_BEGIN()
+				if (!IS_EQUAL(Int))
 				{
 					vm_int_t integer;
 					integer.Int = 0;
@@ -398,6 +393,7 @@ public:
 					code += 4;
                 
                 stackIndex -= 2;
+				FUNC_END()
 			}
 			break;
 
@@ -450,35 +446,34 @@ public:
 				break;
 
 			case vm_inst::OPT_STORE:
-                PRINT_OPCODE();
-                Operations::PopAndStore(currentStore, *++code, currentStack, stackIndex);
+				PRINT_OPCODE();
+				STORE(*++code, POP());
 				break;
 
 			case vm_inst::OPT_STORE_0:
-                PRINT_OPCODE();
-				Operations::PopAndStore(currentStore, 0, currentStack, stackIndex);
+				PRINT_OPCODE();
+				STORE(0, POP());
 				break;
 
 			case vm_inst::OPT_STORE_1:
-                PRINT_OPCODE();
-				Operations::PopAndStore(currentStore, 1, currentStack, stackIndex);
+				PRINT_OPCODE();
+				STORE(1, POP());
 				break;
 
 			case vm_inst::OPT_STORE_2:
-                PRINT_OPCODE();
-				Operations::PopAndStore(currentStore, 2, currentStack, stackIndex);
+				PRINT_OPCODE();
+				STORE(2, POP());
 				break;
 
 			case vm_inst::OPT_STORE_3:
-                PRINT_OPCODE();
-				Operations::PopAndStore(currentStore, 3, currentStack, stackIndex);
+				PRINT_OPCODE();
+				STORE(3, POP());
 				break;
 
 			case vm_inst::OPT_STORE_4:
-                PRINT_OPCODE();
-				Operations::PopAndStore(currentStore, 4, currentStack, stackIndex);
+				PRINT_OPCODE();
+				STORE(4, POP());
 				break;
-
 
 			case vm_inst::OPT_GLOAD:
                 PRINT_OPCODE();
@@ -543,20 +538,24 @@ public:
 			case vm_inst::OPT_CALL:
 			{
                 PRINT_OPCODE();
+				FUNC_BEGIN()
 				currentStore = stores[++storesCount];
 				vm_int_t integer;
 				integer.Int = 0;
 				ASSIGN_4(integer.Chars, code);
                 currentStore->startAddress = (code - startPoint);
 				code += integer.Int;
+				FUNC_END()
 			}
 			break;
 
 			case vm_inst::OPT_RETURN:
 			{
                 PRINT_OPCODE();
+				FUNC_BEGIN()
 				code = startPoint + currentStore->startAddress;
 				currentStore = stores[--storesCount];
+				FUNC_END()
 			}
 			break;
 
@@ -567,10 +566,12 @@ public:
 
 			case vm_inst::OPT_iPUSH: {
                 PRINT_OPCODE();
+				FUNC_BEGIN()
 				vm_int_t integer;
 				integer.Int = 0;
 				ASSIGN_4(integer.Chars, code);
 				PUSH(Int, integer.Int);
+				FUNC_END()
                 // console_out << _T("PUSH : ") << Operations::Peek<int>(currentStack, stackIndex) << '\n';
 			}
 			break;
@@ -657,7 +658,7 @@ public:
 				ASSIGN_1(integer.Chars, code);
                 
                 char * chars = new char[integer.Int + 1];
-                for (int i = integer.Int - 1; i >= 0; i--)
+                for (int i = integer.Int - 1; i >= 0; --i)
                     chars[i] = *++code;
                     
                 chars[integer.Int] = '\0';
@@ -675,7 +676,7 @@ public:
 				ASSIGN_4(integer.Chars, code);
 
 				char * chars = new char[integer.Int + 1];
-				for (int i = integer.Int - 1; i >= 0; i--)
+				for (int i = integer.Int - 1; i >= 0; --i)
 					chars[i] = *++code;
 				
 				chars[integer.Int] = '\0';
@@ -699,32 +700,32 @@ public:
 
 			case OPT_I2D:
                 PRINT_OPCODE();
-				Operations::Convert<int, double>(currentStack, stackIndex);
+				CONVERT(Int, Double, vm_object::vm_object_type::DOUBLE);
                 break;
 
             case OPT_D2I:
                 PRINT_OPCODE();
-				Operations::Convert<double, int>(currentStack, stackIndex);
+				CONVERT(Double, Int, vm_object::vm_object_type::INT);
                 break;
 
             case OPT_I2B:
                 PRINT_OPCODE();
-				Operations::Convert<int, bool>(currentStack, stackIndex);
+				CONVERT(Int, Bool, vm_object::vm_object_type::BOOL);
                 break;
 
             case OPT_B2I:
                 PRINT_OPCODE();
-				Operations::Convert<bool, int>(currentStack, stackIndex);
+				CONVERT(Bool, Int, vm_object::vm_object_type::INT);
                 break;
 
             case OPT_D2B:
                 PRINT_OPCODE();
-				Operations::Convert<double, bool>(currentStack, stackIndex);
+				CONVERT(Double, Bool, vm_object::vm_object_type::BOOL);
                 break;
 
             case OPT_B2D:
                 PRINT_OPCODE();
-				Operations::Convert<bool, double>(currentStack, stackIndex);
+				CONVERT(Bool, Double, vm_object::vm_object_type::DOUBLE);
                 break;
 			}
 
@@ -794,7 +795,7 @@ public:
                     index += integer.Int;
                     
                     char * chars = new char[integer.Int + 1];
-                    for (int i = integer.Int - 1; i >= 0; i--)
+                    for (int i = integer.Int - 1; i >= 0; --i)
                         chars[i] = *++code;
                     
                     chars[integer.Int] = '\0';
@@ -812,7 +813,7 @@ public:
 					index += integer.Int;
 
 					char * chars = new char[integer.Int + 1];
-					for (int i = integer.Int - 1; i >= 0; i--)
+					for (int i = integer.Int - 1; i >= 0; --i)
 						chars[i] = *++code;
 
 					chars[integer.Int] = '\0';
@@ -830,7 +831,7 @@ public:
 					index += integer.Int;
 
 					char * chars = new char[integer.Int + 1];
-					for (int i = integer.Int - 1; i >= 0; i--)
+					for (int i = integer.Int - 1; i >= 0; --i)
 						chars[i] = *++code;
 
 					chars[integer.Int] = '\0';
