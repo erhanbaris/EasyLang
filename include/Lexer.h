@@ -16,14 +16,14 @@
 #include "Definitions.h"
 
 DECLARE_ENUM(EASY_TOKEN_TYPE, TOKEN_NONE,
-			 INTEGER,
-			 DOUBLE,
-			 SYMBOL,
-			 OPERATOR,
-			 TEXT,
-			 VARIABLE,
-			 KEYWORD,
-             END_OF_FILE)
+			 TOKEN_INTEGER,
+			 TOKEN_DOUBLE,
+			 TOKEN_SYMBOL,
+			 TOKEN_OPERATOR,
+			 TOKEN_TEXT,
+			 TOKEN_VARIABLE,
+			 TOKEN_KEYWORD,
+             TOKEN_END_OF_FILE)
 
 DECLARE_ENUM(EASY_OPERATOR_TYPE,
 	OPERATOR_NONE,
@@ -162,53 +162,53 @@ protected:
 class EofToken : public Token {
 public:
     int Value;
-    EofToken() : Token() { Type = EASY_TOKEN_TYPE::END_OF_FILE; }
+    EofToken() : Token() { Type = EASY_TOKEN_TYPE::TOKEN_END_OF_FILE; }
 };
 
 class IntegerToken : public Token {
 public:
     int Value;
-	IntegerToken() : Token() { Type = EASY_TOKEN_TYPE::INTEGER; }
-	IntegerToken(int value) : Token() { Type = EASY_TOKEN_TYPE::INTEGER; Value = value; }
+	IntegerToken() : Token() { Type = EASY_TOKEN_TYPE::TOKEN_INTEGER; }
+	IntegerToken(int value) : Token() { Type = EASY_TOKEN_TYPE::TOKEN_INTEGER; Value = value; }
 };
 
 class DoubleToken : public Token {
 public:
     double Value;
-    DoubleToken() : Token() { Type = EASY_TOKEN_TYPE::DOUBLE; }
-	DoubleToken(int value) : Token() { Type = EASY_TOKEN_TYPE::DOUBLE; Value = value; }
+    DoubleToken() : Token() { Type = EASY_TOKEN_TYPE::TOKEN_DOUBLE; }
+	DoubleToken(int value) : Token() { Type = EASY_TOKEN_TYPE::TOKEN_DOUBLE; Value = value; }
 };
 
 class OperatorToken : public Token {
 public:
     EASY_OPERATOR_TYPE Value;
-	OperatorToken() : Token() { Type = EASY_TOKEN_TYPE::OPERATOR; }
-    OperatorToken(EASY_OPERATOR_TYPE value, size_t line = 0, size_t current = 0) : Token() { Type = EASY_TOKEN_TYPE::OPERATOR; Value = value; Line = line; Current = current; }
+	OperatorToken() : Token() { Type = EASY_TOKEN_TYPE::TOKEN_OPERATOR; }
+    OperatorToken(EASY_OPERATOR_TYPE value, size_t line = 0, size_t current = 0) : Token() { Type = EASY_TOKEN_TYPE::TOKEN_OPERATOR; Value = value; Line = line; Current = current; }
 };
 
 class SymbolToken : public Token {
 public:
     string_type Value;
-    SymbolToken() : Token() { Type = EASY_TOKEN_TYPE::SYMBOL; }
-    SymbolToken(string_type symbol) : Token() { Type = EASY_TOKEN_TYPE::SYMBOL; Value = symbol; }
+    SymbolToken() : Token() { Type = EASY_TOKEN_TYPE::TOKEN_SYMBOL; }
+    SymbolToken(string_type symbol) : Token() { Type = EASY_TOKEN_TYPE::TOKEN_SYMBOL; Value = symbol; }
 };
 
 class TextToken : public Token {
 public:
     string_type Value;
-    TextToken() : Token() { Type = EASY_TOKEN_TYPE::TEXT; }
+    TextToken() : Token() { Type = EASY_TOKEN_TYPE::TOKEN_TEXT; }
 };
 
 class VariableToken : public Token {
 public:
     string_type Value;
-    VariableToken() : Token() { Type = EASY_TOKEN_TYPE::VARIABLE; }
+    VariableToken() : Token() { Type = EASY_TOKEN_TYPE::TOKEN_VARIABLE; }
 };
 
 class KeywordToken : public Token {
 public:
 	EASY_KEYWORD_TYPE Value;
-	KeywordToken() : Token() { Type = EASY_TOKEN_TYPE::KEYWORD; }
+	KeywordToken() : Token() { Type = EASY_TOKEN_TYPE::TOKEN_KEYWORD; }
 };
 
 class Tokinizer

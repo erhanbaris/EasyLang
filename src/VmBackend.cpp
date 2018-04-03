@@ -37,16 +37,16 @@ public:
 class ByteOptVar : public OptVar
 {
 public:
-    char * Data{nullptr};
+	char_type * Data{nullptr};
     size_t Length;
     ByteOptVar() { Type = INT; }
-    ByteOptVar(char * data, size_t length) { Type = INT; Data = data; Length = length; }
+    ByteOptVar(char_type * data, size_t length) { Type = INT; Data = data; Length = length; }
     ByteOptVar(int data)
     {
         Type = INT;
 		vm_int_t i;
 		i.Int = data;
-        Data = new char[4];
+        Data = new char_type[4];
         Data[0] = i.Chars[0];
         Data[1] = i.Chars[1];
 		Data[2] = i.Chars[2];
@@ -59,7 +59,7 @@ public:
         Type = DOUBLE;
 		vm_double_t i;
 		i.Double = data;
-        Data = new char[8];
+        Data = new char_type[8];
         Data[0] = i.Chars[0];
         Data[1] = i.Chars[1];
         Data[2] = i.Chars[2];
@@ -75,7 +75,7 @@ public:
 	{
 		Length = data.size();
 		Type = STRING;
-		Data = new char[Length];
+		Data = new char_type[Length];
 		for (size_t i = 0; i < Length; i++)
 			Data[i] = data[i];
 	}
@@ -83,7 +83,7 @@ public:
 	ByteOptVar(bool data)
 	{
 		Type = BOOL;
-		Data = new char[1];
+		Data = new char_type[1];
 		Data[0] = data;
 		Length = 1;
 	}
@@ -148,7 +148,7 @@ public:
 	std::unordered_map<string_type, VariableInfo*>* globalVariables;
 	std::vector<std::unordered_map<string_type, VariableInfo*>*> variablesList;
     std::unordered_map<string_type, MethodInfo*> methods;
-    std::vector<char> codes;
+    std::vector<char_type> codes;
 	bool dumpOpcode;
 
 	size_t inClassCounter;
@@ -163,7 +163,7 @@ public:
 		variablesList.push_back(variables);
 	}
 
-	inline OpcodeItem* generateStore(std::vector<char> & opcodes, size_t index)
+	inline OpcodeItem* generateStore(std::vector<char_type> & opcodes, size_t index)
 	{
 		switch (index)
 		{
@@ -196,7 +196,7 @@ public:
 		return nullptr;
 	}
 
-	inline OpcodeItem* generateGlobalStore(std::vector<char> & opcodes, size_t index)
+	inline OpcodeItem* generateGlobalStore(std::vector<char_type> & opcodes, size_t index)
 	{
 		switch (index)
 		{
@@ -234,7 +234,7 @@ public:
 		return nullptr;
 	}
 
-	inline OpcodeItem* generateLoad(std::vector<char> & opcodes, size_t index)
+	inline OpcodeItem* generateLoad(std::vector<char_type> & opcodes, size_t index)
 	{
 		switch (index)
 		{
@@ -272,7 +272,7 @@ public:
 		return nullptr;
 	}
 
-	inline OpcodeItem* generateGlobalLoad(std::vector<char> & opcodes, size_t index)
+	inline OpcodeItem* generateGlobalLoad(std::vector<char_type> & opcodes, size_t index)
 	{
 		switch (index)
 		{
@@ -564,7 +564,7 @@ PrimativeValue* VmBackend::getAstItem(Ast* ast)
 }
 
 
-void VmBackend::Compile(std::vector<char> & pOpcode)
+void VmBackend::Compile(std::vector<char_type> & pOpcode)
 {
 	opcodes.assign(pOpcode.begin(), pOpcode.end());
 
@@ -618,7 +618,7 @@ PrimativeValue* VmBackend::Execute()
 				break;
 
 			case vm_object::vm_object_type::STR:
-				result = new PrimativeValue(string_type(static_cast<char*>(lastItem->Pointer)));
+				result = new PrimativeValue(string_type(static_cast<char_type*>(lastItem->Pointer)));
 				break;
 		}
 
@@ -628,9 +628,9 @@ PrimativeValue* VmBackend::Execute()
 	return result;
 }
 
-void VmBackend::Execute(std::vector<char> const & opcodes)
+void VmBackend::Execute(std::vector<char_type> const & opcodes)
 {
-	impl->system.execute(const_cast<char*>(&opcodes[0]), opcodes.size(), 0);
+	impl->system.execute(const_cast<char_type*>(&opcodes[0]), opcodes.size(), 0);
 	auto data = impl->system.getUInt();
 
 	auto* result = new PrimativeValue((int)data);
@@ -662,7 +662,7 @@ vm_object* print(vm_system* vm)
 				break;
 
 			case vm_object::vm_object_type::STR:
-				console_out << static_cast<char*>(item->Pointer) << '\n';
+				console_out << static_cast<char_type*>(item->Pointer) << '\n';
 				break;
 		}
     

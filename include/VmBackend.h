@@ -49,8 +49,8 @@ public:
     void addConvertOpcode(Type from, Type to);
 	Type operationResultType(Type from, Type to);
 	PrimativeValue* Execute() override;
-	void Execute(std::vector<char> const & opcodes) override;
-	void Compile(std::vector<char> & opcode) override;
+	void Execute(std::vector<char_type> const & opcodes) override;
+	void Compile(std::vector<char_type> & opcode) override;
 
 	void visit(AssignmentAst* ast) override;
 	void visit(BlockAst* ast) override;
@@ -71,7 +71,7 @@ public:
 	void visit(PrimativeValue* ast);
 
 private:
-	std::vector<char> opcodes;
+	std::vector<char_type> opcodes;
 	std::vector<Ast*> asts;
 	std::vector<Ast*> temporaryAsts;
 	std::unordered_map<string_type, PrimativeValue*> variables;

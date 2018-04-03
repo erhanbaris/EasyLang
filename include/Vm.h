@@ -10,7 +10,7 @@
 class VmException : public std::runtime_error
 {
 public:
-    VmException(string_type const & message) : std::runtime_error(message.c_str())
+    VmException(string_type const & message) : std::runtime_error(AS_CHAR(message.c_str()))
     {
     }
 };
@@ -24,7 +24,7 @@ template <typename T> class vm_stack;
 
 typedef vm_object*(*VmMethod)(vm_system* vm);
 typedef void(*VmMethodCallback)(vm_system* vm, size_t totalArgs);
-typedef char vm_char_t;
+typedef char_type vm_char_t;
 typedef union vm_double_u { vm_char_t Chars[8];  double Double; } vm_double_t;
 typedef union vm_long_u { vm_char_t Chars[8];  long Long; } vm_long_t;
 typedef union vm_int_u { vm_char_t Chars[4];  int Int; } vm_int_t;
@@ -68,7 +68,7 @@ public:
 		Type = vm_object_type::BOOL;
 	}
     
-    vm_object(char* b)
+    vm_object(char_type* b)
     {
         Pointer = b;
         Type = vm_object_type::STR;
@@ -76,7 +76,7 @@ public:
 
 	vm_object(string_type const & b)
 	{
-		Pointer = new char[b.size()];
+		Pointer = new char_type[b.size()];
 		memcpy(Pointer, b.c_str(), b.size());
 		Type = vm_object_type::STR;
 	}
@@ -255,11 +255,11 @@ class vm_system
 public:
     vm_system();
     ~vm_system();
-    void execute(char* code, size_t len, size_t startIndex);
+    void execute(char_type* code, size_t len, size_t startIndex);
     void addMethod(string_type const & name, VmMethod method);
-	void dumpOpcode(char* code, size_t len);
+	void dumpOpcode(char_type* code, size_t len);
 	void dumpStack();
-    void dump(char* code, size_t len);
+    void dump(char_type* code, size_t len);
 	size_t getUInt();
 	vm_object* getObject();
 

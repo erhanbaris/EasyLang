@@ -11,17 +11,17 @@ include_directories (
 
 
 
-# find_package(LLVM REQUIRED CONFIG)
-# message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-# message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+find_package(LLVM REQUIRED CONFIG)
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-# include_directories(${LLVM_INCLUDE_DIRS})
-# if(LLVM_BUILD_MAIN_SRC_DIR)
-# 	include_directories(${LLVM_BUILD_MAIN_SRC_DIR}/tools/clang/include)
-# 	include_directories(${LLVM_BUILD_BINARY_DIR}/tools/clang/include)
-# endif()
-# link_directories(${LLVM_LIBRARY_DIRS})
-# add_definitions(${LLVM_DEFINITIONS})
+include_directories(${LLVM_INCLUDE_DIRS})
+if(LLVM_BUILD_MAIN_SRC_DIR)
+	include_directories(${LLVM_BUILD_MAIN_SRC_DIR}/tools/clang/include)
+	include_directories(${LLVM_BUILD_BINARY_DIR}/tools/clang/include)
+endif()
+link_directories(${LLVM_LIBRARY_DIRS})
+add_definitions(${LLVM_DEFINITIONS})
 
 add_definitions(
 		-D__STDC_LIMIT_MACROS
@@ -92,13 +92,13 @@ add_compile_options(
 		#        -g
 )
 
-# llvm_map_components_to_libnames(llvm_libs Core
-# 		ExecutionEngine
-# 		Interpreter
-# 		MC
-# 		MCJIT
-# 		Support
-# 		nativecodegen)
+llvm_map_components_to_libnames(llvm_libs Core
+		ExecutionEngine
+		Interpreter
+		MC
+		MCJIT
+		Support
+		nativecodegen)
 
 # Link against LLVM libraries
-# target_link_libraries(EasyLang ${llvm_libs} ${LLVM_SYSTEM_LIBS})
+target_link_libraries(EasyLang ${llvm_libs} ${LLVM_SYSTEM_LIBS})

@@ -34,13 +34,13 @@ public:
 	size_t tokensCount;
 	size_t index;
 
-	GET_ITEM(Keyword, EASY_TOKEN_TYPE::KEYWORD, KeywordToken, EASY_KEYWORD_TYPE);
-	GET_ITEM(Operator, EASY_TOKEN_TYPE::OPERATOR, OperatorToken, EASY_OPERATOR_TYPE);
-	GET_ITEM(Integer, EASY_TOKEN_TYPE::INTEGER, IntegerToken, int);
-	GET_ITEM(Double, EASY_TOKEN_TYPE::DOUBLE, DoubleToken, double);
-	GET_ITEM(Text, EASY_TOKEN_TYPE::TEXT, TextToken, string_type);
-	GET_ITEM(Symbol, EASY_TOKEN_TYPE::SYMBOL, SymbolToken, string_type);
-	GET_ITEM(Variable, EASY_TOKEN_TYPE::VARIABLE, VariableToken, string_type);
+	GET_ITEM(Keyword, EASY_TOKEN_TYPE::TOKEN_KEYWORD, KeywordToken, EASY_KEYWORD_TYPE);
+	GET_ITEM(Operator, EASY_TOKEN_TYPE::TOKEN_OPERATOR, OperatorToken, EASY_OPERATOR_TYPE);
+	GET_ITEM(Integer, EASY_TOKEN_TYPE::TOKEN_INTEGER, IntegerToken, int);
+	GET_ITEM(Double, EASY_TOKEN_TYPE::TOKEN_DOUBLE, DoubleToken, double);
+	GET_ITEM(Text, EASY_TOKEN_TYPE::TOKEN_TEXT, TextToken, string_type);
+	GET_ITEM(Symbol, EASY_TOKEN_TYPE::TOKEN_SYMBOL, SymbolToken, string_type);
+	GET_ITEM(Variable, EASY_TOKEN_TYPE::TOKEN_VARIABLE, VariableToken, string_type);
     
     inline bool isPrimative(Token * token)
     {
@@ -59,7 +59,7 @@ public:
     }
     
     inline bool isAtEnd() {
-        return peek()->GetType() == EASY_TOKEN_TYPE::END_OF_FILE;
+        return peek()->GetType() == EASY_TOKEN_TYPE::TOKEN_END_OF_FILE;
     }
     
     inline Token* peek() {
@@ -118,7 +118,7 @@ public:
             buffer << _T("}\n");
             
             buffer << name << _T("[label=\"IF STATEMENT") << _T("\"]\n");
-            buffer << main << _T(" -> " << name << _T(";\n");
+            buffer << main << _T(" -> ") << name << _T(";\n");
             
 			dumpLevel(ifStatement->True, name, buffer);
 			dumpLevel(ifStatement->False, name,buffer);
@@ -153,7 +153,7 @@ public:
 				break;
 
 			case PrimativeValue::Type::PRI_DOUBLE:
-                buffer << name << _T("[label=\"") << primative->Value->Double << "\"]\n");
+                buffer << name << _T("[label=\"") << primative->Value->Double << _T("\"]\n");
 				buffer << main << _T(" -> ") << name << _T(";\n");
 				break;
 
@@ -228,19 +228,19 @@ public:
 
 		switch (token->GetType())
 		{
-		case EASY_TOKEN_TYPE::INTEGER:
+		case EASY_TOKEN_TYPE::TOKEN_INTEGER:
 			ast = new PrimativeAst(getInteger(token));
 			break;
 
-		case EASY_TOKEN_TYPE::DOUBLE:
+		case EASY_TOKEN_TYPE::TOKEN_DOUBLE:
 			ast = new PrimativeAst(getDouble(token));
 			break;
 
-		case EASY_TOKEN_TYPE::TEXT:
+		case EASY_TOKEN_TYPE::TOKEN_TEXT:
 			ast = new PrimativeAst(getText(token));
 			break;
 
-		case EASY_TOKEN_TYPE::KEYWORD:
+		case EASY_TOKEN_TYPE::TOKEN_KEYWORD:
 			if (getKeyword(token) == EASY_KEYWORD_TYPE::BOOL_TRUE)
 				ast = new PrimativeAst(true);
 			else if (getKeyword(token) == EASY_KEYWORD_TYPE::BOOL_FALSE)
@@ -317,7 +317,7 @@ public:
 
     ExprAst* finishCallExpr(string_type const & package, string_type const & function) {
         std::vector<ExprAst*> arguments;
-		if (previous()->GetType() == EASY_TOKEN_TYPE::OPERATOR && static_cast<OperatorToken*>(previous())->Value == EASY_OPERATOR_TYPE::UNDERLINE)
+		if (previous()->GetType() == EASY_TOKEN_TYPE::TOKEN_OPERATOR && static_cast<OperatorToken*>(previous())->Value == EASY_OPERATOR_TYPE::UNDERLINE)
 			return new FunctionCallAst(package, function, arguments);
 
         if (!check(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES)) {
@@ -583,13 +583,13 @@ public:
                                  
 	StmtAst* functionStmt()
 	{
-		Token* funcName = consume(EASY_TOKEN_TYPE::SYMBOL, _T("Function name required"));
+		Token* funcName = consume(EASY_TOKEN_TYPE::TOKEN_SYMBOL, _T("Function name required"));
 		consume(EASY_OPERATOR_TYPE::LEFT_PARENTHESES, _T("'(' required"));
 
 		std::vector<FunctionDefinetionArg*> args;
 		if (!check(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES))
 			do {
-				Token* arg = consume(EASY_TOKEN_TYPE::SYMBOL, _T("Only string variable name allowed"));
+				Token* arg = consume(EASY_TOKEN_TYPE::TOKEN_SYMBOL, _T("Only string variable name allowed"));
 				consume(EASY_OPERATOR_TYPE::SINGLE_COLON, _T("Parameter type required"));
 				args.push_back(new FunctionDefinetionArg(static_cast<SymbolToken*>(arg)->Value, getVariableType()));
 			} while (match({ EASY_OPERATOR_TYPE::COMMA }));
@@ -654,13 +654,13 @@ public:
 	inline bool check(EASY_OPERATOR_TYPE type)
 	{
 		Token* token = peek();
-		return token != nullptr && token->GetType() == EASY_TOKEN_TYPE::OPERATOR && static_cast<OperatorToken*>(token)->Value == type;
+		return token != nullptr && token->GetType() == EASY_TOKEN_TYPE::TOKEN_OPERATOR && static_cast<OperatorToken*>(token)->Value == type;
 	}
 
 	inline bool check(EASY_KEYWORD_TYPE type)
 	{
 		Token* token = peek();
-		return token != nullptr && token->GetType() == EASY_TOKEN_TYPE::KEYWORD && static_cast<KeywordToken*>(token)->Value == type;
+		return token != nullptr && token->GetType() == EASY_TOKEN_TYPE::TOKEN_KEYWORD && static_cast<KeywordToken*>(token)->Value == type;
 	}
 
 	bool match(std::initializer_list<EASY_TOKEN_TYPE> types)

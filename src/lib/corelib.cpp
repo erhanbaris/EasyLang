@@ -34,7 +34,7 @@ string_type toString(Any & type)
 	if (type.is<int>())
 		return AS_STRING(type.cast<int>());
 	else if (type.is<bool>())
-		return type.cast<bool>() ? "true" : "false";
+		return type.cast<bool>() ? _T("true") : _T("false");
 	else if (type.is<double>())
 		return AS_STRING(type.cast<double>());
 	else if (type.is<string_type>())

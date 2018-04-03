@@ -7,6 +7,8 @@
 #include <fstream>
 
 #if defined(_UNICODE)
+#include <comdef.h>
+
 #define EASY_STRING_TYPE std::wstring
 #define AS_STRING std::to_wstring
 #define EASY_STRING_STREAM std::wstringstream
@@ -14,6 +16,7 @@
 #define console_in std::wcin
 #define EASY_CHAR_TYPE wchar_t
 #define EASY_FILE_STREAM_TYPE std::wifstream
+#define AS_CHAR(text) static_cast<char*>(_bstr_t(text))
 
 #if !defined(_T)
 #define _T(x) L##x
@@ -30,6 +33,7 @@
 #define console_in std::cin
 #define EASY_CHAR_TYPE char
 #define EASY_FILE_STREAM_TYPE std::ifstream
+#define AS_CHAR(text) text
 
 #endif
 

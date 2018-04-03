@@ -524,31 +524,31 @@ void StandartTokinizer::Dump(std::shared_ptr <std::vector<Token *>> Tokens)
 	{
 		switch ((*it)->GetType())
 		{
-		case EASY_TOKEN_TYPE::DOUBLE:
+		case EASY_TOKEN_TYPE::TOKEN_DOUBLE:
 			console_out << _T("DOUBLE : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<DoubleToken*>(*it)->Value << std::endl;
 			break;
 
-		case EASY_TOKEN_TYPE::INTEGER:
+		case EASY_TOKEN_TYPE::TOKEN_INTEGER:
 			console_out << _T("INTEGER : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<IntegerToken*>(*it)->Value << std::endl;
 			break;
 
-		case EASY_TOKEN_TYPE::OPERATOR:
+		case EASY_TOKEN_TYPE::TOKEN_OPERATOR:
 			console_out << _T("OPERATOR : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << EASY_OPERATOR_TYPEToString (reinterpret_cast<OperatorToken*>(*it)->Value) << std::endl;
 			break;
 
-		case EASY_TOKEN_TYPE::SYMBOL:
+		case EASY_TOKEN_TYPE::TOKEN_SYMBOL:
 			console_out << _T("SYMBOL : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<SymbolToken*>(*it)->Value << std::endl;
 			break;
 
-		case EASY_TOKEN_TYPE::TEXT:
+		case EASY_TOKEN_TYPE::TOKEN_TEXT:
 			console_out << _T("TEXT : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<TextToken*>(*it)->Value << std::endl;
 			break;
 
-		case EASY_TOKEN_TYPE::VARIABLE:
+		case EASY_TOKEN_TYPE::TOKEN_VARIABLE:
 			console_out << _T("VARIABLE : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<VariableToken*>(*it)->Value << std::endl;
 			break;
 
-		case EASY_TOKEN_TYPE::KEYWORD:
+		case EASY_TOKEN_TYPE::TOKEN_KEYWORD:
 			console_out << _T("KEYWORD : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << EASY_KEYWORD_TYPEToString(reinterpret_cast<KeywordToken*>(*it)->Value) << std::endl;
 			break;
 

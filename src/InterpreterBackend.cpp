@@ -172,7 +172,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 			functionInfo->Callback(args, returnValue, *Scope::GlobalScope);
 		}
 		else
-			throw ParseError("Unknown method");
+			throw ParseError(_T("Unknown method"));
 
 		return returnValue;
 	}
@@ -273,25 +273,25 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 
 		case EASY_OPERATOR_TYPE::INDEXER:
 			if (source1->Type != PrimativeValue::Type::PRI_INTEGER)
-				throw ParseError("Indexer must be integer.");
+				throw ParseError(_T("Indexer must be integer."));
 
 			switch (target->Type)
 			{
 			case PrimativeValue::Type::PRI_ARRAY:
 			{
 				if (target->Array->size() <= source1->Integer)
-					throw ParseError(AS_STRING(source1->Integer) + " bigger than array size");
+					throw ParseError(AS_STRING(source1->Integer) + _T(" bigger than array size"));
 
 				if (source1->Integer < 0)
-					throw ParseError(AS_STRING(source1->Integer) + " can not be smaller than zero");
+					throw ParseError(AS_STRING(source1->Integer) + _T(" can not be smaller than zero"));
 
 				if (source2 != nullptr)
 				{
 					if (target->Array->size() <= source2->Integer)
-						throw ParseError(AS_STRING(source2->Integer) + " bigger than array size");
+						throw ParseError(AS_STRING(source2->Integer) + _T(" bigger than array size"));
 
 					if (source2->Integer < 0)
-						throw ParseError(AS_STRING(source2->Integer) + " can not be smaller than zero");
+						throw ParseError(AS_STRING(source2->Integer) + _T(" can not be smaller than zero"));
 
 					value = PrimativeValue::CreateArray();
 					for (size_t i = source1->Integer; i < source2->Integer + source1->Integer; ++i)
@@ -305,18 +305,18 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 			case PrimativeValue::Type::PRI_STRING:
 			{
 				if (target->String->size() <= source1->Integer)
-					throw ParseError(AS_STRING(source1->Integer) + " bigger than string size");
+					throw ParseError(AS_STRING(source1->Integer) + _T(" bigger than string size"));
 
 				if (source1->Integer < 0)
-					throw ParseError(AS_STRING(source1->Integer) + " can not be smaller than zero");
+					throw ParseError(AS_STRING(source1->Integer) + _T(" can not be smaller than zero"));
 
 				if (source2 != nullptr)
 				{
 					if (target->Array->size() <= source2->Integer)
-						throw ParseError(AS_STRING(source2->Integer) + " bigger than array size");
+						throw ParseError(AS_STRING(source2->Integer) + _T(" bigger than array size"));
 
 					if (source2->Integer < 0)
-						throw ParseError(AS_STRING(source2->Integer) + " can not be smaller than zero");
+						throw ParseError(AS_STRING(source2->Integer) + _T(" can not be smaller than zero"));
 
 					value = PrimativeValue::CreateString(target->String->substr(source1->Integer, source2->Integer));
 				}
@@ -396,11 +396,11 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
 	return nullptr;
 }
 
-void InterpreterBackend::Compile(std::vector<char> & opcodes)
+void InterpreterBackend::Compile(std::vector<char_type> & opcodes)
 {
 }
 
-void InterpreterBackend::Execute(std::vector<char> const & opcodes)
+void InterpreterBackend::Execute(std::vector<char_type> const & opcodes)
 {
 }
 

@@ -34,12 +34,12 @@ public:
 		return backend->Execute();
 	}
 
-	void Execute(std::vector<char> const & opcodes)
+	void Execute(std::vector<char_type> const & opcodes)
 	{
 		backend->Execute(opcodes);
 	}
 
-	void Compile(string_type const & code, std::vector<char> & opcodes)
+	void Compile(string_type const & code, std::vector<char_type> & opcodes)
 	{
 		tokinizer->Parse(code, tokens);
 		astParser->Parse(tokens, asts);
@@ -80,7 +80,7 @@ EasyEngine<TTokinizer, TAstParser, TBackend>::~EasyEngine()
 }
 
 template<class TTokinizer, class TAstParser, class TBackend>
-void EasyEngine<TTokinizer, TAstParser, TBackend>::Execute(std::vector<char> const & opcodes)
+void EasyEngine<TTokinizer, TAstParser, TBackend>::Execute(std::vector<char_type> const & opcodes)
 {
 	impl->Execute(opcodes);
 }
@@ -92,7 +92,7 @@ PrimativeValue* EasyEngine<TTokinizer, TAstParser, TBackend>::Execute(string_typ
 }
 
 template<class TTokinizer, class TAstParser, class TBackend>
-void EasyEngine<TTokinizer, TAstParser, TBackend>::Compile(string_type const & code, std::vector<char> & opcodes)
+void EasyEngine<TTokinizer, TAstParser, TBackend>::Compile(string_type const & code, std::vector<char_type> & opcodes)
 {
 	impl->Compile(code, opcodes);
 }

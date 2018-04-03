@@ -20,8 +20,8 @@ public:
 	
 	EasyEngine();
 	PrimativeValue* Execute(string_type const & code);
-	void Execute(std::vector<char> const & opcodes);
-	void Compile(string_type const & code, std::vector<char> & opcodes);
+	void Execute(std::vector<char_type> const & opcodes);
+	void Compile(string_type const & code, std::vector<char_type> & opcodes);
 	~EasyEngine();
 
 private:

@@ -14,8 +14,8 @@ public:
 	PrimativeValue* getPrimative(Ast* ast);
 	PrimativeValue* getData(Ast* ast, Scope & scope);
 	PrimativeValue* Execute() override;
-	void Execute(std::vector<char> const & opcodes) override;
-	void Compile(std::vector<char> & opcodes) override;
+	void Execute(std::vector<char_type> const & opcodes) override;
+	void Compile(std::vector<char_type> & opcodes) override;
 
 private:
 	std::vector<Ast*> asts;

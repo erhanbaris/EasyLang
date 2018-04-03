@@ -174,9 +174,9 @@ public:
     vm_system* system {nullptr};
 
 
-	void execute(char* code, size_t len, size_t startIndex)
+	void execute(char_type* code, size_t len, size_t startIndex)
 	{
-		char* startPoint = code;
+		char_type* startPoint = code;
 		code += startIndex;
 		while (1) {
 			switch ((vm_inst)*code)
@@ -657,7 +657,7 @@ public:
                 integer.Int = 0;
 				ASSIGN_1(integer.Chars, code);
                 
-                char * chars = new char[integer.Int + 1];
+                char_type * chars = new char_type[integer.Int + 1];
                 for (int i = integer.Int - 1; i >= 0; --i)
                     chars[i] = *++code;
                     
@@ -675,7 +675,7 @@ public:
 				integer.Int = 0;
 				ASSIGN_4(integer.Chars, code);
 
-				char * chars = new char[integer.Int + 1];
+				char_type * chars = new char_type[integer.Int + 1];
 				for (int i = integer.Int - 1; i >= 0; --i)
 					chars[i] = *++code;
 				
@@ -733,12 +733,12 @@ public:
 		}
 	}
 
-	void dumpOpcode(char* code, size_t len)
+	void dumpOpcode(char_type* code, size_t len)
 	{
 		size_t index = 0;
 		while (index < len) {
 			console_out << _T(">>> ") << index++ << _T(". ");
-			COLOR_RED(vm_instToString((vm_inst)*code));
+			console_out << vm_instToString((vm_inst)*code);
 
 			switch ((vm_inst)*code)
 			{
@@ -794,7 +794,7 @@ public:
                     index += 1;
                     index += integer.Int;
                     
-                    char * chars = new char[integer.Int + 1];
+					char_type * chars = new char_type[integer.Int + 1];
                     for (int i = integer.Int - 1; i >= 0; --i)
                         chars[i] = *++code;
                     
@@ -812,7 +812,7 @@ public:
 					index += 4;
 					index += integer.Int;
 
-					char * chars = new char[integer.Int + 1];
+					char_type * chars = new char_type[integer.Int + 1];
 					for (int i = integer.Int - 1; i >= 0; --i)
 						chars[i] = *++code;
 
@@ -830,7 +830,7 @@ public:
 					index += 4;
 					index += integer.Int;
 
-					char * chars = new char[integer.Int + 1];
+					char_type * chars = new char_type[integer.Int + 1];
 					for (int i = integer.Int - 1; i >= 0; --i)
 						chars[i] = *++code;
 
@@ -889,7 +889,7 @@ public:
 		console_out << '\n';
 
 	}
-	void dump(char* code, size_t len)
+	void dump(char_type* code, size_t len)
 	{
 		size_t index = 0;
 		while (index < len) {
@@ -913,17 +913,17 @@ vm_system::~vm_system()
 	delete impl;
 }
 
-void vm_system::execute(char* code, size_t len, size_t startIndex)
+void vm_system::execute(char_type* code, size_t len, size_t startIndex)
 {
 	impl->execute(code, len, startIndex);
 }
 
-void vm_system::dump(char* code, size_t len)
+void vm_system::dump(char_type* code, size_t len)
 {
     impl->dump(code, len);
 }
 
-void vm_system::dumpOpcode(char* code, size_t len)
+void vm_system::dumpOpcode(char_type* code, size_t len)
 {
 	impl->dumpOpcode(code, len);
 }

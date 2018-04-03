@@ -104,7 +104,7 @@ static Function *CreateFibFunction(Module *M, LLVMContext &Context) {
 }
 #endif
 
-int main(int argc, char* argv[]) {
+int main(int argc, char_type* argv[]) {
 #ifdef LLVM_ACTIVE
     int n = argc > 1 ? atol(argv[1]) : 27;
 
@@ -164,7 +164,7 @@ int main(int argc, char* argv[]) {
 			return 0;
 		}
 
-		std::vector<char> opcodes;
+		std::vector<char_type> opcodes;
 		if (file.substr(file.find_last_of(_T(".")) + 1) == _T("ea")) {
 			string_type line;
 			string_stream stream;
@@ -179,7 +179,7 @@ int main(int argc, char* argv[]) {
 			if (opcodeFile.is_open())
 			{
 				opcodeFile.seekp(0);
-				opcodeFile.write(&opcodes[0], opcodes.size());
+				opcodeFile.write(AS_CHAR(&opcodes[0]), opcodes.size());
 				opcodeFile.close();
 			}
 			else
@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
 			engine->Execute(opcodes);
 		}
 		else if (file.substr(file.find_last_of(_T(".")) + 1) == _T("eac")) {
-			std::vector<char> codes;
+			std::vector<char_type> codes;
 
 			while (!codeFile.eof()) {
 				codes.push_back(codeFile.get());

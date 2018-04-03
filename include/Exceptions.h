@@ -7,7 +7,7 @@
 class ParseError : public std::runtime_error
 {
 public:
-	ParseError(string_type const & message) : std::runtime_error(message.c_str())
+	ParseError(string_type const & message) : std::runtime_error(AS_CHAR(message.c_str()))
 	{
 	}
 };
@@ -15,7 +15,7 @@ public:
 class ConvertError : public std::runtime_error
 {
 public:
-    ConvertError(string_type  const & message): std::runtime_error(message.c_str())
+    ConvertError(string_type  const & message): std::runtime_error(AS_CHAR(message.c_str()))
     {
     }
 };
@@ -23,7 +23,7 @@ public:
 class ParameterError : public std::runtime_error
 {
 public:
-    ParameterError(string_type const & message): std::runtime_error(message.c_str())
+    ParameterError(string_type const & message): std::runtime_error(AS_CHAR(message.c_str()))
     {
     }
 };
@@ -31,7 +31,7 @@ public:
 class NullException : public std::runtime_error
 {
 public:
-	NullException(string_type const & message) : std::runtime_error(message.c_str())
+	NullException(string_type const & message) : std::runtime_error(AS_CHAR(message.c_str()))
 	{
 	}
 };
