@@ -4,17 +4,6 @@
 #ifndef EASYLANG_VMBACKEND_H
 #define EASYLANG_VMBACKEND_H
 
-
-enum class Type {
-	EMPTY,
-	INT,
-	DOUBLE,
-	STRING,
-	BOOL,
-	ARRAY,
-	DICTIONARY
-};
-
 class VmBackendImpl;
 class VmBackend :
 		public Backend,
@@ -45,9 +34,9 @@ public:
 	void Prepare(std::shared_ptr<std::vector<Ast*>> pAsts) override;
 	PrimativeValue* getPrimative(Ast* ast);
 	PrimativeValue* getAstItem(Ast* ast);
-	Type detectType(Ast* ast);
-    void addConvertOpcode(Type from, Type to);
-	Type operationResultType(Type from, Type to);
+	BACKEND_ITEM_TYPE detectType(Ast* ast);
+    void addConvertOpcode(BACKEND_ITEM_TYPE from, BACKEND_ITEM_TYPE to);
+	BACKEND_ITEM_TYPE operationResultType(BACKEND_ITEM_TYPE from, BACKEND_ITEM_TYPE to);
 	PrimativeValue* Execute() override;
 	void Execute(std::vector<char_type> const & opcodes) override;
 	void Compile(std::vector<char_type> & opcode) override;

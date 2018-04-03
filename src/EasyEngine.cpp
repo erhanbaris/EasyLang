@@ -100,4 +100,6 @@ void EasyEngine<TTokinizer, TAstParser, TBackend>::Compile(string_type const & c
 
 template class EasyEngine<StandartTokinizer, AstParser, VmBackend>;
 template class EasyEngine<StandartTokinizer, AstParser, InterpreterBackend>;
+#if defined(EASYLANG_JIT_ACTIVE)
 template class EasyEngine<StandartTokinizer, AstParser, LLVMBackend>;
+#endif

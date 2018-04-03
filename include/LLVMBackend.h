@@ -4,19 +4,6 @@
 #if !defined(EASYLANG_LLVMBACKEND_H) && defined(EASYLANG_JIT_ACTIVE)
 #define EASYLANG_LLVMBACKEND_H
 
-
-namespace tmp {
-	enum class Type {
-		EMPTY,
-		INT,
-		DOUBLE,
-		STRING,
-		BOOL,
-		ARRAY,
-		DICTIONARY
-	};
-}
-
 class LLVMBackendImpl;
 class LLVMBackend :
 		public Backend,
@@ -31,7 +18,8 @@ public:
 	void Prepare(std::shared_ptr<std::vector<Ast*>> pAsts) override;
 	PrimativeValue* getPrimative(Ast* ast);
 	PrimativeValue* getAstItem(Ast* ast);
-	tmp::Type operationResultType(tmp::Type from, tmp::Type to);
+    BACKEND_ITEM_TYPE detectType(Ast* ast);
+	BACKEND_ITEM_TYPE operationResultType(BACKEND_ITEM_TYPE from, BACKEND_ITEM_TYPE to);
 	PrimativeValue* Execute() override;
 	void Execute(std::vector<char_type> const & opcodes) override;
 	void Compile(std::vector<char_type> & opcode) override;

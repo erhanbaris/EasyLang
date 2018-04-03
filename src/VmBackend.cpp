@@ -127,17 +127,17 @@ public:
 
 class VariableInfo {
 public:
-    Type Type;
+    BACKEND_ITEM_TYPE Type;
     string_type Name;
     int Index;
 };
 
 class MethodInfo {
 public:
-    Type ReturnType;
+    BACKEND_ITEM_TYPE ReturnType;
     string_type Function;
     int Index;
-	std::vector<Type> Args;
+	std::vector<BACKEND_ITEM_TYPE> Args;
 };
 
 class VmBackendImpl
@@ -331,48 +331,49 @@ PrimativeValue* VmBackend::getPrimative(Ast* ast)
 	return primative;
 }
 
-void VmBackend::addConvertOpcode(Type from, Type to)
+void VmBackend::addConvertOpcode(BACKEND_ITEM_TYPE from, BACKEND_ITEM_TYPE to)
 {
-	if (from == Type::INT && to == Type::DOUBLE)
+	if (from == BACKEND_ITEM_TYPE::INT && to == BACKEND_ITEM_TYPE::DOUBLE)
 		this->opcodes.push_back(vm_inst::OPT_I2D);
-	else if (to == Type::INT && from == Type::DOUBLE)
+	else if (to == BACKEND_ITEM_TYPE::INT && from == BACKEND_ITEM_TYPE::DOUBLE)
 		this->opcodes.push_back(vm_inst::OPT_D2I);
-	else if (from == Type::INT && to == Type::BOOL)
+	else if (from == BACKEND_ITEM_TYPE::INT && to == BACKEND_ITEM_TYPE::BOOL)
 		this->opcodes.push_back(vm_inst::OPT_I2B);
-	else if (to == Type::INT && from == Type::BOOL)
+	else if (to == BACKEND_ITEM_TYPE::INT && from == BACKEND_ITEM_TYPE::BOOL)
 		this->opcodes.push_back(vm_inst::OPT_B2I);
-	else if (from == Type::DOUBLE && to == Type::BOOL)
+	else if (from == BACKEND_ITEM_TYPE::DOUBLE && to == BACKEND_ITEM_TYPE::BOOL)
 		this->opcodes.push_back(vm_inst::OPT_D2B);
-	else if (to == Type::DOUBLE && from == Type::BOOL)
+	else if (to == BACKEND_ITEM_TYPE::DOUBLE && from == BACKEND_ITEM_TYPE::BOOL)
 		this->opcodes.push_back(vm_inst::OPT_B2D);
 }
 
-Type VmBackend::operationResultType(Type from, Type to)
+BACKEND_ITEM_TYPE VmBackend::operationResultType(BACKEND_ITEM_TYPE from, BACKEND_ITEM_TYPE to)
 {
-	if (from == Type::INT && to == Type::DOUBLE)
-		return Type::DOUBLE;
-	else if (to == Type::INT && from == Type::DOUBLE)
-		return Type::DOUBLE;
-	else if (to == Type::INT && from == Type::INT)
-		return Type::INT;
-	else if (from == Type::INT && to == Type::BOOL)
-		return Type::INT;
-	else if (to == Type::INT && from == Type::BOOL)
-		return Type::INT;
-	else if (to == Type::BOOL && from == Type::BOOL)
-		return Type::BOOL;
-	else if (from == Type::DOUBLE && to == Type::BOOL)
-		return Type::DOUBLE;
-	else if (to == Type::DOUBLE && from == Type::BOOL)
-		return Type::DOUBLE;
-	else if (to == Type::DOUBLE && from == Type::DOUBLE)
-		return Type::DOUBLE;
+	if (from == BACKEND_ITEM_TYPE::INT && to == BACKEND_ITEM_TYPE::DOUBLE)
+		return BACKEND_ITEM_TYPE::DOUBLE;
+	else if (to == BACKEND_ITEM_TYPE::INT && from == BACKEND_ITEM_TYPE::DOUBLE)
+		return BACKEND_ITEM_TYPE::DOUBLE;
+	else if (to == BACKEND_ITEM_TYPE::INT && from == BACKEND_ITEM_TYPE::INT)
+		return BACKEND_ITEM_TYPE::INT;
+	else if (from == BACKEND_ITEM_TYPE::INT && to == BACKEND_ITEM_TYPE::BOOL)
+		return BACKEND_ITEM_TYPE::INT;
+	else if (to == BACKEND_ITEM_TYPE::INT && from == BACKEND_ITEM_TYPE::BOOL)
+		return BACKEND_ITEM_TYPE::INT;
+	else if (to == BACKEND_ITEM_TYPE::BOOL && from == BACKEND_ITEM_TYPE::BOOL)
+		return BACKEND_ITEM_TYPE::BOOL;
+	else if (from == BACKEND_ITEM_TYPE::DOUBLE && to == BACKEND_ITEM_TYPE::BOOL)
+		return BACKEND_ITEM_TYPE::DOUBLE;
+	else if (to == BACKEND_ITEM_TYPE::DOUBLE && from == BACKEND_ITEM_TYPE::BOOL)
+		return BACKEND_ITEM_TYPE::DOUBLE;
+	else if (to == BACKEND_ITEM_TYPE::DOUBLE && from == BACKEND_ITEM_TYPE::DOUBLE)
+		return BACKEND_ITEM_TYPE::DOUBLE;
+    return BACKEND_ITEM_TYPE::EMPTY;
 }
 
-Type VmBackend::detectType(Ast* ast)
+BACKEND_ITEM_TYPE VmBackend::detectType(Ast* ast)
 {
 	if (ast == nullptr)
-		return Type::EMPTY;
+		return BACKEND_ITEM_TYPE::EMPTY;
 
 	switch (ast->GetType())
 	{
@@ -389,30 +390,30 @@ Type VmBackend::detectType(Ast* ast)
 			{
 
 				case PrimativeValue::Type::PRI_INTEGER:
-					return Type::INT;
+					return BACKEND_ITEM_TYPE::INT;
 
 				case PrimativeValue::Type::PRI_DOUBLE:
-					return Type::DOUBLE;
+					return BACKEND_ITEM_TYPE::DOUBLE;
 
 				case PrimativeValue::Type::PRI_STRING:
-					return Type::STRING;
+					return BACKEND_ITEM_TYPE::STRING;
 
 				case PrimativeValue::Type::PRI_BOOL:
-					return Type::BOOL;
+					return BACKEND_ITEM_TYPE::BOOL;
 
 				case PrimativeValue::Type::PRI_ARRAY:
-					return Type::ARRAY;
+					return BACKEND_ITEM_TYPE::ARRAY;
 
 				case PrimativeValue::Type::PRI_DICTIONARY:
-					return Type::DICTIONARY;
+					return BACKEND_ITEM_TYPE::DICTIONARY;
 
 				case PrimativeValue::Type::PRI_NULL:
-					return Type::EMPTY;
+					return BACKEND_ITEM_TYPE::EMPTY;
 			}
 		}
 
 		case EASY_AST_TYPE::RETURN:
-			return Type::EMPTY;
+			return BACKEND_ITEM_TYPE::EMPTY;
 
 		case EASY_AST_TYPE::PARENTHESES_BLOCK:
             return detectType(static_cast<ParenthesesGroupAst*>(ast)->Data);
@@ -435,11 +436,11 @@ Type VmBackend::detectType(Ast* ast)
 			break;
 
 		case EASY_AST_TYPE::ASSIGNMENT:
-			return Type::EMPTY;
+			return BACKEND_ITEM_TYPE::EMPTY;
 			break;
 
 		case EASY_AST_TYPE::BLOCK:
-			return Type::EMPTY;
+			return BACKEND_ITEM_TYPE::EMPTY;
 			break;
 
 		case EASY_AST_TYPE::FUNCTION_DECLERATION:
@@ -454,16 +455,16 @@ Type VmBackend::detectType(Ast* ast)
 			break;
 
 		case EASY_AST_TYPE::IF_STATEMENT:
-			return Type::EMPTY;
+			return BACKEND_ITEM_TYPE::EMPTY;
 
 		case EASY_AST_TYPE::FOR:
-			return Type::EMPTY;
+			return BACKEND_ITEM_TYPE::EMPTY;
 
 		case EASY_AST_TYPE::BINARY_OPERATION:
 		{
 			auto binary = static_cast<BinaryAst*>(ast);
-			Type rightType =  detectType(binary->Right);
-			Type leftType =  detectType(binary->Left);
+			BACKEND_ITEM_TYPE rightType =  detectType(binary->Right);
+			BACKEND_ITEM_TYPE leftType =  detectType(binary->Left);
 
             return operationResultType(rightType, leftType);
 		}
@@ -474,14 +475,14 @@ Type VmBackend::detectType(Ast* ast)
 			break;
 
 		case EASY_AST_TYPE::CONTROL_OPERATION:
-			return Type::BOOL;
+			return BACKEND_ITEM_TYPE::BOOL;
 			break;
 
 		case EASY_AST_TYPE::NONE:
-			return Type::EMPTY;
+			return BACKEND_ITEM_TYPE::EMPTY;
 	}
 
-	return Type::EMPTY;
+	return BACKEND_ITEM_TYPE::EMPTY;
 }
 
 PrimativeValue* VmBackend::getAstItem(Ast* ast)
@@ -708,27 +709,27 @@ void VmBackend::visit(AssignmentAst* ast)
 			switch (ast->VariableType)
 			{
 				case TYPE_BOOL:
-					varInfo->Type = Type::BOOL;
+					varInfo->Type = BACKEND_ITEM_TYPE::BOOL;
 					break;
 
 				case TYPE_INT:
-					varInfo->Type = Type::INT;
+					varInfo->Type = BACKEND_ITEM_TYPE::INT;
 					break;
 
 				case TYPE_DOUBLE:
-					varInfo->Type = Type::DOUBLE;
+					varInfo->Type = BACKEND_ITEM_TYPE::DOUBLE;
 					break;
 
 				case TYPE_STRING:
-					varInfo->Type = Type::STRING;
+					varInfo->Type = BACKEND_ITEM_TYPE::STRING;
 					break;
 
 				case TYPE_ARRAY:
-					varInfo->Type = Type::ARRAY;
+					varInfo->Type = BACKEND_ITEM_TYPE::ARRAY;
 					break;
 
 				case TYPE_DICTIONARY:
-					varInfo->Type = Type::DICTIONARY;
+					varInfo->Type = BACKEND_ITEM_TYPE::DICTIONARY;
 					break;
 			}
 		}
@@ -857,27 +858,27 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     switch (ast->ReturnType)
     {
         case TYPE_BOOL:
-            methodInfo->ReturnType = Type::BOOL;
+            methodInfo->ReturnType = BACKEND_ITEM_TYPE::BOOL;
             break;
 
         case TYPE_INT:
-            methodInfo->ReturnType = Type::INT;
+            methodInfo->ReturnType = BACKEND_ITEM_TYPE::INT;
             break;
 
         case TYPE_DOUBLE:
-            methodInfo->ReturnType = Type::DOUBLE;
+            methodInfo->ReturnType = BACKEND_ITEM_TYPE::DOUBLE;
             break;
 
         case TYPE_STRING:
-            methodInfo->ReturnType = Type::STRING;
+            methodInfo->ReturnType = BACKEND_ITEM_TYPE::STRING;
             break;
 
         case TYPE_ARRAY:
-            methodInfo->ReturnType = Type::ARRAY;
+            methodInfo->ReturnType = BACKEND_ITEM_TYPE::ARRAY;
             break;
 
         case TYPE_DICTIONARY:
-            methodInfo->ReturnType = Type::DICTIONARY;
+            methodInfo->ReturnType = BACKEND_ITEM_TYPE::DICTIONARY;
             break;
     }
 
@@ -894,27 +895,27 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
         switch (ast->Args[i]->Type)
         {
             case TYPE_BOOL:
-                varInfo->Type = Type::BOOL;
+                varInfo->Type = BACKEND_ITEM_TYPE::BOOL;
                 break;
 
             case TYPE_INT:
-                varInfo->Type = Type::INT;
+                varInfo->Type = BACKEND_ITEM_TYPE::INT;
                 break;
 
             case TYPE_DOUBLE:
-                varInfo->Type = Type::DOUBLE;
+                varInfo->Type = BACKEND_ITEM_TYPE::DOUBLE;
                 break;
 
             case TYPE_STRING:
-                varInfo->Type = Type::STRING;
+                varInfo->Type = BACKEND_ITEM_TYPE::STRING;
                 break;
 
             case TYPE_ARRAY:
-                varInfo->Type = Type::ARRAY;
+                varInfo->Type = BACKEND_ITEM_TYPE::ARRAY;
                 break;
 
             case TYPE_DICTIONARY:
-                varInfo->Type = Type::DICTIONARY;
+                varInfo->Type = BACKEND_ITEM_TYPE::DICTIONARY;
                 break;
         }
 
@@ -946,7 +947,7 @@ void VmBackend::visit(ForStatementAst* ast)
     auto* varInfo = new VariableInfo;
     varInfo->Index = impl->variables->size();
     varInfo->Name = ast->Variable;
-    varInfo->Type = Type::INT;
+    varInfo->Type = BACKEND_ITEM_TYPE::INT;
     
     (*impl->variables)[ast->Variable] = varInfo;
 
@@ -1173,8 +1174,8 @@ void VmBackend::visit(ControlAst* ast)
 
 void VmBackend::visit(BinaryAst* ast)
 {
-	Type rightType =  detectType(ast->Right);
-	Type leftType =  detectType(ast->Left);
+	BACKEND_ITEM_TYPE rightType =  detectType(ast->Right);
+	BACKEND_ITEM_TYPE leftType =  detectType(ast->Left);
 	auto binaryResultType = detectType(ast);
 
 	getAstItem(ast->Left);
@@ -1191,15 +1192,15 @@ void VmBackend::visit(BinaryAst* ast)
 		{
 			switch (binaryResultType)
 			{
-			case Type::INT:
+			case BACKEND_ITEM_TYPE::INT:
 				this->opcodes.push_back(vm_inst::OPT_iADD);
 				break;
 
-			case Type::DOUBLE:
+			case BACKEND_ITEM_TYPE::DOUBLE:
 				this->opcodes.push_back(vm_inst::OPT_dADD);
 				break;
 
-			case Type::BOOL:
+			case BACKEND_ITEM_TYPE::BOOL:
 				this->opcodes.push_back(vm_inst::OPT_bADD);
 				break;
 			}
@@ -1210,15 +1211,15 @@ void VmBackend::visit(BinaryAst* ast)
 		{
 			switch (binaryResultType)
 			{
-			case Type::INT:
+			case BACKEND_ITEM_TYPE::INT:
 				this->opcodes.push_back(vm_inst::OPT_iSUB);
 				break;
 
-			case Type::DOUBLE:
+			case BACKEND_ITEM_TYPE::DOUBLE:
 				this->opcodes.push_back(vm_inst::OPT_dSUB);
 				break;
 
-			case Type::BOOL:
+			case BACKEND_ITEM_TYPE::BOOL:
 				this->opcodes.push_back(vm_inst::OPT_bSUB);
 				break;
 			}
@@ -1229,15 +1230,15 @@ void VmBackend::visit(BinaryAst* ast)
 		{
 			switch(binaryResultType)
 			{
-				case Type::INT:
+				case BACKEND_ITEM_TYPE::INT:
 					this->opcodes.push_back(vm_inst::OPT_iMUL);
 					break;
 
-				case Type::DOUBLE:
+				case BACKEND_ITEM_TYPE::DOUBLE:
 					this->opcodes.push_back(vm_inst::OPT_dMUL);
 					break;
 
-				case Type::BOOL:
+				case BACKEND_ITEM_TYPE::BOOL:
 					this->opcodes.push_back(vm_inst::OPT_bMUL);
 					break;
 			}
@@ -1248,15 +1249,15 @@ void VmBackend::visit(BinaryAst* ast)
 		{
 			switch (binaryResultType)
 			{
-			case Type::INT:
+			case BACKEND_ITEM_TYPE::INT:
 				this->opcodes.push_back(vm_inst::OPT_iDIV);
 				break;
 
-			case Type::DOUBLE:
+			case BACKEND_ITEM_TYPE::DOUBLE:
 				this->opcodes.push_back(vm_inst::OPT_dDIV);
 				break;
 
-			case Type::BOOL:
+			case BACKEND_ITEM_TYPE::BOOL:
 				this->opcodes.push_back(vm_inst::OPT_bDIV);
 				break;
 			}
@@ -1331,7 +1332,7 @@ void VmBackend::visit(FunctionCallAst* ast)
         size_t totalParameters = ast->Args.size();
         for (size_t i = totalParameters; i > 0; --i)
         {
-            Type type = detectType(ast->Args[i - 1]);
+            BACKEND_ITEM_TYPE type = detectType(ast->Args[i - 1]);
             if (type != function->Args[i - 1])
                 throw ParseError(_T("Argument not type matched."));
 
@@ -1351,7 +1352,7 @@ void VmBackend::visit(FunctionCallAst* ast)
         size_t totalParameters = ast->Args.size();
         for (size_t i = totalParameters; i > 0; --i)
         {
-            Type type = detectType(ast->Args[i - 1]);
+            BACKEND_ITEM_TYPE type = detectType(ast->Args[i - 1]);
             getAstItem(ast->Args[i - 1]);
         }
       

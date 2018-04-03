@@ -13,6 +13,16 @@
 
 #include "ASTs.h"
 
+enum class BACKEND_ITEM_TYPE {
+    EMPTY,
+    INT,
+    DOUBLE,
+    STRING,
+    BOOL,
+    ARRAY,
+    DICTIONARY
+};
+
 class Backend {
 public:
     virtual void Prepare(std::shared_ptr<std::vector<Ast*>> asts) = 0;

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <limits>
+#include <stack>
 
 #include "Exceptions.h"
 #include "LLVMBackend.h"
@@ -36,8 +37,10 @@ using namespace llvm;
 class LLVMBackendImpl
 {
 public:
-	Module* module;
+	std::unique_ptr<Module> module;
 	LLVMContext context;
+    std::stack<Value*> values;
+    std::unordered_map<std::string, Function*> functions;
 
 	LLVMBackendImpl()
 	{
@@ -45,17 +48,122 @@ public:
 		InitializeNativeTarget();
 		InitializeNativeTargetAsmPrinter();
 
-		module = new Module("SYSTEM", context);
+        module = std::unique_ptr<Module>(new Module("SYSTEM", context));
 		LLVMContext Context;
 	}
 
 	~LLVMBackendImpl()
 	{
-		delete module;
+		//delete module;
 	}
 };
 
-
+BACKEND_ITEM_TYPE LLVMBackend::detectType(Ast* ast)
+{
+    if (ast == nullptr)
+    return BACKEND_ITEM_TYPE::EMPTY;
+    
+    switch (ast->GetType())
+    {
+        case EASY_AST_TYPE::UNARY:
+        {
+            auto* unary = static_cast<UnaryAst*>(ast);
+            return detectType(unary->Data);
+        }
+            
+        case EASY_AST_TYPE::PRIMATIVE:
+        {
+            auto type = static_cast<PrimativeAst*>(ast)->Value->Type;
+            switch (type)
+            {
+                    
+                case PrimativeValue::Type::PRI_INTEGER:
+                    return BACKEND_ITEM_TYPE::INT;
+                    
+                case PrimativeValue::Type::PRI_DOUBLE:
+                    return BACKEND_ITEM_TYPE::DOUBLE;
+                    
+                case PrimativeValue::Type::PRI_STRING:
+                    return BACKEND_ITEM_TYPE::STRING;
+                    
+                case PrimativeValue::Type::PRI_BOOL:
+                    return BACKEND_ITEM_TYPE::BOOL;
+                    
+                case PrimativeValue::Type::PRI_ARRAY:
+                    return BACKEND_ITEM_TYPE::ARRAY;
+                    
+                case PrimativeValue::Type::PRI_DICTIONARY:
+                    return BACKEND_ITEM_TYPE::DICTIONARY;
+                    
+                case PrimativeValue::Type::PRI_NULL:
+                    return BACKEND_ITEM_TYPE::EMPTY;
+            }
+        }
+            
+        case EASY_AST_TYPE::RETURN:
+            return BACKEND_ITEM_TYPE::EMPTY;
+            
+        case EASY_AST_TYPE::PARENTHESES_BLOCK:
+            return detectType(static_cast<ParenthesesGroupAst*>(ast)->Data);
+            
+        case EASY_AST_TYPE::EXPR_STATEMENT:
+            return detectType(static_cast<ExprStatementAst*>(ast)->Expr);
+            break;
+            
+        case EASY_AST_TYPE::VARIABLE:
+        {
+            
+        }
+            break;
+            
+        case EASY_AST_TYPE::ASSIGNMENT:
+            return BACKEND_ITEM_TYPE::EMPTY;
+            break;
+            
+        case EASY_AST_TYPE::BLOCK:
+            return BACKEND_ITEM_TYPE::EMPTY;
+            break;
+            
+        case EASY_AST_TYPE::FUNCTION_DECLERATION:
+            //static_cast<FunctionDefinetionAst*>(ast)->accept(this);
+            break;
+            
+        case EASY_AST_TYPE::FUNCTION_CALL:
+        {
+            
+        }
+            break;
+            
+        case EASY_AST_TYPE::IF_STATEMENT:
+            return BACKEND_ITEM_TYPE::EMPTY;
+            
+        case EASY_AST_TYPE::FOR:
+            return BACKEND_ITEM_TYPE::EMPTY;
+            
+        case EASY_AST_TYPE::BINARY_OPERATION:
+        {
+            auto binary = static_cast<BinaryAst*>(ast);
+            BACKEND_ITEM_TYPE rightType =  detectType(binary->Right);
+            BACKEND_ITEM_TYPE leftType =  detectType(binary->Left);
+            
+            return operationResultType(rightType, leftType);
+        }
+            break;
+            
+        case EASY_AST_TYPE::STRUCT_OPERATION:
+            //static_cast<StructAst*>(ast)->accept(this);
+            break;
+            
+        case EASY_AST_TYPE::CONTROL_OPERATION:
+            return BACKEND_ITEM_TYPE::BOOL;
+            break;
+            
+        case EASY_AST_TYPE::NONE:
+            return BACKEND_ITEM_TYPE::EMPTY;
+    }
+    
+    return BACKEND_ITEM_TYPE::EMPTY;
+}
 
 void LLVMBackend::Prepare(std::shared_ptr<std::vector<Ast*>> pAsts)
 {
@@ -69,26 +177,26 @@ PrimativeValue* LLVMBackend::getPrimative(Ast* ast)
 	return primative;
 }
 
-tmp::Type LLVMBackend::operationResultType(tmp::Type from, tmp::Type to)
+BACKEND_ITEM_TYPE LLVMBackend::operationResultType(BACKEND_ITEM_TYPE from, BACKEND_ITEM_TYPE to)
 {
-	if (from == tmp::Type::INT && to == tmp::Type::DOUBLE)
-		return tmp::Type::DOUBLE;
-	else if (to == tmp::Type::INT && from == tmp::Type::DOUBLE)
-		return tmp::Type::DOUBLE;
-	else if (to == tmp::Type::INT && from == tmp::Type::INT)
-		return tmp::Type::INT;
-	else if (from == tmp::Type::INT && to == tmp::Type::BOOL)
-		return tmp::Type::INT;
-	else if (to == tmp::Type::INT && from == tmp::Type::BOOL)
-		return tmp::Type::INT;
-	else if (to == tmp::Type::BOOL && from == tmp::Type::BOOL)
-		return tmp::Type::BOOL;
-	else if (from == tmp::Type::DOUBLE && to == tmp::Type::BOOL)
-		return tmp::Type::DOUBLE;
-	else if (to == tmp::Type::DOUBLE && from == tmp::Type::BOOL)
-		return tmp::Type::DOUBLE;
-	else if (to == tmp::Type::DOUBLE && from == tmp::Type::DOUBLE)
-		return tmp::Type::DOUBLE;
+	if (from == BACKEND_ITEM_TYPE::INT && to == BACKEND_ITEM_TYPE::DOUBLE)
+		return BACKEND_ITEM_TYPE::DOUBLE;
+	else if (to == BACKEND_ITEM_TYPE::INT && from == BACKEND_ITEM_TYPE::DOUBLE)
+		return BACKEND_ITEM_TYPE::DOUBLE;
+	else if (to == BACKEND_ITEM_TYPE::INT && from == BACKEND_ITEM_TYPE::INT)
+		return BACKEND_ITEM_TYPE::INT;
+	else if (from == BACKEND_ITEM_TYPE::INT && to == BACKEND_ITEM_TYPE::BOOL)
+		return BACKEND_ITEM_TYPE::INT;
+	else if (to == BACKEND_ITEM_TYPE::INT && from == BACKEND_ITEM_TYPE::BOOL)
+		return BACKEND_ITEM_TYPE::INT;
+	else if (to == BACKEND_ITEM_TYPE::BOOL && from == BACKEND_ITEM_TYPE::BOOL)
+		return BACKEND_ITEM_TYPE::BOOL;
+	else if (from == BACKEND_ITEM_TYPE::DOUBLE && to == BACKEND_ITEM_TYPE::BOOL)
+		return BACKEND_ITEM_TYPE::DOUBLE;
+	else if (to == BACKEND_ITEM_TYPE::DOUBLE && from == BACKEND_ITEM_TYPE::BOOL)
+		return BACKEND_ITEM_TYPE::DOUBLE;
+	else if (to == BACKEND_ITEM_TYPE::DOUBLE && from == BACKEND_ITEM_TYPE::DOUBLE)
+		return BACKEND_ITEM_TYPE::DOUBLE;
 }
 
 PrimativeValue* LLVMBackend::getAstItem(Ast* ast)
@@ -196,47 +304,26 @@ PrimativeValue* LLVMBackend::Execute()
 {
 	PrimativeValue* result = nullptr;
 	size_t codeStart = temporaryAsts.size();
+    std::vector<char_type> opcodes;
+    
+    this->Compile(opcodes);
 
-	this->Compile(temporaryAsts);
-	impl->system.execute(&impl->codes[0], impl->codes.size(), codeStart);
-	auto* lastItem = impl->system.getObject();
-
-	if (lastItem != nullptr)
-		switch (lastItem->Type)
-		{
-		case vm_object::vm_object_type::INT:
-			result = new PrimativeValue(lastItem->Int);
-			break;
-
-		case vm_object::vm_object_type::DOUBLE:
-			result = new PrimativeValue(lastItem->Double);
-			break;
-
-		case vm_object::vm_object_type::BOOL:
-			result = new PrimativeValue(lastItem->Bool);
-			break;
-
-		case vm_object::vm_object_type::EMPTY:
-			result = new PrimativeValue();
-			break;
-
-		case vm_object::vm_object_type::ARRAY:
-			console_out << _T("(ARRAY) Size: ") << static_cast<vm_array*>(lastItem->Pointer)->Indicator << '\n';
-			break;
-
-		case vm_object::vm_object_type::STR:
-			result = new PrimativeValue(string_type(static_cast<char_type*>(lastItem->Pointer)));
-			break;
-		}
-
-	if (result != nullptr)
-		console_out << result->Describe() << '\n';
-
-	return result;
+    return nullptr;
 }
 
 void LLVMBackend::Execute(std::vector<char_type> const & opcodes)
 {
+    int n = 32;
+    std::string errStr;
+    ExecutionEngine *EE = EngineBuilder(std::move(impl->module)).setErrorStr(&errStr).create();
+    
+    std::vector<GenericValue> Args(1);
+    Args[0].IntVal = APInt(32, n);
+    
+    GenericValue GV = EE->runFunction(impl->functions["test"], Args);
+    
+    // import result of execution
+    outs() << "Result: " << GV.IntVal << "\n";
 }
 
 LLVMBackend::~LLVMBackend()
@@ -299,16 +386,18 @@ void LLVMBackend::visit(ControlAst* ast)
 
 void LLVMBackend::visit(BinaryAst* ast)
 {
-	tmp::Type rightType = tmp::Type::INT;
+	BACKEND_ITEM_TYPE rightType = BACKEND_ITEM_TYPE::INT;
 
-	tmp::Type leftType = tmp::Type::INT;
-	auto binaryResultType = tmp::Type::INT;
-
-	auto leftValue = getPrimative(ast->Left);
-	auto rightValue = getPrimative(ast->Right);
-
-	Value *leftVal = ConstantInt::get(llvm::Type::getInt32Ty(impl->context), leftValue->Integer);
-	Value *rightVal = ConstantInt::get(llvm::Type::getInt32Ty(impl->context), rightValue->Integer);
+	BACKEND_ITEM_TYPE leftType = BACKEND_ITEM_TYPE::INT;
+	auto binaryResultType = BACKEND_ITEM_TYPE::INT;
+    
+	auto left = getPrimative(ast->Left);
+	auto right = getPrimative(ast->Right);
+    
+    
+    
+	Value *leftVal = ConstantInt::get(llvm::Type::getInt32Ty(impl->context), left->Integer);
+	Value *rightVal = ConstantInt::get(llvm::Type::getInt32Ty(impl->context), right->Integer);
 
 
 	switch (ast->Op)
@@ -317,14 +406,14 @@ void LLVMBackend::visit(BinaryAst* ast)
 	{
 		switch (binaryResultType)
 		{
-		case tmp::Type::INT:
+		case BACKEND_ITEM_TYPE::INT:
 			break;
 
-		case tmp::Type::DOUBLE:
+		case BACKEND_ITEM_TYPE::DOUBLE:
 			//this->opcodes.push_back(vm_inst::OPT_dADD);
 			break;
 
-		case tmp::Type::BOOL:
+		case BACKEND_ITEM_TYPE::BOOL:
 			//this->opcodes.push_back(vm_inst::OPT_bADD);
 			break;
 		}
@@ -335,15 +424,15 @@ void LLVMBackend::visit(BinaryAst* ast)
 	{
 		switch (binaryResultType)
 		{
-		case tmp::Type::INT:
+		case BACKEND_ITEM_TYPE::INT:
 			//this->opcodes.push_back(vm_inst::OPT_iSUB);
 			break;
 
-		case tmp::Type::DOUBLE:
+		case BACKEND_ITEM_TYPE::DOUBLE:
 			//this->opcodes.push_back(vm_inst::OPT_dSUB);
 			break;
 
-		case tmp::Type::BOOL:
+		case BACKEND_ITEM_TYPE::BOOL:
 			//this->opcodes.push_back(vm_inst::OPT_bSUB);
 			break;
 		}
@@ -354,15 +443,15 @@ void LLVMBackend::visit(BinaryAst* ast)
 	{
 		switch (binaryResultType)
 		{
-		case tmp::Type::INT:
+		case BACKEND_ITEM_TYPE::INT:
 			//this->opcodes.push_back(vm_inst::OPT_iMUL);
 			break;
 
-		case tmp::Type::DOUBLE:
+		case BACKEND_ITEM_TYPE::DOUBLE:
 			//this->opcodes.push_back(vm_inst::OPT_dMUL);
 			break;
 
-		case tmp::Type::BOOL:
+		case BACKEND_ITEM_TYPE::BOOL:
 			//this->opcodes.push_back(vm_inst::OPT_bMUL);
 			break;
 		}
@@ -373,15 +462,15 @@ void LLVMBackend::visit(BinaryAst* ast)
 	{
 		switch (binaryResultType)
 		{
-		case tmp::Type::INT:
+		case BACKEND_ITEM_TYPE::INT:
 			//this->opcodes.push_back(vm_inst::OPT_iDIV);
 			break;
 
-		case tmp::Type::DOUBLE:
+		case BACKEND_ITEM_TYPE::DOUBLE:
 			//this->opcodes.push_back(vm_inst::OPT_dDIV);
 			break;
 
-		case tmp::Type::BOOL:
+		case BACKEND_ITEM_TYPE::BOOL:
 			//this->opcodes.push_back(vm_inst::OPT_bDIV);
 			break;
 		}
