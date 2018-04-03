@@ -1,6 +1,7 @@
 #include "EasyEngine.h"
 #include "InterpreterBackend.h"
 #include "VmBackend.h"
+#include "LLVMBackend.h"
 #include "Lexer.h"
 #include "ASTs.h"
 #include "Backend.h"
@@ -99,3 +100,4 @@ void EasyEngine<TTokinizer, TAstParser, TBackend>::Compile(string_type const & c
 
 template class EasyEngine<StandartTokinizer, AstParser, VmBackend>;
 template class EasyEngine<StandartTokinizer, AstParser, InterpreterBackend>;
+template class EasyEngine<StandartTokinizer, AstParser, LLVMBackend>;

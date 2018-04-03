@@ -1,24 +1,34 @@
 //#define LLVM_ACTIVE
-
+#define NOMINMAX
 #include <fstream>
 
 #include <string>
 #include <vector>
 #include <iostream>
 #include <sstream>
-#include <cmath>
+#include <limits>
 #define CATCH_CONFIG_RUNNER
 
 #include "Catch.h"
 #include "System.h"
 #include "EasyEngine.h"
+
+#ifdef EASYLANG_JIT_ACTIVE
+#include "LLVMEasyEngine.h"
+#define ENGINE LLVMEasyEngine
+#else 
 #include "VmEasyEngine.h"
-#include "InterpreterEasyEngine.h"
+#include "VmBackend.h"
+#include "../Tests/VmTests.h"
+//#include "InterpreterBackend.h"
+//#include "InterpreterEasyEngine.h"
+#define ENGINE VmEasyEngine
+#endif
+
 #include "Definitions.h"
 #include "FunctionDispatch.h"
 
-#include "VmBackend.h"
-#include "InterpreterBackend.h"
+
 #include "ASTs.h"
 #include "Lexer.h"
 #include "Console.h"
@@ -26,11 +36,10 @@
 #include "../Tests/LexerTests.h"
 #include "../Tests/AstTests.h"
 //#include "../Tests/InterpreterTests.h"
-#include "../Tests/VmTests.h"
 
 using namespace std;
 
-#ifdef LLVM_ACTIVE
+#ifdef EASYLANG_JIT_ACTIVE
 #include "llvm/ADT/APInt.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
@@ -57,15 +66,14 @@ static Function *CreateFibFunction(Module *M, LLVMContext &Context) {
     // Create the fib function and insert it into module M. This function is said
     // to return an int and take an int parameter.
     Function *FibF =
-            cast<Function>(M->getOrInsertFunction("fib", Type::getInt32Ty(Context),
-                                                  Type::getInt32Ty(Context)));
+            cast<Function>(M->getOrInsertFunction("fib", llvm::Type::getInt32Ty(Context), llvm::Type::getInt32Ty(Context)));
 
     // Add a basic block to the function.
     BasicBlock *BB = BasicBlock::Create(Context, "EntryBlock", FibF);
 
     // Get pointers to the constants.
-    Value *One = ConstantInt::get(Type::getInt32Ty(Context), 1);
-    Value *Two = ConstantInt::get(Type::getInt32Ty(Context), 2);
+    Value *One = ConstantInt::get(llvm::Type::getInt32Ty(Context), 1);
+    Value *Two = ConstantInt::get(llvm::Type::getInt32Ty(Context), 2);
 
     // Get pointer to the integer argument of the add1 function...
     Argument *ArgX = &*FibF->arg_begin(); // Get the arg.
@@ -105,8 +113,8 @@ static Function *CreateFibFunction(Module *M, LLVMContext &Context) {
 #endif
 
 int main(int argc, char_type* argv[]) {
-#ifdef LLVM_ACTIVE
-    int n = argc > 1 ? atol(argv[1]) : 27;
+#ifdef EASYLANG_JIT_ACTIVE
+    int n = 32;
 
     InitializeNativeTarget();
     InitializeNativeTargetAsmPrinter();
@@ -129,16 +137,6 @@ int main(int argc, char_type* argv[]) {
         return 1;
     }
 
-    errs() << "verifying... ";
-    if (verifyModule(*M)) {
-        errs() << argv[0] << ": Error constructing function!\n";
-        return 1;
-    }
-
-    errs() << "OK\n";
-    errs() << "We just constructed this LLVM module:\n\n---------\n" << *M;
-    errs() << "---------\nstarting fibonacci(" << n << ") with JIT...\n";
-
     // Call the Fibonacci function with argument n:
     std::vector<GenericValue> Args(1);
     Args[0].IntVal = APInt(32, n);
@@ -153,7 +151,7 @@ int main(int argc, char_type* argv[]) {
 	// Unit tests
 	Catch::Session().run(argc, argv);
 
-	auto* engine = new VmEasyEngine;
+	auto* engine = new ENGINE;
 	if (argc == 2)
 	{
 		string_type file(argv[1]);
