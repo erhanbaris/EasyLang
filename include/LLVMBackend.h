@@ -85,7 +85,6 @@ public:
 	void visit(ForStatementAst* ast) override;
 	void visit(ReturnAst* ast) override;
 	void visit(ExprStatementAst* ast) override;
-	void visit(PrimativeValue* ast);
 
 private:
 	std::vector<char_type> opcodes;

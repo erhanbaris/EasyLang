@@ -364,14 +364,32 @@ llvm::Value* LLVMBackend::visit(JITVariableAst* ast)
     return nullptr;
 }
 
-void LLVMBackend::visit(PrimativeValue* value) 
-{
-	
-}
-
 llvm::Value* LLVMBackend::visit(JITPrimativeAst* ast)
 {
-    return nullptr;
+    PrimativeValue* astValue = ast->Value;
+    switch (astValue->Type) {
+        case PrimativeValue::Type::PRI_INTEGER:
+            return llvm::ConstantInt::get(impl->context, APInt(32, astValue->Integer, false));
+            break;
+            
+        case PrimativeValue::Type::PRI_DOUBLE:
+            break;
+            
+        case PrimativeValue::Type::PRI_STRING:
+            break;
+            
+        case PrimativeValue::Type::PRI_BOOL:
+            break;
+            
+        case PrimativeValue::Type::PRI_ARRAY:
+            break;
+            
+        case PrimativeValue::Type::PRI_DICTIONARY:
+            break;
+            
+        case PrimativeValue::Type::PRI_NULL:
+            break;
+    }
 }
 
 llvm::Value* LLVMBackend::visit(JITControlAst* ast)
