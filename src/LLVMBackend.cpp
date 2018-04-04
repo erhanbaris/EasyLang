@@ -210,13 +210,12 @@ PrimativeValue* LLVMBackend::getAstItem(Ast* ast)
 	{
 		auto* unary = static_cast<UnaryAst*>(ast);
 		getAstItem(unary->Data);
-		unary->accept(this);
+
 		return nullptr;
 	}
 	break;
 
 	case EASY_AST_TYPE::PRIMATIVE:
-		static_cast<PrimativeAst*>(ast)->accept(this);
 		break;
 
 	case EASY_AST_TYPE::RETURN:
@@ -224,7 +223,6 @@ PrimativeValue* LLVMBackend::getAstItem(Ast* ast)
 		break;
 
 	case EASY_AST_TYPE::PARENTHESES_BLOCK:
-		static_cast<ParenthesesGroupAst*>(ast)->accept(this);
 		break;
 
 	case EASY_AST_TYPE::EXPR_STATEMENT:
@@ -232,11 +230,9 @@ PrimativeValue* LLVMBackend::getAstItem(Ast* ast)
 		break;
 
 	case EASY_AST_TYPE::VARIABLE:
-		static_cast<VariableAst*>(ast)->accept(this);
 		break;
 
 	case EASY_AST_TYPE::ASSIGNMENT:
-		static_cast<AssignmentAst*>(ast)->accept(this);
 		break;
 
 	case EASY_AST_TYPE::BLOCK:
@@ -248,7 +244,6 @@ PrimativeValue* LLVMBackend::getAstItem(Ast* ast)
 		break;
 
 	case EASY_AST_TYPE::FUNCTION_CALL:
-		static_cast<FunctionCallAst*>(ast)->accept(this);
 		break;
 
 	case EASY_AST_TYPE::IF_STATEMENT:
@@ -260,15 +255,12 @@ PrimativeValue* LLVMBackend::getAstItem(Ast* ast)
 		break;
 
 	case EASY_AST_TYPE::BINARY_OPERATION:
-		static_cast<BinaryAst*>(ast)->accept(this);
 		break;
 
 	case EASY_AST_TYPE::STRUCT_OPERATION:
-		static_cast<StructAst*>(ast)->accept(this);
 		break;
 
 	case EASY_AST_TYPE::CONTROL_OPERATION:
-		static_cast<ControlAst*>(ast)->accept(this);
 		break;
 
 	case EASY_AST_TYPE::NONE:
@@ -337,9 +329,9 @@ LLVMBackend::LLVMBackend()
 	impl = new LLVMBackendImpl;
 }
 
-void LLVMBackend::visit(AssignmentAst* ast)
+llvm::Value* LLVMBackend::visit(JITAssignmentAst* ast)
 {
-	
+    return nullptr;
 }
 
 void LLVMBackend::visit(BlockAst* ast)
@@ -367,27 +359,29 @@ void LLVMBackend::visit(ForStatementAst* ast)
    
 }
 
-void LLVMBackend::visit(VariableAst* ast)
+llvm::Value* LLVMBackend::visit(JITVariableAst* ast)
+{
+    return nullptr;
+}
+
+void LLVMBackend::visit(PrimativeValue* value) 
 {
 	
 }
 
-void LLVMBackend::visit(PrimativeValue* value) {
-	
-}
-
-void LLVMBackend::visit(PrimativeAst* ast) {
-}
-
-void LLVMBackend::visit(ControlAst* ast)
+llvm::Value* LLVMBackend::visit(JITPrimativeAst* ast)
 {
-	
+    return nullptr;
 }
 
-void LLVMBackend::visit(BinaryAst* ast)
+llvm::Value* LLVMBackend::visit(JITControlAst* ast)
+{
+    return nullptr;
+}
+
+llvm::Value* LLVMBackend::visit(JITBinaryAst* ast)
 {
 	BACKEND_ITEM_TYPE rightType = BACKEND_ITEM_TYPE::INT;
-
 	BACKEND_ITEM_TYPE leftType = BACKEND_ITEM_TYPE::INT;
 	auto binaryResultType = BACKEND_ITEM_TYPE::INT;
     
@@ -476,33 +470,39 @@ void LLVMBackend::visit(BinaryAst* ast)
 		}
 	}
 	break;
-	}
+    }
+    
+    return nullptr;
 }
 
-void LLVMBackend::visit(StructAst* ast) 
+llvm::Value* LLVMBackend::visit(JITStructAst* ast)
 {
-	
+    return nullptr;
 }
 
 void LLVMBackend::visit(ReturnAst* ast)
 {
-	
+    return nullptr;
 }
 
-void LLVMBackend::visit(ParenthesesGroupAst* ast) { }
-void LLVMBackend::visit(FunctionCallAst* ast)
+llvm::Value* LLVMBackend::visit(JITParenthesesGroupAst* ast)
 {
-	
+    return nullptr;
 }
 
-void LLVMBackend::visit(UnaryAst* ast)
+llvm::Value* LLVMBackend::visit(JITFunctionCallAst* ast)
 {
+    return nullptr;
+}
 
+llvm::Value* LLVMBackend::visit(JITUnaryAst* ast)
+{
+    return nullptr;
 }
 
 void LLVMBackend::visit(ExprStatementAst* ast)
 {
-	ast->Expr->accept(this);
+	//ast->Expr->accept(this);
 }
 
 #endif
