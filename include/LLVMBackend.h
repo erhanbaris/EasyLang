@@ -25,6 +25,7 @@ class JITStructAst : public StructAst, public CodeGenerator { };
 class JITParenthesesGroupAst : public ParenthesesGroupAst, public CodeGenerator { };
 class JITUnaryAst : public UnaryAst, public CodeGenerator { };
 class JITFunctionCallAst : public FunctionCallAst, public CodeGenerator { };
+class JITExprStatementAst : public ExprStatementAst, public CodeGenerator { };
 
 class JITExprVisitor : public BaseVisitor,
 public Visitor<JITAssignmentAst, llvm::Value*>,
@@ -35,7 +36,8 @@ public Visitor<JITBinaryAst, llvm::Value*>,
 public Visitor<JITStructAst, llvm::Value*>,
 public Visitor<JITParenthesesGroupAst, llvm::Value*>,
 public Visitor<JITUnaryAst, llvm::Value*>,
-public Visitor<JITFunctionCallAst, llvm::Value*>
+public Visitor<JITFunctionCallAst, llvm::Value*>,
+public Visitor<JITExprStatementAst, llvm::Value*>
 {
 public:
     virtual llvm::Value* visit(JITAssignmentAst* ast) = 0;
@@ -47,6 +49,7 @@ public:
     virtual llvm::Value* visit(JITParenthesesGroupAst* ast) = 0;
     virtual llvm::Value* visit(JITUnaryAst* ast) = 0;
     virtual llvm::Value* visit(JITFunctionCallAst* ast) = 0;
+	virtual llvm::Value* visit(JITExprStatementAst* ast) = 0;
 };
 
 class LLVMBackendImpl;
@@ -62,7 +65,7 @@ public:
 
 	void Prepare(std::shared_ptr<std::vector<Ast*>> pAsts) override;
 	PrimativeValue* getPrimative(Ast* ast);
-	PrimativeValue* getAstItem(Ast* ast);
+	llvm::Value* getAstItem(Ast* ast);
     BACKEND_ITEM_TYPE detectType(Ast* ast);
 	BACKEND_ITEM_TYPE operationResultType(BACKEND_ITEM_TYPE from, BACKEND_ITEM_TYPE to);
 	PrimativeValue* Execute() override;
@@ -78,6 +81,7 @@ public:
     llvm::Value* visit(JITParenthesesGroupAst* ast) override;
     llvm::Value* visit(JITUnaryAst* ast) override;
     llvm::Value* visit(JITFunctionCallAst* ast) override;
+	llvm::Value* visit(JITExprStatementAst* ast) override;
     
 	void visit(BlockAst* ast) override;
 	void visit(IfStatementAst* ast) override;

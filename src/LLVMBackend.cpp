@@ -56,6 +56,45 @@ public:
 	{
 		//delete module;
 	}
+
+	llvm::Value* getConstant(PrimativeValue* astValue)
+	{
+		switch (astValue->Type) {
+		case PrimativeValue::Type::PRI_INTEGER:
+			return llvm::ConstantInt::get(this->context, APInt(32, astValue->Integer, false));
+
+		case PrimativeValue::Type::PRI_DOUBLE:
+			return llvm::ConstantFP::get(this->context, llvm::APFloat(astValue->Double));
+
+		case PrimativeValue::Type::PRI_STRING:
+			return llvm::ConstantDataArray::getString(this->context, AS_CHAR(astValue->String->c_str()), true);
+
+		case PrimativeValue::Type::PRI_BOOL:
+			return llvm::ConstantInt::get(this->context, APInt(1, astValue->Bool, false));
+			break;
+
+		case PrimativeValue::Type::PRI_ARRAY:
+		{
+			auto* array = astValue->Array;
+
+			IntegerType* i32 = IntegerType::get(this->context, 32);
+			ArrayType* arrayType = ArrayType::get(i32, array->size());
+			std::vector<Value*> constantArray;
+
+			auto itEnd = array->end();
+			for (auto it = array->begin(); it != itEnd; ++it)
+				constantArray.push_back(getConstant(*it));
+		}
+		/*return llvm::ConstantArray::get(;*/
+		break;
+
+		case PrimativeValue::Type::PRI_DICTIONARY:
+			break;
+
+		case PrimativeValue::Type::PRI_NULL:
+			break;
+		}
+	}
 };
 
 BACKEND_ITEM_TYPE LLVMBackend::detectType(Ast* ast)
@@ -199,7 +238,7 @@ BACKEND_ITEM_TYPE LLVMBackend::operationResultType(BACKEND_ITEM_TYPE from, BACKE
 		return BACKEND_ITEM_TYPE::DOUBLE;
 }
 
-PrimativeValue* LLVMBackend::getAstItem(Ast* ast)
+llvm::Value* LLVMBackend::getAstItem(Ast* ast)
 {
 	if (ast == nullptr)
 		return nullptr;
@@ -216,6 +255,7 @@ PrimativeValue* LLVMBackend::getAstItem(Ast* ast)
 	break;
 
 	case EASY_AST_TYPE::PRIMATIVE:
+		return static_cast<JITPrimativeAst*>(ast)->generate(this);
 		break;
 
 	case EASY_AST_TYPE::RETURN:
@@ -226,7 +266,7 @@ PrimativeValue* LLVMBackend::getAstItem(Ast* ast)
 		break;
 
 	case EASY_AST_TYPE::EXPR_STATEMENT:
-		static_cast<ExprStatementAst*>(ast)->accept(this);
+		return static_cast<JITExprStatementAst*>(ast)->generate(this);
 		break;
 
 	case EASY_AST_TYPE::VARIABLE:
@@ -255,6 +295,7 @@ PrimativeValue* LLVMBackend::getAstItem(Ast* ast)
 		break;
 
 	case EASY_AST_TYPE::BINARY_OPERATION:
+		return static_cast<JITBinaryAst*>(ast)->generate(this);
 		break;
 
 	case EASY_AST_TYPE::STRUCT_OPERATION:
@@ -366,30 +407,7 @@ llvm::Value* LLVMBackend::visit(JITVariableAst* ast)
 
 llvm::Value* LLVMBackend::visit(JITPrimativeAst* ast)
 {
-    PrimativeValue* astValue = ast->Value;
-    switch (astValue->Type) {
-        case PrimativeValue::Type::PRI_INTEGER:
-            return llvm::ConstantInt::get(impl->context, APInt(32, astValue->Integer, false));
-            break;
-            
-        case PrimativeValue::Type::PRI_DOUBLE:
-            break;
-            
-        case PrimativeValue::Type::PRI_STRING:
-            break;
-            
-        case PrimativeValue::Type::PRI_BOOL:
-            break;
-            
-        case PrimativeValue::Type::PRI_ARRAY:
-            break;
-            
-        case PrimativeValue::Type::PRI_DICTIONARY:
-            break;
-            
-        case PrimativeValue::Type::PRI_NULL:
-            break;
-    }
+	return impl->getConstant(ast->Value);
 }
 
 llvm::Value* LLVMBackend::visit(JITControlAst* ast)
@@ -403,94 +421,30 @@ llvm::Value* LLVMBackend::visit(JITBinaryAst* ast)
 	BACKEND_ITEM_TYPE leftType = BACKEND_ITEM_TYPE::INT;
 	auto binaryResultType = BACKEND_ITEM_TYPE::INT;
     
-	auto left = getPrimative(ast->Left);
-	auto right = getPrimative(ast->Right);
-    
-    
-    
-	Value *leftVal = ConstantInt::get(llvm::Type::getInt32Ty(impl->context), left->Integer);
-	Value *rightVal = ConstantInt::get(llvm::Type::getInt32Ty(impl->context), right->Integer);
+	llvm::Value* left = getAstItem(ast->Left);
+	llvm::Value* right = getAstItem(ast->Right);
 
-
+	Instruction::BinaryOps instr;
 	switch (ast->Op)
 	{
 	case PLUS:
-	{
-		switch (binaryResultType)
-		{
-		case BACKEND_ITEM_TYPE::INT:
-			break;
-
-		case BACKEND_ITEM_TYPE::DOUBLE:
-			//this->opcodes.push_back(vm_inst::OPT_dADD);
-			break;
-
-		case BACKEND_ITEM_TYPE::BOOL:
-			//this->opcodes.push_back(vm_inst::OPT_bADD);
-			break;
-		}
-	}
+		instr = Instruction::Add;
 	break;
 
 	case MINUS:
-	{
-		switch (binaryResultType)
-		{
-		case BACKEND_ITEM_TYPE::INT:
-			//this->opcodes.push_back(vm_inst::OPT_iSUB);
-			break;
-
-		case BACKEND_ITEM_TYPE::DOUBLE:
-			//this->opcodes.push_back(vm_inst::OPT_dSUB);
-			break;
-
-		case BACKEND_ITEM_TYPE::BOOL:
-			//this->opcodes.push_back(vm_inst::OPT_bSUB);
-			break;
-		}
-	}
+		instr = Instruction::Sub;
 	break;
 
 	case MULTIPLICATION:
-	{
-		switch (binaryResultType)
-		{
-		case BACKEND_ITEM_TYPE::INT:
-			//this->opcodes.push_back(vm_inst::OPT_iMUL);
-			break;
-
-		case BACKEND_ITEM_TYPE::DOUBLE:
-			//this->opcodes.push_back(vm_inst::OPT_dMUL);
-			break;
-
-		case BACKEND_ITEM_TYPE::BOOL:
-			//this->opcodes.push_back(vm_inst::OPT_bMUL);
-			break;
-		}
-	}
+		instr = Instruction::Mul;
 	break;
 
 	case DIVISION:
-	{
-		switch (binaryResultType)
-		{
-		case BACKEND_ITEM_TYPE::INT:
-			//this->opcodes.push_back(vm_inst::OPT_iDIV);
-			break;
-
-		case BACKEND_ITEM_TYPE::DOUBLE:
-			//this->opcodes.push_back(vm_inst::OPT_dDIV);
-			break;
-
-		case BACKEND_ITEM_TYPE::BOOL:
-			//this->opcodes.push_back(vm_inst::OPT_bDIV);
-			break;
-		}
-	}
+		instr = Instruction::FDiv;
 	break;
     }
-    
-    return nullptr;
+
+	return BinaryOperator::Create(instr, left, right);
 }
 
 llvm::Value* LLVMBackend::visit(JITStructAst* ast)
@@ -500,7 +454,7 @@ llvm::Value* LLVMBackend::visit(JITStructAst* ast)
 
 void LLVMBackend::visit(ReturnAst* ast)
 {
-    return nullptr;
+
 }
 
 llvm::Value* LLVMBackend::visit(JITParenthesesGroupAst* ast)
@@ -521,6 +475,11 @@ llvm::Value* LLVMBackend::visit(JITUnaryAst* ast)
 void LLVMBackend::visit(ExprStatementAst* ast)
 {
 	//ast->Expr->accept(this);
+}
+
+llvm::Value* LLVMBackend::visit(JITExprStatementAst* ast)
+{
+	return getAstItem(ast);
 }
 
 #endif
