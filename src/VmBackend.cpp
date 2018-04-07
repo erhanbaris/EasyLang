@@ -593,7 +593,7 @@ PrimativeValue* VmBackend::Execute()
 	
 	this->Compile(this->impl->codes);
 	impl->system.execute(&impl->codes[0], impl->codes.size(), codeStart);	
-	auto* lastItem = impl->system.getObject();
+	auto const * lastItem = impl->system.getObject();
 
 	if (lastItem != nullptr)
 		switch (lastItem->Type)
@@ -619,7 +619,8 @@ PrimativeValue* VmBackend::Execute()
 				break;
 
 			case vm_object::vm_object_type::STR:
-				result = new PrimativeValue(string_type(static_cast<char_type*>(lastItem->Pointer)));
+                char_type* str = static_cast<char_type*>(lastItem->Pointer);
+				result = new PrimativeValue(string_type(str));
 				break;
 		}
 
@@ -1046,13 +1047,14 @@ void VmBackend::visit(PrimativeValue* value) {
 			vm_double_t i;
 			i.Double = value->Double;
 			this->opcodes.push_back(vm_inst::OPT_dPUSH);
-			this->opcodes.push_back(i.Chars[7]);
+            this->opcodes.push_back(i.Chars[7]);
 			this->opcodes.push_back(i.Chars[6]);
 			this->opcodes.push_back(i.Chars[5]);
 			this->opcodes.push_back(i.Chars[4]);
 			this->opcodes.push_back(i.Chars[3]);
 			this->opcodes.push_back(i.Chars[2]);
 			this->opcodes.push_back(i.Chars[1]);
+            this->opcodes.push_back(i.Chars[0]);
 		}
 	}
 	break;

@@ -70,7 +70,8 @@ public:
     
     vm_object(char_type* b)
     {
-        Pointer = b;
+        Pointer = new char_type[strlen(b)];
+        memcpy(Pointer, b, strlen(b));
         Type = vm_object_type::STR;
     }
 
@@ -86,6 +87,13 @@ public:
 		Pointer = const_cast<void*>((void*)array);
 		Type = vm_object_type::ARRAY;
 	}
+    
+    vm_object& operator=(vm_object const & other)
+    {
+        Type = other.Type;
+        Double = other.Double;
+        return *this;
+    }
 
 	vm_object_type Type;
 
@@ -261,7 +269,7 @@ public:
 	void dumpStack();
     void dump(char_type* code, size_t len);
 	size_t getUInt();
-	vm_object* getObject();
+	vm_object const* getObject();
 
 private:
 	vm_system_impl* impl;

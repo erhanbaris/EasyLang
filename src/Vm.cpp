@@ -25,10 +25,10 @@
 #endif
 
 #define STORE(index, obj) FUNC_BEGIN() *(currentStore->variables + (index)) = obj; FUNC_END()
-#define LOAD(index) currentStore->variables + index
+#define LOAD(index) ((vm_object) currentStore[ index ])
 
 #define GSTORE(index, obj) FUNC_BEGIN() *(globalStore.variables + (index)) = obj; FUNC_END()
-#define GLOAD(index) globalStore.variables + index
+#define GLOAD(index) ((vm_object) globalStore.variables[ index ])
 
 #define PEEK() (currentStack[stackIndex - 1])
 #define POP() (currentStack[--stackIndex])
@@ -39,8 +39,10 @@
     PRINT_AND_CHECK_STACK();\
     -- stackIndex ; 
 
-#define PUSH_WITH_TYPE(currentStack, stackIndex, type, obj) FUNC_BEGIN() currentStack [ stackIndex ]. type = obj . type ; PRINT_STACK(); ++ stackIndex; FUNC_END()
-#define PUSH(type, obj) currentStack [ stackIndex ]. type = obj ; PRINT_STACK(); ++ stackIndex;
+#define PUSH_WITH_STACK(currentStack, stackIndex, type, obj) FUNC_BEGIN() currentStack [ stackIndex ]. type = obj . type ; PRINT_STACK(); ++ stackIndex; FUNC_END()
+#define PUSH_WITH_INIT(obj) currentStack [ stackIndex ] = vm_object( obj ) ; PRINT_STACK(); ++ stackIndex;
+//#define PUSH(type, obj) currentStack [ stackIndex ]. type = obj ; PRINT_STACK(); ++ stackIndex;
+#define PUSH_WITH_ASSIGN(obj) currentStack [ stackIndex ] = obj ; PRINT_STACK(); ++ stackIndex;
 #define INC(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type = currentStack [ stackIndex - 1]. type + 1;
 #define DINC(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type = currentStack [ stackIndex - 1]. type - 1;
 #define NEG(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type =  currentStack [ stackIndex - 1]. type * -1;
@@ -267,7 +269,7 @@ public:
 				case vm_object::vm_object_type::STR:
 				{
 					string_type* newStr = new string_type(*static_cast<string_type*>(currentStack[stackIndex - 1].Pointer));
-					PUSH(Pointer, newStr);
+					PUSH_WITH_INIT(newStr);
 				}
 					break;
 
@@ -275,15 +277,15 @@ public:
 					break;
 
 				case vm_object::vm_object_type::INT:
-					PUSH_WITH_TYPE(currentStack, stackIndex, Int, currentStack[stackIndex - 1]);
+					PUSH_WITH_STACK(currentStack, stackIndex, Int, currentStack[stackIndex - 1]);
 					break;
 
 				case vm_object::vm_object_type::DOUBLE:
-					PUSH_WITH_TYPE(currentStack, stackIndex, Double, currentStack[stackIndex - 1]);
+					PUSH_WITH_STACK(currentStack, stackIndex, Double, currentStack[stackIndex - 1]);
 					break;
 
 				case vm_object::vm_object_type::BOOL:
-					PUSH_WITH_TYPE(currentStack, stackIndex, Bool, currentStack[stackIndex - 1]);
+					PUSH_WITH_STACK(currentStack, stackIndex, Bool, currentStack[stackIndex - 1]);
 					break;
 				}
 				
@@ -318,7 +320,7 @@ public:
 			case vm_inst::OPT_INITARRAY:
                 PRINT_OPCODE();
 				FUNC_BEGIN()
-				PUSH(Pointer, new vm_array);
+				PUSH_WITH_ASSIGN(new vm_array);
 				FUNC_END()
                 break;
 
@@ -339,7 +341,7 @@ public:
 				FUNC_BEGIN()
 				vm_object& data = POP();
 				vm_array* array = static_cast<vm_array*>(PEEK().Pointer);
-				PUSH(Pointer, &array->Array[data.Int]);
+				PUSH_WITH_ASSIGN(&array->Array[data.Int]);
 				FUNC_END()
 			}
 			break;
@@ -477,32 +479,32 @@ public:
 
 			case vm_inst::OPT_GLOAD:
                 PRINT_OPCODE();
-				PUSH(Pointer, GLOAD(*++code));
+				PUSH_WITH_ASSIGN(GLOAD(*++code));
 				break;
 
 			case vm_inst::OPT_GLOAD_0:
                 PRINT_OPCODE();
-				PUSH(Pointer, GLOAD(0));
+				PUSH_WITH_ASSIGN(GLOAD(0));
 				break;
 
 			case vm_inst::OPT_GLOAD_1:
                 PRINT_OPCODE();
-				PUSH(Pointer, GLOAD(1));
-				break;
+                PUSH_WITH_ASSIGN(GLOAD(1));
+                break;
 
 			case vm_inst::OPT_GLOAD_2:
                 PRINT_OPCODE();
-				PUSH(Pointer, GLOAD(2));
+				PUSH_WITH_ASSIGN(GLOAD(2));
 				break;
 
 			case vm_inst::OPT_GLOAD_3:
                 PRINT_OPCODE();
-				PUSH(Pointer, GLOAD(3));
+				PUSH_WITH_ASSIGN(GLOAD(3));
 				break;
 
 			case vm_inst::OPT_GLOAD_4:
                 PRINT_OPCODE();
-				PUSH(Pointer, GLOAD(4));
+				PUSH_WITH_ASSIGN(GLOAD(4));
 				break;
 
 			case vm_inst::OPT_GSTORE:
@@ -570,7 +572,7 @@ public:
 				vm_int_t integer;
 				integer.Int = 0;
 				ASSIGN_4(integer.Chars, code);
-				PUSH(Int, integer.Int);
+				PUSH_WITH_ASSIGN(integer.Int);
 				FUNC_END()
                 // console_out << _T("PUSH : ") << Operations::Peek<int>(currentStack, stackIndex) << '\n';
 			}
@@ -578,62 +580,62 @@ public:
 
             case vm_inst::OPT_iPUSH_0:
                 PRINT_OPCODE();
-                PUSH(Int, 0);
+                PUSH_WITH_ASSIGN(0);
                 break;
 
             case vm_inst::OPT_iPUSH_1:
                 PRINT_OPCODE();
-                PUSH(Int, 1);
+                PUSH_WITH_ASSIGN(1);
                 break;
 
             case vm_inst::OPT_iPUSH_2:
                 PRINT_OPCODE();
-                PUSH(Int, 2);
+                PUSH_WITH_ASSIGN(2);
                 break;
 
             case vm_inst::OPT_iPUSH_3:
                 PRINT_OPCODE();
-                PUSH(Int, 3);
+                PUSH_WITH_ASSIGN(3);
                 break;
 
             case vm_inst::OPT_iPUSH_4:
                 PRINT_OPCODE();
-                PUSH(Int, 4);
+                PUSH_WITH_ASSIGN(4);
                 break;
 
             case vm_inst::OPT_dPUSH_0:
                 PRINT_OPCODE();
-                PUSH(Double, 0.0);
+                PUSH_WITH_ASSIGN(0.0);
                 break;
 
             case vm_inst::OPT_dPUSH_1:
                 PRINT_OPCODE();
-                PUSH(Double, 1.0);
+                PUSH_WITH_ASSIGN(1.0);
                 break;
 
             case vm_inst::OPT_dPUSH_2:
                 PRINT_OPCODE();
-                PUSH(Double, 2.0);
+                PUSH_WITH_ASSIGN(2.0);
                 break;
 
             case vm_inst::OPT_dPUSH_3:
                 PRINT_OPCODE();
-                PUSH(Double, 3.0);
+                PUSH_WITH_ASSIGN(3.0);
                 break;
 
             case vm_inst::OPT_dPUSH_4:
                 PRINT_OPCODE();
-                PUSH(Double, 4.0);
+                PUSH_WITH_ASSIGN(4.0);
                 break;
 
             case vm_inst::OPT_bPUSH_0:
                 PRINT_OPCODE();
-                PUSH(Bool, false);
+                PUSH_WITH_ASSIGN(false);
                 break;
 
             case vm_inst::OPT_bPUSH_1:
                 PRINT_OPCODE();
-                PUSH(Bool, true);
+                PUSH_WITH_ASSIGN(true);
                 break;
 
 			case vm_inst::OPT_dPUSH: {
@@ -641,14 +643,14 @@ public:
 				vm_double_t d;
 				d.Double = 0.0;
 				ASSIGN_8(d.Chars, code);
-				PUSH(Double, d.Double);
+				PUSH_WITH_ASSIGN(d.Double);
 			}
 				break;
 
 
 			case vm_inst::OPT_bPUSH:
                 PRINT_OPCODE();
-				PUSH(Bool, (bool)*++code);
+				PUSH_WITH_ASSIGN((bool)*++code);
 				break;
                     
             case vm_inst::OPT_INVOKE: {
@@ -680,7 +682,7 @@ public:
 					chars[i] = *++code;
 				
 				chars[integer.Int] = '\0';
-				PUSH(Pointer, chars);
+				PUSH_WITH_INIT(chars);
 			}
 				break;
 
@@ -938,11 +940,11 @@ size_t vm_system::getUInt()
 	return impl->currentStack[impl->stackIndex - 1].Int;
 }
 
-vm_object* vm_system::getObject()
+vm_object const * vm_system::getObject()
 {
 	if (impl->stackIndex > 0)
 	{
-		console_out << impl->stackIndex << '\n';
+		//console_out << impl->stackIndex << '\n';
 		return &impl->currentStack[--impl->stackIndex];
 	}
 
