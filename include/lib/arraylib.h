@@ -6,8 +6,9 @@
 #include <memory>
 #include <iostream>
 #include "PrimativeValue.h"
+#include "Vm.h"
 
-Void addTo(std::vector<Any> & args, Any & item);
+vm_object* addTo(vm_system* vm);
 
 class ArrayLibInit {
 public:

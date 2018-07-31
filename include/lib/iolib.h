@@ -6,9 +6,10 @@
 #include <memory>
 #include <iostream>
 #include "PrimativeValue.h"
+#include "Vm.h"
 
-Void print_(Any& message);
-string_type readline_();
+vm_object* print(vm_system* vm);
+vm_object* readLine(vm_system* vm);
 
 class IOLibInit {
 public:

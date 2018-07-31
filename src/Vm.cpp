@@ -657,15 +657,38 @@ public:
                 PRINT_OPCODE();
                 vm_int_t integer;
                 integer.Int = 0;
-				ASSIGN_1(integer.Chars, code);
-                
+                ASSIGN_4(integer.Chars, code);
+
                 char_type * chars = new char_type[integer.Int + 1];
                 for (int i = integer.Int - 1; i >= 0; --i)
                     chars[i] = *++code;
                     
                 chars[integer.Int] = '\0';
                 if (nativeMethods.find(chars) != nativeMethodsEnd)
-					nativeMethods[chars](system);
+                {
+                    vm_object* result = nativeMethods[chars](system);
+                    if (result != nullptr)
+                    {
+                        switch (result->Type)
+                        {
+                            case vm_object::vm_object_type::BOOL:
+                                PUSH_WITH_INIT(result->Bool);
+                                break;
+
+                            case vm_object::vm_object_type::DOUBLE:
+                            PUSH_WITH_INIT(result->Double);
+                                break;
+
+                            case vm_object::vm_object_type::INT:
+                            PUSH_WITH_INIT(result->Int);
+                                break;
+
+                            case vm_object::vm_object_type::STR:
+                            PUSH_WITH_INIT(string_type(*static_cast<string_type*>(result->Pointer)));
+                                break;
+                        }
+                    }
+                }
                 else
                     console_out << _T("ERROR : Method '") << chars << _T("' Not Found\n");
             }

@@ -257,7 +257,13 @@ public:
                     break;
 
                 case '+':
-                    opt->Value = EASY_OPERATOR_TYPE::PLUS;
+                    if (chNext == '=')
+                    {
+                        opt->Value = EASY_OPERATOR_TYPE::APPEND;
+                        increase();
+                    }
+                    else
+                        opt->Value = EASY_OPERATOR_TYPE::PLUS;
                     break;
 
                 case '*':
@@ -292,11 +298,6 @@ public:
                     if (chNext == '=')
                     {
                         opt->Value = EASY_OPERATOR_TYPE::LOWER_EQUAL;
-                        increase();
-                    }
-                    else if (chNext == '+')
-                    {
-                        opt->Value = EASY_OPERATOR_TYPE::APPEND;
                         increase();
                     }
                     else

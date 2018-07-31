@@ -3,34 +3,42 @@
 #include "System.h"
 #include "Exceptions.h"
 
-Void print_(Any& data)
+vm_object* print(vm_system* vm)
 {
-	if (data.is<bool>())
-		console_out << data.cast<bool>();
-	else if (data.is<int>())
-		console_out << data.cast<int>();
-	else if (data.is<double>())
-		console_out << data.cast<double>();
-	else if (data.is<string_type>())
-		console_out << data.cast<string_type>();
-	else if (data.is<std::vector<Any>>())
-		console_out << data.cast<bool>();
-	else if (data.is<std::unordered_map<string_type, Any>>())
-		console_out << data.cast<bool>();
-	return Void();
+    auto* item = vm->getObject();
+    if (item != nullptr)
+        switch (item->Type) {
+            case vm_object::vm_object_type::BOOL:
+                console_out << item->Bool << '\n';
+                break;
+
+            case vm_object::vm_object_type::INT:
+                console_out << item->Int << '\n';
+                break;
+
+            case vm_object::vm_object_type::DOUBLE:
+                console_out << item->Double << '\n';
+                break;
+
+            case vm_object::vm_object_type::STR:
+                console_out << static_cast<char_type*>(item->Pointer) << '\n';
+                break;
+        }
+
+    return nullptr;
 }
 
-string_type readline_()
+vm_object* readLine(vm_system* vm)
 {
-	string_type text;
-	std::getline(console_in, text);
-	return text;
+    string_type text;
+    std::getline(console_in, text);
+
+    vm_object* returnValue = new vm_object(text);
+    return returnValue;
 }
 
 IOLibInit::IOLibInit()
 {
-    System::SystemPackages[_T("io")] = std::unordered_map<string_type, Caller*>();
-
-	System::SystemPackages[_T("io")][_T("print")] = def_function(print_);
-    System::SystemPackages[_T("io")][_T("readline")] = def_function(readline_);
+    System::SystemMethods[_T("io::print")] = print;
+    System::SystemMethods[_T("io::readline")] = readLine;
 }

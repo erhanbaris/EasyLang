@@ -26,11 +26,11 @@ data6 = []
 This operation works for string and array types.
 ```
 array = []
-array <+ "test"
-array <+ true
-array <+ 2000
+array += "test"
+array += true
+array += 2000
 tmpArray = []
-array <+ tmpArray
+array += tmpArray
 ```
 
 Result
@@ -47,9 +47,9 @@ This operation works for string and array types.
 ##### Get item from index
 ```
 array = []
-array <+ "test"
-array <+ true
-array <+ 2000
+array += "test"
+array += true
+array += 2000
 array!0
 ```
 
@@ -71,9 +71,9 @@ Result
 ##### Get items with range
 ```
 array = []
-array <+ "test"
-array <+ true
-array <+ 2000
+array += "test"
+array += true
+array += 2000
 array!1:2
 ```
 

@@ -3,14 +3,12 @@
 #include "System.h"
 #include "Exceptions.h"
 
-Void addTo(std::vector<Any> & args, Any & item)
+vm_object* addTo(vm_system* vm)
 {
-	args.push_back(item);
-	return Void();
+    return nullptr;
 }
 
 ArrayLibInit::ArrayLibInit()
 {
-    System::SystemPackages[_T("array")] = std::unordered_map<string_type, Caller*>();
-    System::SystemPackages[_T("array")][_T("addTo")] = def_function(addTo);
+
 }

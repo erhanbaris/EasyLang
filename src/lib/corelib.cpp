@@ -3,139 +3,195 @@
 #include "System.h"
 #include "Exceptions.h"
 
-int toInt(Any & type)
+vm_object* toInt(vm_system* type)
 {
-	if (type.is<int>())
-		return type.cast<int>();
-	else if (type.is<bool>())
-		return type.cast<bool>() ? 1 : 0;
-	else if (type.is<double>())
-		return (int)type.cast<double>();
-	else if (type.is<string_type>())
-		return std::stoi(type.cast<string_type>());
-	return 0;
+	vm_object const * obj = type->getObject();
+	switch (obj->Type)
+	{
+		case vm_object::vm_object_type::INT:
+			return const_cast<vm_object*>(obj);
+
+		case vm_object::vm_object_type::BOOL:
+			return new vm_object(obj->Int ? 1 : 0);
+
+		case vm_object::vm_object_type::DOUBLE:
+			return new vm_object((int)obj->Double);
+
+		case vm_object::vm_object_type::STR:
+			return new vm_object(std::stoi(static_cast<char_type*>(obj->Pointer)));
+
+		default:
+			return new vm_object();
+	}
 }
 
-double toDouble(Any & type)
+vm_object* toDouble(vm_system* type)
 {
-	if (type.is<int>())
-		return type.cast<int>();
-	else if (type.is<bool>())
-		return type.cast<bool>() ? 1 : 0;
-	else if (type.is<double>())
-		return (int)type.cast<double>();
-	else if (type.is<string_type>())
-		return std::stod(type.cast<string_type>());
-	return 0.0;
+	vm_object const * obj = type->getObject();
+	switch (obj->Type)
+	{
+		case vm_object::vm_object_type::INT:
+			return new vm_object((double)obj->Int);
+
+		case vm_object::vm_object_type::BOOL:
+			return new vm_object(obj->Int ? 1.0 : 0.0);
+
+		case vm_object::vm_object_type::DOUBLE:
+			return const_cast<vm_object*>(obj);
+
+		case vm_object::vm_object_type::STR:
+			return new vm_object(std::stod(static_cast<char_type*>(obj->Pointer)));
+
+		default:
+			return new vm_object();
+	}
 }
 
-string_type toString(Any & type)
+vm_object* toString(vm_system* type)
 {
-	if (type.is<int>())
-		return AS_STRING(type.cast<int>());
-	else if (type.is<bool>())
-		return type.cast<bool>() ? _T("true") : _T("false");
-	else if (type.is<double>())
-		return AS_STRING(type.cast<double>());
-	else if (type.is<string_type>())
-		return type.cast<string_type>();
-	return _T("");
-}
-bool toBool(Any & type)
-{
-	if (type.is<bool>())
-		return type.cast<bool>();
-	else if (type.is<int>())
-		return type.cast<int>() > 0;
-	else if (type.is<double>())
-		return type.cast<double>() > 0;
-	else if (type.is<string_type>())
-		return type.cast<string_type>() > 0;
-	else if (type.is<std::vector<Any>>())
-		return type.cast<std::vector<Any>>().size() > 0;
-	else if (type.is<std::unordered_map<string_type, Any>>())
-		return type.cast<std::unordered_map<string_type, Any>>().size() > 0;
+	vm_object const * obj = type->getObject();
+	switch (obj->Type) {
+		case vm_object::vm_object_type::INT:
+			return new vm_object(AS_STRING(obj->Int));
 
-	return false;
+		case vm_object::vm_object_type::BOOL:
+			return new vm_object(obj->Bool ? _T("true") : _T("false"));
+
+		case vm_object::vm_object_type::DOUBLE:
+			return new vm_object(AS_STRING(obj->Double));
+
+		case vm_object::vm_object_type::STR:
+			return const_cast<vm_object *>(obj);
+
+		default:
+			return new vm_object();
+	}
 }
 
-bool isEmpty(Any & type)
+vm_object* toBool(vm_system* type)
 {
-	if (type.is<string_type>())
-		return type.cast<string_type>().size() == 0;
-	else if (type.is<std::vector<Any>>())
-		return type.cast<std::vector<Any>>().size() == 0;
-	else if (type.is<std::unordered_map<string_type, Any>>())
-		return type.cast<std::unordered_map<string_type, Any>>().size() == 0;
-	else if (type.is<int>() || type.is<double>() || type.is<bool>())
-		return false;
+	vm_object const * obj = type->getObject();
+	switch (obj->Type)
+	{
+		case vm_object::vm_object_type::INT:
+			return new vm_object(obj->Int > 0);
 
-	return true;
+		case vm_object::vm_object_type::BOOL:
+			return const_cast<vm_object*>(obj);
+
+		case vm_object::vm_object_type::DOUBLE:
+			return new vm_object(obj->Double > 0);
+
+		case vm_object::vm_object_type::STR:
+			return new vm_object(strlen(static_cast<char_type*>(obj->Pointer)) > 0);
+
+		case vm_object::vm_object_type::ARRAY:
+			return new vm_object(static_cast<vm_array*>(obj->Pointer)->Indicator > 0);
+
+		default:
+			return new vm_object();
+	}
 }
 
-bool isInt(Any & type)
+vm_object* isEmpty(vm_system* type)
 {
-	return type.is<int>();
+	vm_object const * obj = type->getObject();
+	switch (obj->Type)
+	{
+		case vm_object::vm_object_type::STR:
+			return new vm_object(strlen(static_cast<char_type*>(obj->Pointer)) == 0);
+
+		case vm_object::vm_object_type::ARRAY:
+			return new vm_object(static_cast<vm_array*>(obj->Pointer)->Indicator == 0);
+
+		case vm_object::vm_object_type::EMPTY:
+			return new vm_object(true);
+
+		default:
+			return new vm_object(false);
+	}
 }
 
-bool isDouble(Any & type)
+vm_object* isInt(vm_system* type)
 {
-	return type.is<double>();
+	vm_object const * obj = type->getObject();
+	return new vm_object(obj->Type == vm_object::vm_object_type::INT);
 }
 
-bool isString(Any & type)
+vm_object* isDouble(vm_system* type)
 {
-	return type.is<string_type>();
+	vm_object const * obj = type->getObject();
+	return new vm_object(obj->Type == vm_object::vm_object_type::DOUBLE);
 }
 
-bool isBool(Any & type)
+vm_object* isString(vm_system* type)
 {
-	return type.is<bool>();
+	vm_object const * obj = type->getObject();
+	return new vm_object(obj->Type == vm_object::vm_object_type::STR);
 }
 
-bool isArray(Any & type)
+vm_object* isBool(vm_system* type)
 {
-	return type.is<std::vector<Any>>();
+	vm_object const * obj = type->getObject();
+	return new vm_object(obj->Type == vm_object::vm_object_type::BOOL);
 }
 
-bool isDictionary(Any& type)
+vm_object* isArray(vm_system* type)
 {
-	return type.is<std::unordered_map<string_type, Any>>();
+	vm_object const * obj = type->getObject();
+	return new vm_object(obj->Type == vm_object::vm_object_type::ARRAY);
 }
 
-int length(Any& data)
+vm_object* isDictionary(vm_system* type)
 {
-	if (data.is<bool>())
-		return 1;
-	else if (data.is<int>())
-		return 1;
-	else if (data.is<double>())
-		return 1;
-	else if (data.is<string_type>())
-		return data.cast<string_type>().size();
-	else if (data.is<std::vector<Any>>())
-		return data.cast<std::vector<Any>>().size();
-	else if (data.is<std::unordered_map<string_type, Any>>())
-		return data.cast<std::unordered_map<string_type, Any>>().size();
+	vm_object const * obj = type->getObject();
+	return new vm_object(obj->Type == vm_object::vm_object_type::DICT);
+}
 
-	return 0;
+vm_object* exitApp(vm_system* type)
+{
+    std::exit(0);
+    return 0;
+}
+
+vm_object* length(vm_system* data)
+{
+	vm_object const * obj = data->getObject();
+	switch (obj->Type)
+	{
+		case vm_object::vm_object_type::INT:
+			return new vm_object(1);
+
+		case vm_object::vm_object_type::BOOL:
+			return new vm_object(1);
+
+		case vm_object::vm_object_type::DOUBLE:
+			return new vm_object(1);
+
+		case vm_object::vm_object_type::STR:
+			return new vm_object((int)strlen(static_cast<char_type*>(obj->Pointer)));
+
+		case vm_object::vm_object_type::ARRAY:
+			return new vm_object((int)static_cast<vm_array*>(obj->Pointer)->Indicator);
+
+		default:
+			return new vm_object(0);
+	}
 }
 
 CoreLibInit::CoreLibInit()
 {
-    System::SystemPackages[_T("core")] = std::unordered_map<string_type, Caller*>();
-
-    System::SystemPackages[_T("core")][_T("toInt")] = def_function(toInt);
-    System::SystemPackages[_T("core")][_T("toDouble")] = def_function(toDouble);
-    System::SystemPackages[_T("core")][_T("toString")] = def_function(toString);
-    System::SystemPackages[_T("core")][_T("toBool")] = def_function(toBool);
-    System::SystemPackages[_T("core")][_T("isEmpty")] = def_function(isEmpty);
-
-    System::SystemPackages[_T("core")][_T("isInt")] = def_function(isInt);
-    System::SystemPackages[_T("core")][_T("isDouble")] = def_function(isDouble);
-    System::SystemPackages[_T("core")][_T("isString")] = def_function(isString);
-    System::SystemPackages[_T("core")][_T("isBool")] = def_function(isBool);
-    System::SystemPackages[_T("core")][_T("isArray")] = def_function(isArray);
-    System::SystemPackages[_T("core")][_T("isDictionary")] = def_function(isDictionary);
-	System::SystemPackages[_T("core")][_T("length")] = def_function(length);
+	System::SystemMethods[_T("core::toInt")] = toInt;
+	System::SystemMethods[_T("core::toDouble")] = toDouble;
+	System::SystemMethods[_T("core::toString")] = toString;
+	System::SystemMethods[_T("core::toBool")] = toBool;
+	System::SystemMethods[_T("core::isEmpty")] = isEmpty;
+	System::SystemMethods[_T("core::isInt")] = isInt;
+	System::SystemMethods[_T("core::isDouble")] = isDouble;
+	System::SystemMethods[_T("core::isString")] = isString;
+	System::SystemMethods[_T("core::isBool")] = isBool;
+	System::SystemMethods[_T("core::isArray")] = isArray;
+	System::SystemMethods[_T("core::isDictionary")] = isDictionary;
+	System::SystemMethods[_T("core::length")] = length;
+	System::SystemMethods[_T("core::exit")] = exitApp;
 }

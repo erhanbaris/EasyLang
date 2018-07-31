@@ -646,48 +646,18 @@ VmBackend::~VmBackend()
 	delete Scope::GlobalScope;
 }
 
-namespace {
-	vm_object* print(vm_system* vm)
-	{
-		auto* item = vm->getObject();
-		if (item != nullptr)
-			switch (item->Type) {
-				case vm_object::vm_object_type::BOOL:
-					console_out << item->Bool << '\n';
-					break;
-
-				case vm_object::vm_object_type::INT:
-					console_out << item->Int << '\n';
-					break;
-
-				case vm_object::vm_object_type::DOUBLE:
-					console_out << item->Double << '\n';
-					break;
-
-				case vm_object::vm_object_type::STR:
-					console_out << static_cast<char_type*>(item->Pointer) << '\n';
-					break;
-			}
-    
-		return nullptr;
-	}
-
-	vm_object* readLine(vm_system* vm)
-	{
-		string_type text;
-		std::getline(console_in, text);
-
-		vm_object* returnValue = new vm_object(text);
-		return returnValue;
-	}
-}
-
 VmBackend::VmBackend()
 {
 	impl = new VmBackendImpl;
     Scope::GlobalScope = new Scope;
-    this->impl->system.addMethod(_T("io::print"), print);
-    this->impl->system.addMethod(_T("io::readLine"), readLine);
+
+	std::unordered_map<string_type, VmMethod>::iterator methodItEnd = System::SystemMethods.end();
+	std::unordered_map<string_type, VmMethod>::iterator methodIt = System::SystemMethods.begin();
+
+	for(; methodIt != methodItEnd; ++methodIt)
+	{
+		this->impl->system.addMethod((*methodIt).first, (*methodIt).second);
+	}
 }
 
 void VmBackend::visit(AssignmentAst* ast)
@@ -1325,7 +1295,8 @@ void VmBackend::visit(FunctionCallAst* ast)
 		return;
 	}
 
-	auto* function = this->impl->methods[ast->Package + _T("::") + ast->Function];
+	auto functionName = ast->Package + _T("::") + ast->Function;
+	auto* function = this->impl->methods[functionName];
 	if (function != nullptr)
     {
         if (function->Args.size() != ast->Args.size())
@@ -1358,15 +1329,18 @@ void VmBackend::visit(FunctionCallAst* ast)
             getAstItem(ast->Args[i - 1]);
         }
       
-        string_type funcName = ast->Package + _T("::") + ast->Function;
 
         this->opcodes.push_back(vm_inst::OPT_INVOKE);
-        vm_int_t len;
-        len.Int = static_cast<int>(funcName.size());
-        opcodes.push_back(len.Chars[0]);
+
+		vm_int_t len;
+		len.Int = static_cast<int>(functionName.size());
+		opcodes.push_back(len.Chars[3]);
+		opcodes.push_back(len.Chars[2]);
+		opcodes.push_back(len.Chars[1]);
+		opcodes.push_back(len.Chars[0]);
 
         for (int j = 0; j < len.Int; ++j)
-            opcodes.push_back(funcName[(len.Int - j) - 1]);
+            opcodes.push_back(functionName[(len.Int - j) - 1]);
     }
 
     // throw ParseError(_T("'") + ast->Function + _T("' Not Found"));

@@ -6,20 +6,22 @@
 #include <memory>
 #include <iostream>
 #include "PrimativeValue.h"
+#include <Vm.h>
 
-int toInt(Any & type);
-double toDouble(Any & type);
-string_type toString(Any & type);
-bool toBool(Any & type);
-bool isEmpty(Any & type);
+vm_object* toInt(vm_system*type);
+vm_object* toDouble(vm_system*type);
+vm_object* toString(vm_system*type);
+vm_object* toBool(vm_system*type);
+vm_object* isEmpty(vm_system*type);
 
-bool isInt(Any & type);
-bool isDouble(Any & type);
-bool isString(Any & type);
-bool isBool(Any & type);
-bool isArray(Any & type);
-bool isDictionary(Any & type);
-int length(Any& data);
+vm_object* isInt(vm_system*type);
+vm_object* isDouble(vm_system*type);
+vm_object* isString(vm_system*type);
+vm_object* isBool(vm_system*type);
+vm_object* isArray(vm_system*type);
+vm_object* isDictionary(vm_system*type);
+vm_object* length(vm_system*data);
+vm_object* exitApp(vm_system*type);
 
 class CoreLibInit {
 public:
