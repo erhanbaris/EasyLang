@@ -251,20 +251,6 @@ public:
 		return ast;
 	}
 
-	EASY_KEYWORD_TYPE getVariableType()
-	{
-		if (!isKeyword(peek()))
-			throw ParseError(_T("Variable type required"));
-
-		KeywordToken* token = static_cast<KeywordToken*>(advance());
-		if (Types.find(token->Value) == TypesEnd)
-			throw ParseError(_T("Type not found"));
-
-		return token->Value;
-
-		// Todo : Implement array[string], dict[string:int]
-	}
-
 	ExprAst* primaryExpr()
 	{
         if (isPrimative(peek()))
@@ -450,13 +436,6 @@ public:
 	{
 		ExprAst* expr = orExpr();
 
-		EASY_KEYWORD_TYPE variableType = EASY_KEYWORD_TYPE::KEYWORD_NONE;
-		if (check(EASY_OPERATOR_TYPE::SINGLE_COLON))
-		{
-			match({EASY_OPERATOR_TYPE ::SINGLE_COLON});
-			variableType = getVariableType();
-		}
-
 		if (match({ EASY_OPERATOR_TYPE::ASSIGN }))
 		{
 			ExprAst* value = orExpr();
@@ -465,7 +444,6 @@ public:
 				AssignmentAst *assignment = new AssignmentAst;
 				assignment->Data = value;
 				assignment->Name = static_cast<VariableAst*>(expr)->Value;
-				assignment->VariableType = variableType;
 				return assignment;
 			}
 
@@ -590,14 +568,11 @@ public:
 		if (!check(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES))
 			do {
 				Token* arg = consume(EASY_TOKEN_TYPE::TOKEN_SYMBOL, _T("Only string variable name allowed"));
-				consume(EASY_OPERATOR_TYPE::SINGLE_COLON, _T("Parameter type required"));
-				args.push_back(new FunctionDefinetionArg(static_cast<SymbolToken*>(arg)->Value, getVariableType()));
+				args.push_back(new FunctionDefinetionArg(static_cast<SymbolToken*>(arg)->Value));
 			} while (match({ EASY_OPERATOR_TYPE::COMMA }));
 
 			StmtAst* body = nullptr;
 			consume(EASY_OPERATOR_TYPE::RIGHT_PARENTHESES, _T("')' required"));
-			consume(EASY_OPERATOR_TYPE::SINGLE_COLON, _T("':' required"));
-			EASY_KEYWORD_TYPE returnType = getVariableType();
 
 			if (match({ EASY_OPERATOR_TYPE::BLOCK_START }))
 				body = block();
@@ -606,7 +581,7 @@ public:
 				body = returnStmt();
 			}
 
-		return new FunctionDefinetionAst(static_cast<SymbolToken*>(funcName)->Value, args, returnType, body);
+		return new FunctionDefinetionAst(static_cast<SymbolToken*>(funcName)->Value, args, body);
 	}
 
 	StmtAst* block() {

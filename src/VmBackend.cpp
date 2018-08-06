@@ -127,17 +127,15 @@ public:
 
 class VariableInfo {
 public:
-    BACKEND_ITEM_TYPE Type;
     string_type Name;
     int Index;
 };
 
 class MethodInfo {
 public:
-    BACKEND_ITEM_TYPE ReturnType;
-    string_type Function;
+	string_type Function;
     int Index;
-	std::vector<BACKEND_ITEM_TYPE> Args;
+    size_t ArgsCount;
 };
 
 class VmBackendImpl
@@ -422,19 +420,6 @@ BACKEND_ITEM_TYPE VmBackend::detectType(Ast* ast)
 			return detectType(static_cast<ExprStatementAst*>(ast)->Expr);
 			break;
 
-		case EASY_AST_TYPE::VARIABLE:
-        {
-            auto* var = static_cast<VariableAst*>(ast);
-            if (this->impl->variables->find(var->Value) != this->impl->variables->end())
-                return this->impl->variables->find(var->Value)->second->Type;
-            
-            if (this->impl->globalVariables->find(var->Value) != this->impl->globalVariables->end())
-                return this->impl->globalVariables->find(var->Value)->second->Type;
-            
-            throw ParseError(_T("'") + var->Value + _T("' Not Found"));
-        }
-			break;
-
 		case EASY_AST_TYPE::ASSIGNMENT:
 			return BACKEND_ITEM_TYPE::EMPTY;
 			break;
@@ -447,12 +432,6 @@ BACKEND_ITEM_TYPE VmBackend::detectType(Ast* ast)
 			//static_cast<FunctionDefinetionAst*>(ast)->accept(this);
 			break;
 
-		case EASY_AST_TYPE::FUNCTION_CALL:
-        {
-            auto* call = static_cast<FunctionCallAst*>(ast);
-            return this->impl->methods[call->Package + _T("::") + call->Function]->ReturnType;
-        }
-			break;
 
 		case EASY_AST_TYPE::IF_STATEMENT:
 			return BACKEND_ITEM_TYPE::EMPTY;
@@ -673,45 +652,11 @@ void VmBackend::visit(AssignmentAst* ast)
 		auto* varInfo = new VariableInfo;
 		varInfo->Index = variables->size();
 		varInfo->Name = ast->Name;
-
-		if (ast->VariableType == EASY_KEYWORD_TYPE::KEYWORD_NONE)
-			varInfo->Type = detectType(ast->Data);
-		else {
-			switch (ast->VariableType)
-			{
-				case TYPE_BOOL:
-					varInfo->Type = BACKEND_ITEM_TYPE::BOOL;
-					break;
-
-				case TYPE_INT:
-					varInfo->Type = BACKEND_ITEM_TYPE::INT;
-					break;
-
-				case TYPE_DOUBLE:
-					varInfo->Type = BACKEND_ITEM_TYPE::DOUBLE;
-					break;
-
-				case TYPE_STRING:
-					varInfo->Type = BACKEND_ITEM_TYPE::STRING;
-					break;
-
-				case TYPE_ARRAY:
-					varInfo->Type = BACKEND_ITEM_TYPE::ARRAY;
-					break;
-
-				case TYPE_DICTIONARY:
-					varInfo->Type = BACKEND_ITEM_TYPE::DICTIONARY;
-					break;
-			}
-		}
-
 		(*variables)[ast->Name] = varInfo;
 	}
 	else
 	{
-		VariableInfo* info = variables->find(ast->Name)->second;
-		if (ast->VariableType != EASY_KEYWORD_TYPE::KEYWORD_NONE || info->Type != detectType(ast->Data))
-			throw ParseError(_T("'") + ast->Name + _T("' Adready Defined"));
+		throw ParseError(_T("'") + ast->Name + _T("' Adready Defined"));
 	}
 
 
@@ -826,34 +771,10 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 
     MethodInfo* methodInfo = new MethodInfo;
     methodInfo->Index = this->opcodes.size();
-    switch (ast->ReturnType)
-    {
-        case TYPE_BOOL:
-            methodInfo->ReturnType = BACKEND_ITEM_TYPE::BOOL;
-            break;
 
-        case TYPE_INT:
-            methodInfo->ReturnType = BACKEND_ITEM_TYPE::INT;
-            break;
-
-        case TYPE_DOUBLE:
-            methodInfo->ReturnType = BACKEND_ITEM_TYPE::DOUBLE;
-            break;
-
-        case TYPE_STRING:
-            methodInfo->ReturnType = BACKEND_ITEM_TYPE::STRING;
-            break;
-
-        case TYPE_ARRAY:
-            methodInfo->ReturnType = BACKEND_ITEM_TYPE::ARRAY;
-            break;
-
-        case TYPE_DICTIONARY:
-            methodInfo->ReturnType = BACKEND_ITEM_TYPE::DICTIONARY;
-            break;
-    }
 
     methodInfo->Function = ast->Name;
+    methodInfo->ArgsCount = ast->Args.size();
 	this->impl->methods[_T("::") + ast->Name] = methodInfo;
     size_t totalParameter = ast->Args.size();
 
@@ -863,37 +784,11 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
         auto* varInfo = new VariableInfo;
         varInfo->Index = i;
         varInfo->Name = ast->Args[i]->Name;
-        switch (ast->Args[i]->Type)
-        {
-            case TYPE_BOOL:
-                varInfo->Type = BACKEND_ITEM_TYPE::BOOL;
-                break;
-
-            case TYPE_INT:
-                varInfo->Type = BACKEND_ITEM_TYPE::INT;
-                break;
-
-            case TYPE_DOUBLE:
-                varInfo->Type = BACKEND_ITEM_TYPE::DOUBLE;
-                break;
-
-            case TYPE_STRING:
-                varInfo->Type = BACKEND_ITEM_TYPE::STRING;
-                break;
-
-            case TYPE_ARRAY:
-                varInfo->Type = BACKEND_ITEM_TYPE::ARRAY;
-                break;
-
-            case TYPE_DICTIONARY:
-                varInfo->Type = BACKEND_ITEM_TYPE::DICTIONARY;
-                break;
-        }
 
         (*this->impl->variables)[ast->Args[i]->Name] = varInfo;
 
 		this->impl->generateStore(this->opcodes, i);
-		methodInfo->Args.push_back(varInfo->Type);
+
     }
 
     ast->Body->accept(this);
@@ -918,8 +813,7 @@ void VmBackend::visit(ForStatementAst* ast)
     auto* varInfo = new VariableInfo;
     varInfo->Index = impl->variables->size();
     varInfo->Name = ast->Variable;
-    varInfo->Type = BACKEND_ITEM_TYPE::INT;
-    
+
     (*impl->variables)[ast->Variable] = varInfo;
 
     this->getAstItem(ast->Start);
@@ -1299,7 +1193,9 @@ void VmBackend::visit(FunctionCallAst* ast)
 	auto* function = this->impl->methods[functionName];
 	if (function != nullptr)
     {
-        if (function->Args.size() != ast->Args.size())
+        auto funcArgCount = function->ArgsCount;
+		auto astArgCount = ast->Args.size();
+        if (funcArgCount != astArgCount)
             throw ParseError(_T("Argument type matched."));
 
         size_t totalParameters = ast->Args.size();

@@ -33,7 +33,7 @@ typedef bool vm_bool_t;
 class vm_object
 {
 public:
-	enum class vm_object_type {
+	enum class vm_object_type : char {
 		EMPTY,
 		INT,
 		DOUBLE,

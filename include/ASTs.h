@@ -137,7 +137,6 @@ class AssignmentAst : public ExprAst {
 public:
 	string_type Name;
     ExprAst* Data{ nullptr };
-	EASY_KEYWORD_TYPE VariableType;
     AssignmentAst() { Type = EASY_AST_TYPE::ASSIGNMENT; }
 	AssignmentAst(string_type name, ExprAst* data) { Type = EASY_AST_TYPE::ASSIGNMENT; Name = name; Data = data; }
 	string_type print(ExprVisitor<string_type>* visitor) override { return visitor->visit(this); }
@@ -289,10 +288,9 @@ public:
 class FunctionDefinetionArg {
 public:
 	string_type Name;
-	EASY_KEYWORD_TYPE Type;
 
 	FunctionDefinetionArg() {}
-	FunctionDefinetionArg(string_type name, EASY_KEYWORD_TYPE type) : Name(name), Type(type) {}
+	FunctionDefinetionArg(string_type name) : Name(name) {}
 };
 
 class FunctionDefinetionAst : public StmtAst
@@ -301,9 +299,8 @@ public:
 	string_type Name;
 	std::vector<FunctionDefinetionArg*> Args;
 	StmtAst* Body {nullptr};
-    EASY_KEYWORD_TYPE  ReturnType;
     FunctionDefinetionAst() { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; }
-	FunctionDefinetionAst(string_type const & name, std::vector<FunctionDefinetionArg*> & args, EASY_KEYWORD_TYPE  returnType, StmtAst* body) { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; Name = name; Args = args; ReturnType = returnType; Body = body; }
+	FunctionDefinetionAst(string_type const & name, std::vector<FunctionDefinetionArg*> & args, StmtAst* body) { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; Name = name; Args = args; Body = body; }
 	string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
 	void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
 

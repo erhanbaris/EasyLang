@@ -19,6 +19,7 @@
 #else 
 #include "VmEasyEngine.h"
 #include "VmBackend.h"
+#include "Vm.h"
 #include "../Tests/VmTests.h"
 //#include "InterpreterBackend.h"
 //#include "InterpreterEasyEngine.h"
@@ -113,6 +114,53 @@ static Function *CreateFibFunction(Module *M, LLVMContext &Context) {
 }
 #endif
 
+enum class ObjectType : char {
+    INTEGER,
+    DOUBLE,
+    STRING,
+    ARRAY,
+    MAP,
+};
+
+union Atom
+{
+	unsigned char byte[3];
+
+    struct
+    {
+        bool bit1 : 1;
+        bool bit2 : 1;
+        bool bit3 : 1;
+        bool bit4 : 1;
+        bool bit5 : 1;
+        bool bit6 : 1;
+        bool bit7 : 1;
+        bool bit8 : 1;
+    };
+
+	struct {
+		unsigned int Part1 : 6;
+		unsigned int Part2 : 6;
+		unsigned int Part3 : 6;
+		vm_inst InstType : 6;
+	};
+
+    struct {
+        unsigned char value1 : 4;
+        unsigned char value2 : 4;
+    };
+
+    struct {
+        unsigned char value3 : 1;
+        unsigned char value4 : 7;
+    };
+
+    struct {
+        unsigned char value5 : 2;
+        unsigned char value6 : 6;
+    };
+};
+
 int main(int argc, char_type* argv[]) {
 #ifdef EASYLANG_JIT_ACTIVE
     int n = 32;
@@ -147,6 +195,14 @@ int main(int argc, char_type* argv[]) {
     outs() << "Result: " << GV.IntVal << "\n";
 
 #endif
+
+    Atom a;
+	a.byte[0] = (unsigned char)255;
+	a.byte[1] = (unsigned char)255;
+	a.byte[2] = (unsigned char)255;
+
+
+	std::cout << "Size : " << sizeof(char[3]) << "-" << sizeof(Atom) << " " << a.byte << " " << a.value1 << " - " << a.value2  << std::endl;
 
     System::WarmUp();
 	// Unit tests
