@@ -4,11 +4,6 @@ project(EasyLang)
 set(PROJECT_NAME EasyLang)
 set(CMAKE_CXX_STANDARD 11)
 
-include_directories (
-	deps/memory-allocators/includes/
-)
-
-
 option(JIT_COMPILER "LLVM based jit compiler" OFF)
 if( JIT_COMPILER )
 	find_package(LLVM REQUIRED CONFIG)
@@ -77,15 +72,7 @@ add_executable(EasyLang
 		src/LLVMBackend.cpp
 		include/LLVMBackend.h
 		include/termcolor.hpp
-		include/Console.h
-
-		deps/memory-allocators/src/Allocator.cpp 
-		deps/memory-allocators/src/CAllocator.cpp 
-		deps/memory-allocators/src/LinearAllocator.cpp 
-		deps/memory-allocators/src/StackAllocator 
-		deps/memory-allocators/src/PoolAllocator 
-		deps/memory-allocators/src/FreeListAllocator.cpp 
-        )
+		include/Console.h)
 
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
