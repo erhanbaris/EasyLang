@@ -341,7 +341,7 @@ public:
 		}
 		GOTO_OPCODE();
 
-	opt_METHOD:
+	OPT_METHOD_DEF:
 		++code;
 		{
 			PRINT_OPCODE();
@@ -741,7 +741,7 @@ public:
 		PUSH_WITH_ASSIGN((bool)*++code);
 		GOTO_OPCODE();
 
-	opt_INVOKE:
+	opt_CALL_NATIVE:
 		++code; {
 			PRINT_OPCODE();
 			vm_int_t integer;
@@ -945,7 +945,7 @@ public:
 		STORE_ADDRESS(76 /*OPT_bPUSH_0*/, opt_bPUSH_0);
 		STORE_ADDRESS(77 /*OPT_bPUSH_1*/, opt_bPUSH_1);
 		STORE_ADDRESS(78 /*OPT_INVOKE*/, opt_INVOKE);
-		STORE_ADDRESS(79 /*OPT_METHOD*/, opt_METHOD);
+		STORE_ADDRESS(79 /*OPT_METHOD_DEF*/, opt_METHOD_DEF);
 		STORE_ADDRESS(80 /*OPT_INITARRAY*/, opt_INITARRAY);
 		STORE_ADDRESS(82 /*OPT_aPUSH*/, opt_aPUSH);
 		STORE_ADDRESS(88 /*OPT_aGET*/, opt_aGET);
@@ -1022,7 +1022,7 @@ public:
 			}
 			break;
 
-			case vm_inst::OPT_METHOD:
+			case vm_inst::OPT_METHOD_DEF:
 			{
 				vm_int_t integer;
 				integer.Int = 0;

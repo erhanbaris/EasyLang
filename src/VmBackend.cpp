@@ -329,22 +329,6 @@ PrimativeValue* VmBackend::getPrimative(Ast* ast)
 	return primative;
 }
 
-void VmBackend::addConvertOpcode(BACKEND_ITEM_TYPE from, BACKEND_ITEM_TYPE to)
-{
-	if (from == BACKEND_ITEM_TYPE::INT && to == BACKEND_ITEM_TYPE::DOUBLE)
-		this->opcodes.push_back(vm_inst::OPT_I2D);
-	else if (to == BACKEND_ITEM_TYPE::INT && from == BACKEND_ITEM_TYPE::DOUBLE)
-		this->opcodes.push_back(vm_inst::OPT_D2I);
-	else if (from == BACKEND_ITEM_TYPE::INT && to == BACKEND_ITEM_TYPE::BOOL)
-		this->opcodes.push_back(vm_inst::OPT_I2B);
-	else if (to == BACKEND_ITEM_TYPE::INT && from == BACKEND_ITEM_TYPE::BOOL)
-		this->opcodes.push_back(vm_inst::OPT_B2I);
-	else if (from == BACKEND_ITEM_TYPE::DOUBLE && to == BACKEND_ITEM_TYPE::BOOL)
-		this->opcodes.push_back(vm_inst::OPT_D2B);
-	else if (to == BACKEND_ITEM_TYPE::DOUBLE && from == BACKEND_ITEM_TYPE::BOOL)
-		this->opcodes.push_back(vm_inst::OPT_B2D);
-}
-
 BACKEND_ITEM_TYPE VmBackend::operationResultType(BACKEND_ITEM_TYPE from, BACKEND_ITEM_TYPE to)
 {
 	if (from == BACKEND_ITEM_TYPE::INT && to == BACKEND_ITEM_TYPE::DOUBLE)
@@ -749,7 +733,7 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
     this->opcodes.push_back(0);
     this->opcodes.push_back(0);
 
-	this->opcodes.push_back(vm_inst::OPT_METHOD);
+	this->opcodes.push_back(vm_inst::OPT_METHOD_DEF);
 	
 	auto* functionName = ast->Name.c_str();
 	vm_int_t i;
@@ -888,7 +872,7 @@ void VmBackend::visit(PrimativeValue* value) {
 			for (size_t i = 0; i < arrayLength; ++i)
 			{
 				visit(value->Array->at(i));
-				this->opcodes.push_back(vm_inst::OPT_aPUSH);
+				//this->opcodes.push_back(vm_inst::OPT_aPUSH);
 			}
 		}
 	}
@@ -897,28 +881,21 @@ void VmBackend::visit(PrimativeValue* value) {
 	case PrimativeValue::Type::PRI_DOUBLE:
 	{
 		if (value->Double == 0.0)
-			this->opcodes.push_back(vm_inst::OPT_dPUSH_0);
+			this->opcodes.push_back(vm_inst::OPT_CONST_DOUBLE_0);
 		else if (value->Double == 1.0)
-			this->opcodes.push_back(vm_inst::OPT_dPUSH_1);
-		else if (value->Double == 2.0)
-			this->opcodes.push_back(vm_inst::OPT_dPUSH_2);
-		else if (value->Double == 3.0)
-			this->opcodes.push_back(vm_inst::OPT_dPUSH_3);
-		else if (value->Double == 4.0)
-			this->opcodes.push_back(vm_inst::OPT_dPUSH_4);
-		else
-		{
+			this->opcodes.push_back(vm_inst::OPT_CONST_DOUBLE_1);
+		else {
 			vm_double_t i;
 			i.Double = value->Double;
-			this->opcodes.push_back(vm_inst::OPT_dPUSH);
-            this->opcodes.push_back(i.Chars[7]);
+			this->opcodes.push_back(vm_inst::OPT_CONST_DOUBLE);
+			this->opcodes.push_back(i.Chars[7]);
 			this->opcodes.push_back(i.Chars[6]);
 			this->opcodes.push_back(i.Chars[5]);
 			this->opcodes.push_back(i.Chars[4]);
 			this->opcodes.push_back(i.Chars[3]);
 			this->opcodes.push_back(i.Chars[2]);
 			this->opcodes.push_back(i.Chars[1]);
-            this->opcodes.push_back(i.Chars[0]);
+			this->opcodes.push_back(i.Chars[0]);
 		}
 	}
 	break;
@@ -927,47 +904,28 @@ void VmBackend::visit(PrimativeValue* value) {
 		switch (value->Bool)
 		{
 		case true:
-			this->opcodes.push_back(vm_inst::OPT_bPUSH_1);
+			this->opcodes.push_back(vm_inst::OPT_CONST_BOOL_TRUE);
 			break;
 
 		case false:
-			this->opcodes.push_back(vm_inst::OPT_bPUSH_0);
+			this->opcodes.push_back(vm_inst::OPT_CONST_BOOL_FALSE);
 			break;
 		}
 		break;
 
 	case PrimativeValue::Type::PRI_INTEGER:
-		switch (value->Integer)
-		{
-		case 0:
-			this->opcodes.push_back(vm_inst::OPT_iPUSH_0);
-			break;
-
-		case 1:
-			this->opcodes.push_back(vm_inst::OPT_iPUSH_1);
-			break;
-
-		case 2:
-			this->opcodes.push_back(vm_inst::OPT_iPUSH_2);
-			break;
-
-		case 3:
-			this->opcodes.push_back(vm_inst::OPT_iPUSH_3);
-			break;
-
-		case 4:
-			this->opcodes.push_back(vm_inst::OPT_iPUSH_4);
-			break;
-
-		default:
-			this->opcodes.push_back(vm_inst::OPT_iPUSH);
+		if (value->Integer == 0)
+			this->opcodes.push_back(vm_inst::OPT_CONST_INT_0);
+		else if (value->Integer == 1)
+			this->opcodes.push_back(vm_inst::OPT_CONST_INT_1);
+		else {
+			this->opcodes.push_back(vm_inst::OPT_CONST_INT);
 			vm_int_t i;
 			i.Int = value->Integer;
 			this->opcodes.push_back(i.Chars[3]);
 			this->opcodes.push_back(i.Chars[2]);
 			this->opcodes.push_back(i.Chars[1]);
 			this->opcodes.push_back(i.Chars[0]);
-			break;
 		}
 		break;
 
@@ -976,7 +934,7 @@ void VmBackend::visit(PrimativeValue* value) {
 		auto* text = value->String->c_str();
 		vm_int_t i;
 		i.Int = value->String->size();
-		this->opcodes.push_back(vm_inst::OPT_sPUSH);
+		this->opcodes.push_back(vm_inst::OPT_CONST_STR);
 		this->opcodes.push_back(i.Chars[3]);
 		this->opcodes.push_back(i.Chars[2]);
 		this->opcodes.push_back(i.Chars[1]);
@@ -1045,89 +1003,24 @@ void VmBackend::visit(BinaryAst* ast)
 	auto binaryResultType = detectType(ast);
 
 	getAstItem(ast->Left);
-	if (leftType != binaryResultType)
-		addConvertOpcode(leftType, binaryResultType);
-
 	getAstItem(ast->Right);
-	if (rightType != binaryResultType)
-		addConvertOpcode(rightType, binaryResultType);
 
 	switch (ast->Op)
 	{
 		case PLUS:
-		{
-			switch (binaryResultType)
-			{
-			case BACKEND_ITEM_TYPE::INT:
-				this->opcodes.push_back(vm_inst::OPT_iADD);
-				break;
-
-			case BACKEND_ITEM_TYPE::DOUBLE:
-				this->opcodes.push_back(vm_inst::OPT_dADD);
-				break;
-
-			case BACKEND_ITEM_TYPE::BOOL:
-				this->opcodes.push_back(vm_inst::OPT_bADD);
-				break;
-			}
-		}
+			this->opcodes.push_back(vm_inst::OPT_ADD);
 			break;
 
 		case MINUS:
-		{
-			switch (binaryResultType)
-			{
-			case BACKEND_ITEM_TYPE::INT:
-				this->opcodes.push_back(vm_inst::OPT_iSUB);
-				break;
-
-			case BACKEND_ITEM_TYPE::DOUBLE:
-				this->opcodes.push_back(vm_inst::OPT_dSUB);
-				break;
-
-			case BACKEND_ITEM_TYPE::BOOL:
-				this->opcodes.push_back(vm_inst::OPT_bSUB);
-				break;
-			}
-		}
+			this->opcodes.push_back(vm_inst::OPT_SUB);
 			break;
 
 		case MULTIPLICATION:
-		{
-			switch(binaryResultType)
-			{
-				case BACKEND_ITEM_TYPE::INT:
-					this->opcodes.push_back(vm_inst::OPT_iMUL);
-					break;
-
-				case BACKEND_ITEM_TYPE::DOUBLE:
-					this->opcodes.push_back(vm_inst::OPT_dMUL);
-					break;
-
-				case BACKEND_ITEM_TYPE::BOOL:
-					this->opcodes.push_back(vm_inst::OPT_bMUL);
-					break;
-			}
-		}
+			this->opcodes.push_back(vm_inst::OPT_MUL);
 			break;
 
 		case DIVISION:
-		{
-			switch (binaryResultType)
-			{
-			case BACKEND_ITEM_TYPE::INT:
-				this->opcodes.push_back(vm_inst::OPT_iDIV);
-				break;
-
-			case BACKEND_ITEM_TYPE::DOUBLE:
-				this->opcodes.push_back(vm_inst::OPT_dDIV);
-				break;
-
-			case BACKEND_ITEM_TYPE::BOOL:
-				this->opcodes.push_back(vm_inst::OPT_bDIV);
-				break;
-			}
-		}
+			this->opcodes.push_back(vm_inst::OPT_DIV);
 			break;
 	}
 }
@@ -1140,11 +1033,11 @@ void VmBackend::visit(StructAst* ast)
 	switch (ast->Op)
 	{
 	case APPEND:
-		this->opcodes.push_back(vm_inst::OPT_aPUSH);
+		//this->opcodes.push_back(vm_inst::OPT_aPUSH);
 		break;
 
 	case INDEXER:
-		this->opcodes.push_back(vm_inst::OPT_aGET);
+		//this->opcodes.push_back(vm_inst::OPT_aGET);
 		break;
 
 	default:
@@ -1201,10 +1094,6 @@ void VmBackend::visit(FunctionCallAst* ast)
         size_t totalParameters = ast->Args.size();
         for (size_t i = totalParameters; i > 0; --i)
         {
-            BACKEND_ITEM_TYPE type = detectType(ast->Args[i - 1]);
-            if (type != function->Args[i - 1])
-                throw ParseError(_T("Argument not type matched."));
-
             getAstItem(ast->Args[i - 1]);
         }
 
