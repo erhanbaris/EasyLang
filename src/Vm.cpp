@@ -944,8 +944,8 @@ public:
 		STORE_ADDRESS(75 /*OPT_dPUSH_4*/, opt_dPUSH_4);
 		STORE_ADDRESS(76 /*OPT_bPUSH_0*/, opt_bPUSH_0);
 		STORE_ADDRESS(77 /*OPT_bPUSH_1*/, opt_bPUSH_1);
-		STORE_ADDRESS(78 /*OPT_INVOKE*/, opt_INVOKE);
-		STORE_ADDRESS(79 /*OPT_METHOD_DEF*/, opt_METHOD_DEF);
+        STORE_ADDRESS(78 /*OPT_CALL_NATIVE*/, opt_CALL_NATIVE);
+    //	STORE_ADDRESS(79 /*OPT_METHOD_DEF*/, opt_METHOD_DEF);
 		STORE_ADDRESS(80 /*OPT_INITARRAY*/, opt_INITARRAY);
 		STORE_ADDRESS(82 /*OPT_aPUSH*/, opt_aPUSH);
 		STORE_ADDRESS(88 /*OPT_aGET*/, opt_aGET);
@@ -978,7 +978,7 @@ public:
 			case vm_inst::OPT_JIF:
 			case vm_inst::OPT_IF_EQ:
 			case vm_inst::OPT_JNIF:
-			case vm_inst::OPT_iPUSH:
+            case vm_inst::OPT_CONST_INT:
 			{
 				vm_int_t integer;
 				integer.Int = 0;
@@ -988,7 +988,7 @@ public:
 			}
 			break;
 
-			case vm_inst::OPT_dPUSH:
+            case vm_inst::OPT_CONST_DOUBLE:
 			{
 				vm_double_t d;
 				d.Double = 0;
@@ -999,12 +999,13 @@ public:
 			}
 			break;
 
-			case vm_inst::OPT_bPUSH:
+                case vm_inst::OPT_CONST_BOOL_TRUE:
+                case vm_inst::OPT_CONST_BOOL_FALSE:
 				// console_out << _T(" ") << (bool)*++code;
 				++index;
 				break;
 
-			case vm_inst::OPT_INVOKE:
+            case vm_inst::OPT_CALL_NATIVE:
 			{
 				vm_int_t integer;
 				integer.Int = 0;
@@ -1040,7 +1041,7 @@ public:
 			}
 			break;
 
-			case vm_inst::OPT_sPUSH:
+            case vm_inst::OPT_CONST_STR:
 			{
 				vm_int_t integer;
 				integer.Int = 0;

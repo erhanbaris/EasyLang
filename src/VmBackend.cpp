@@ -166,19 +166,19 @@ public:
 		switch (index)
 		{
 		case 0:
-			opcodes.push_back(vm_inst::OPT_STORE_0);
+            //opcodes.push_back(vm_inst::OPT_STORE_0);
 			break;
 		case 1:
-			opcodes.push_back(vm_inst::OPT_STORE_1);
+            //opcodes.push_back(vm_inst::OPT_STORE_1);
 			break;
 		case 2:
-			opcodes.push_back(vm_inst::OPT_STORE_2);
+            //opcodes.push_back(vm_inst::OPT_STORE_2);
 			break;
 		case 3:
-			opcodes.push_back(vm_inst::OPT_STORE_3);
+            //opcodes.push_back(vm_inst::OPT_STORE_3);
 			break;
 		case 4:
-			opcodes.push_back(vm_inst::OPT_STORE_4);
+            //opcodes.push_back(vm_inst::OPT_STORE_4);
 			break;
 		default:
 			opcodes.push_back(vm_inst::OPT_STORE);
@@ -199,23 +199,23 @@ public:
 		switch (index)
 		{
 		case 0:
-			opcodes.push_back(vm_inst::OPT_GSTORE_0);
+            //opcodes.push_back(vm_inst::OPT_GSTORE_0);
             break;
 
 		case 1:
-			opcodes.push_back(vm_inst::OPT_GSTORE_1);
+            //opcodes.push_back(vm_inst::OPT_GSTORE_1);
             break;
 
 		case 2:
-			opcodes.push_back(vm_inst::OPT_GSTORE_2);
+            //opcodes.push_back(vm_inst::OPT_GSTORE_2);
             break;
 
 		case 3:
-			opcodes.push_back(vm_inst::OPT_GSTORE_3);
+            //opcodes.push_back(vm_inst::OPT_GSTORE_3);
             break;
 
 		case 4:
-			opcodes.push_back(vm_inst::OPT_GSTORE_4);
+            //opcodes.push_back(vm_inst::OPT_GSTORE_4);
             break;
 
 		default:
@@ -237,23 +237,23 @@ public:
 		switch (index)
 		{
 		case 0:
-			opcodes.push_back(vm_inst::OPT_LOAD_0);
+            //opcodes.push_back(vm_inst::OPT_LOAD_0);
             break;
 
 		case 1:
-			opcodes.push_back(vm_inst::OPT_LOAD_1);
+            //opcodes.push_back(vm_inst::OPT_LOAD_1);
             break;
 
 		case 2:
-			opcodes.push_back(vm_inst::OPT_LOAD_2);
+            //opcodes.push_back(vm_inst::OPT_LOAD_2);
             break;
 
 		case 3:
-			opcodes.push_back(vm_inst::OPT_LOAD_3);
+            //opcodes.push_back(vm_inst::OPT_LOAD_3);
             break;
 
 		case 4:
-			opcodes.push_back(vm_inst::OPT_LOAD_4);
+            //opcodes.push_back(vm_inst::OPT_LOAD_4);
             break;
 
 		default:
@@ -275,23 +275,23 @@ public:
 		switch (index)
 		{
 		case 0:
-			opcodes.push_back(vm_inst::OPT_GLOAD_0);
+            //opcodes.push_back(vm_inst::OPT_GLOAD_0);
             break;
 
 		case 1:
-			opcodes.push_back(vm_inst::OPT_GLOAD_1);
+            //opcodes.push_back(vm_inst::OPT_GLOAD_1);
             break;
 
 		case 2:
-			opcodes.push_back(vm_inst::OPT_GLOAD_2);
+            //opcodes.push_back(vm_inst::OPT_GLOAD_2);
             break;
 
 		case 3:
-			opcodes.push_back(vm_inst::OPT_GLOAD_3);
+            //opcodes.push_back(vm_inst::OPT_GLOAD_3);
             break;
 
 		case 4:
-			opcodes.push_back(vm_inst::OPT_GLOAD_4);
+            //opcodes.push_back(vm_inst::OPT_GLOAD_4);
             break;
 
 		default:
@@ -801,10 +801,10 @@ void VmBackend::visit(ForStatementAst* ast)
     (*impl->variables)[ast->Variable] = varInfo;
 
     this->getAstItem(ast->Start);
-    this->opcodes.push_back(vm_inst::OPT_STORE_0);
+    //this->opcodes.push_back(vm_inst::OPT_STORE_0);
     
     size_t forPoint = this->opcodes.size();
-    this->opcodes.push_back(vm_inst::OPT_LOAD_0);
+    //this->opcodes.push_back(vm_inst::OPT_LOAD_0);
     this->getAstItem(ast->End);
     this->opcodes.push_back(vm_inst::OPT_LTE);
    
@@ -817,9 +817,9 @@ void VmBackend::visit(ForStatementAst* ast)
     
     this->getAstItem(ast->Repeat);
     
-    this->opcodes.push_back(vm_inst::OPT_LOAD_0);
+    //this->opcodes.push_back(vm_inst::OPT_LOAD_0);
     this->opcodes.push_back(vm_inst::OPT_INC);
-    this->opcodes.push_back(vm_inst::OPT_STORE_0);
+    //this->opcodes.push_back(vm_inst::OPT_STORE_0);
     
     
     this->opcodes.push_back(vm_inst::OPT_JMP);
@@ -1107,6 +1107,7 @@ void VmBackend::visit(FunctionCallAst* ast)
     }
     else
     {
+        //native method call
         size_t totalParameters = ast->Args.size();
         for (size_t i = totalParameters; i > 0; --i)
         {
@@ -1115,7 +1116,7 @@ void VmBackend::visit(FunctionCallAst* ast)
         }
       
 
-        this->opcodes.push_back(vm_inst::OPT_INVOKE);
+        this->opcodes.push_back(vm_inst::OPT_CALL_NATIVE);
 
 		vm_int_t len;
 		len.Int = static_cast<int>(functionName.size());
