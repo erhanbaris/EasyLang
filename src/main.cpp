@@ -206,7 +206,7 @@ int main(int argc, char_type* argv[]) {
 
     System::WarmUp();
 	// Unit tests
-    Catch::Session().run(argc, argv);
+    // Catch::Session().run(argc, argv);
 
 	auto* engine = new ENGINE;
 	if (argc == 2)

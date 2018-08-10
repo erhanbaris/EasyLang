@@ -3,6 +3,98 @@
 #include "System.h"
 #include "Vm.h"
 
+#include <array>
+
+namespace {
+	std::array<vm_inst, 18> LOCAL_LOADS
+	{
+		vm_inst::OPT_LOAD,
+		vm_inst::OPT_LOAD_0,
+		vm_inst::OPT_LOAD_1,
+		vm_inst::OPT_LOAD_2,
+		vm_inst::OPT_LOAD_3,
+		vm_inst::OPT_LOAD_4,
+		vm_inst::OPT_LOAD_5,
+		vm_inst::OPT_LOAD_6,
+		vm_inst::OPT_LOAD_7,
+		vm_inst::OPT_LOAD_8,
+		vm_inst::OPT_LOAD_9,
+		vm_inst::OPT_LOAD_10,
+		vm_inst::OPT_LOAD_11,
+		vm_inst::OPT_LOAD_12,
+		vm_inst::OPT_LOAD_13,
+		vm_inst::OPT_LOAD_14,
+		vm_inst::OPT_LOAD_15,
+		vm_inst::OPT_LOAD_16
+	};
+
+	std::array<vm_inst, 18> GLOBAL_LOADS
+	{
+		vm_inst::OPT_GLOAD,
+		vm_inst::OPT_GLOAD_0,
+		vm_inst::OPT_GLOAD_1,
+		vm_inst::OPT_GLOAD_2,
+		vm_inst::OPT_GLOAD_3,
+		vm_inst::OPT_GLOAD_4,
+		vm_inst::OPT_GLOAD_5,
+		vm_inst::OPT_GLOAD_6,
+		vm_inst::OPT_GLOAD_7,
+		vm_inst::OPT_GLOAD_8,
+		vm_inst::OPT_GLOAD_9,
+		vm_inst::OPT_GLOAD_10,
+		vm_inst::OPT_GLOAD_11,
+		vm_inst::OPT_GLOAD_12,
+		vm_inst::OPT_GLOAD_13,
+		vm_inst::OPT_GLOAD_14,
+		vm_inst::OPT_GLOAD_15,
+		vm_inst::OPT_GLOAD_16
+	};
+
+	std::array<vm_inst, 18> LOCAL_STORES
+	{
+		vm_inst::OPT_STORE,
+		vm_inst::OPT_STORE_0,
+		vm_inst::OPT_STORE_1,
+		vm_inst::OPT_STORE_2,
+		vm_inst::OPT_STORE_3,
+		vm_inst::OPT_STORE_4,
+		vm_inst::OPT_STORE_5,
+		vm_inst::OPT_STORE_6,
+		vm_inst::OPT_STORE_7,
+		vm_inst::OPT_STORE_8,
+		vm_inst::OPT_STORE_9,
+		vm_inst::OPT_STORE_10,
+		vm_inst::OPT_STORE_11,
+		vm_inst::OPT_STORE_12,
+		vm_inst::OPT_STORE_13,
+		vm_inst::OPT_STORE_14,
+		vm_inst::OPT_STORE_15,
+		vm_inst::OPT_STORE_16
+	};
+
+	std::array<vm_inst, 18> GLOBAL_STORES
+	{
+		vm_inst::OPT_GSTORE,
+		vm_inst::OPT_GSTORE_0,
+		vm_inst::OPT_GSTORE_1,
+		vm_inst::OPT_GSTORE_2,
+		vm_inst::OPT_GSTORE_3,
+		vm_inst::OPT_GSTORE_4,
+		vm_inst::OPT_GSTORE_5,
+		vm_inst::OPT_GSTORE_6,
+		vm_inst::OPT_GSTORE_7,
+		vm_inst::OPT_GSTORE_8,
+		vm_inst::OPT_GSTORE_9,
+		vm_inst::OPT_GSTORE_10,
+		vm_inst::OPT_GSTORE_11,
+		vm_inst::OPT_GSTORE_12,
+		vm_inst::OPT_GSTORE_13,
+		vm_inst::OPT_GSTORE_14,
+		vm_inst::OPT_GSTORE_15,
+		vm_inst::OPT_GSTORE_16
+	};
+}
+
 class NullBuffer : public std::streambuf
 {
 public:
@@ -631,22 +723,18 @@ void VmBackend::visit(AssignmentAst* ast)
 	else
 		variables = this->impl->variables;
 
-	if (variables->find(ast->Name) == variables->end())
+	if (variables->find(ast->Name) != variables->end())
 	{
-		auto* varInfo = new VariableInfo;
-		varInfo->Index = variables->size();
-		varInfo->Name = ast->Name;
-		(*variables)[ast->Name] = varInfo;
-	}
-	else
-	{
-		throw ParseError(_T("'") + ast->Name + _T("' Adready Defined"));
+		auto item = variables->find(ast->Name);
+		delete item->second;
 	}
 
-
+	auto* varInfo = new VariableInfo;
+	varInfo->Index = variables->size();
+	varInfo->Name = ast->Name;
+	(*variables)[ast->Name] = varInfo;
+	
 	this->getAstItem(ast->Data);
-    
-    
     
     if (this->impl->inFunctionCounter == 0 || this->impl->globalVariables->find(ast->Name) != this->impl->globalVariables->end())
 		this->impl->generateGlobalStore(this->opcodes, static_cast<int>((*this->impl->globalVariables)[ast->Name]->Index)); 
