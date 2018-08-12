@@ -33,7 +33,7 @@ vm_object* readLine(vm_system* vm)
     string_type text;
     std::getline(console_in, text);
 
-    vm_object* returnValue = new vm_object(text);
+    vm_object* returnValue = new vm_object(text.c_str());
     return returnValue;
 }
 

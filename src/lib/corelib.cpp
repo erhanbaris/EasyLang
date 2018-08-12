@@ -179,6 +179,34 @@ vm_object* length(vm_system* data)
 	}
 }
 
+vm_object* typeOf(vm_system* data)
+{
+	vm_object const * obj = data->getObject();
+	switch (obj->Type)
+	{
+		case vm_object::vm_object_type::INT:
+			return vm_object::CreateFromString(_T("Int"));
+
+		case vm_object::vm_object_type::BOOL:
+			return vm_object::CreateFromString(_T("Bool"));
+
+		case vm_object::vm_object_type::DOUBLE:
+			return vm_object::CreateFromString(_T("Double"));
+
+		case vm_object::vm_object_type::STR:
+			return vm_object::CreateFromString(_T("String"));
+
+		case vm_object::vm_object_type::ARRAY:
+			return vm_object::CreateFromString(_T("Array"));
+
+		case vm_object::vm_object_type::DICT:
+			return vm_object::CreateFromString(_T("Dict"));
+
+		default:
+			return vm_object::CreateFromString(_T("Empty"));
+	}
+}
+
 CoreLibInit::CoreLibInit()
 {
 	System::SystemMethods[_T("core::toInt")] = toInt;
@@ -194,4 +222,5 @@ CoreLibInit::CoreLibInit()
 	System::SystemMethods[_T("core::isDictionary")] = isDictionary;
 	System::SystemMethods[_T("core::length")] = length;
 	System::SystemMethods[_T("core::exit")] = exitApp;
+	System::SystemMethods[_T("core::typeOf")] = typeOf;
 }

@@ -253,151 +253,36 @@ public:
 		variablesList.push_back(variables);
 	}
 
-	inline OpcodeItem* generateStore(std::vector<char_type> & opcodes, size_t index)
+	inline void generateStore(std::array<vm_inst, 18> storeTypes, std::vector<char_type> & opcodes, size_t index)
 	{
-		switch (index)
-		{
-		case 0:
-            //opcodes.push_back(vm_inst::OPT_STORE_0);
-			break;
-		case 1:
-            //opcodes.push_back(vm_inst::OPT_STORE_1);
-			break;
-		case 2:
-            //opcodes.push_back(vm_inst::OPT_STORE_2);
-			break;
-		case 3:
-            //opcodes.push_back(vm_inst::OPT_STORE_3);
-			break;
-		case 4:
-            //opcodes.push_back(vm_inst::OPT_STORE_4);
-			break;
-		default:
-			opcodes.push_back(vm_inst::OPT_STORE);
+	    if (index > storeTypes.size() - 2)
+        {
+            opcodes.push_back(storeTypes[0]);
             vm_int_t len;
             len.Int = (int)index;
             opcodes.push_back(len.Chars[3]);
             opcodes.push_back(len.Chars[2]);
             opcodes.push_back(len.Chars[1]);
             opcodes.push_back(len.Chars[0]);
-			break;
-		}
-
-		return nullptr;
+        }
+        else
+            opcodes.push_back(storeTypes[index + 1]);
 	}
 
-	inline OpcodeItem* generateGlobalStore(std::vector<char_type> & opcodes, size_t index)
+	inline void generateLoad(std::array<vm_inst, 18> loadTypes, std::vector<char_type> & opcodes, size_t index)
 	{
-		switch (index)
-		{
-		case 0:
-            //opcodes.push_back(vm_inst::OPT_GSTORE_0);
-            break;
-
-		case 1:
-            //opcodes.push_back(vm_inst::OPT_GSTORE_1);
-            break;
-
-		case 2:
-            //opcodes.push_back(vm_inst::OPT_GSTORE_2);
-            break;
-
-		case 3:
-            //opcodes.push_back(vm_inst::OPT_GSTORE_3);
-            break;
-
-		case 4:
-            //opcodes.push_back(vm_inst::OPT_GSTORE_4);
-            break;
-
-		default:
-            opcodes.push_back(vm_inst::OPT_GSTORE);
+        if (index > loadTypes.size() - 2)
+        {
+            opcodes.push_back(loadTypes[0]);
             vm_int_t len;
             len.Int = (int)index;
             opcodes.push_back(len.Chars[3]);
             opcodes.push_back(len.Chars[2]);
             opcodes.push_back(len.Chars[1]);
             opcodes.push_back(len.Chars[0]);
-            break;
-		}
-
-		return nullptr;
-	}
-
-	inline OpcodeItem* generateLoad(std::vector<char_type> & opcodes, size_t index)
-	{
-		switch (index)
-		{
-		case 0:
-            //opcodes.push_back(vm_inst::OPT_LOAD_0);
-            break;
-
-		case 1:
-            //opcodes.push_back(vm_inst::OPT_LOAD_1);
-            break;
-
-		case 2:
-            //opcodes.push_back(vm_inst::OPT_LOAD_2);
-            break;
-
-		case 3:
-            //opcodes.push_back(vm_inst::OPT_LOAD_3);
-            break;
-
-		case 4:
-            //opcodes.push_back(vm_inst::OPT_LOAD_4);
-            break;
-
-		default:
-            opcodes.push_back(vm_inst::OPT_LOAD);
-            vm_int_t len;
-            len.Int = (int)index;
-            opcodes.push_back(len.Chars[3]);
-            opcodes.push_back(len.Chars[2]);
-            opcodes.push_back(len.Chars[1]);
-            opcodes.push_back(len.Chars[0]);
-            break;
-		}
-
-		return nullptr;
-	}
-
-	inline OpcodeItem* generateGlobalLoad(std::vector<char_type> & opcodes, size_t index)
-	{
-		switch (index)
-		{
-		case 0:
-            //opcodes.push_back(vm_inst::OPT_GLOAD_0);
-            break;
-
-		case 1:
-            //opcodes.push_back(vm_inst::OPT_GLOAD_1);
-            break;
-
-		case 2:
-            //opcodes.push_back(vm_inst::OPT_GLOAD_2);
-            break;
-
-		case 3:
-            //opcodes.push_back(vm_inst::OPT_GLOAD_3);
-            break;
-
-		case 4:
-            //opcodes.push_back(vm_inst::OPT_GLOAD_4);
-            break;
-
-		default:
-            opcodes.push_back(vm_inst::OPT_GLOAD);
-            vm_int_t len;
-            len.Int = (int)index;
-            opcodes.push_back(len.Chars[3]);
-            opcodes.push_back(len.Chars[2]);
-            opcodes.push_back(len.Chars[1]);
-            opcodes.push_back(len.Chars[0]);
-            break;
-		}
-
-		return nullptr;
+        }
+        else
+            opcodes.push_back(loadTypes[index + 1]);
 	}
 
 	~VmBackendImpl()
@@ -737,9 +622,9 @@ void VmBackend::visit(AssignmentAst* ast)
 	this->getAstItem(ast->Data);
     
     if (this->impl->inFunctionCounter == 0 || this->impl->globalVariables->find(ast->Name) != this->impl->globalVariables->end())
-		this->impl->generateGlobalStore(this->opcodes, static_cast<int>((*this->impl->globalVariables)[ast->Name]->Index)); 
+		this->impl->generateStore(GLOBAL_STORES, this->opcodes, static_cast<int>((*this->impl->globalVariables)[ast->Name]->Index));
 	else
-		this->impl->generateStore(this->opcodes, static_cast<int>((*this->impl->variables)[ast->Name]->Index));
+		this->impl->generateStore(LOCAL_STORES, this->opcodes, static_cast<int>((*this->impl->variables)[ast->Name]->Index));
 }
 
 void VmBackend::visit(BlockAst* ast)
@@ -832,7 +717,7 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 	this->opcodes.push_back(i.Chars[0]);
 
 	for (int j = 0; j < i.Int; ++j)
-		opcodes.push_back(functionName[(i.Int - j) - 1]);
+		opcodes.push_back(functionName[j]);
 
 	if (this->impl->methods.find(_T("::") + ast->Name) != this->impl->methods.end())
 	{
@@ -859,7 +744,7 @@ void VmBackend::visit(FunctionDefinetionAst* ast)
 
         (*this->impl->variables)[ast->Args[i]->Name] = varInfo;
 
-		this->impl->generateStore(this->opcodes, i);
+		this->impl->generateStore(LOCAL_STORES, this->opcodes, i);
 
     }
 
@@ -937,12 +822,12 @@ void VmBackend::visit(VariableAst* ast)
 	if (this->impl->globalVariables->find(ast->Value) != this->impl->globalVariables->end())
 	{
 		size_t index = (*this->impl->globalVariables)[ast->Value]->Index;
-		this->impl->generateGlobalLoad(this->opcodes, index);
+		this->impl->generateLoad(GLOBAL_LOADS, this->opcodes, index);
 	}
 	else if (this->impl->variables->find(ast->Value) != this->impl->variables->end())
 	{
 		size_t index = (*this->impl->variables)[ast->Value]->Index;
-		this->impl->generateLoad(this->opcodes, index);
+		this->impl->generateLoad(LOCAL_LOADS, this->opcodes, index);
 	}
     else
         throw ParseError(ast->Value + _T(" Not Found"));
@@ -1029,7 +914,7 @@ void VmBackend::visit(PrimativeValue* value) {
 		this->opcodes.push_back(i.Chars[0]);
 
 		for (int j = 0; j < i.Int; ++j)
-			opcodes.push_back(text[(i.Int - j) - 1]);
+			opcodes.push_back(text[j]);
 	}
 	break;
 
@@ -1144,7 +1029,7 @@ void VmBackend::visit(ReturnAst* ast)
 void VmBackend::visit(ParenthesesGroupAst* ast) { }
 void VmBackend::visit(FunctionCallAst* ast)
 {
-	if (ast->Package == _T("core") && ast->Function == _T("dumpopcode"))
+	if (ast->Package == _T("core") && ast->Function == _T("dumpOpcode"))
 	{
 		impl->system.dumpOpcode(&impl->codes[0], impl->codes.size());
 		return;
@@ -1214,7 +1099,7 @@ void VmBackend::visit(FunctionCallAst* ast)
 		opcodes.push_back(len.Chars[0]);
 
         for (int j = 0; j < len.Int; ++j)
-            opcodes.push_back(functionName[(len.Int - j) - 1]);
+            opcodes.push_back(functionName[j]);
     }
 
     // throw ParseError(_T("'") + ast->Function + _T("' Not Found"));

@@ -67,11 +67,10 @@ public:
 		Bool = b;
 		Type = vm_object_type::BOOL;
 	}
-    
+
     vm_object(char_type* b)
     {
-        Pointer = new char_type[strlen(b)];
-        memcpy(Pointer, b, strlen(b));
+        Pointer = b;
         Type = vm_object_type::STR;
     }
 
@@ -94,6 +93,14 @@ public:
         Double = other.Double;
         return *this;
     }
+
+	static vm_object* CreateFromString(char_type* b)
+	{
+		vm_object* obj = new vm_object;
+		obj->Type = vm_object::vm_object_type::STR;
+		obj->Pointer = b;
+		return obj;
+	}
 
 	vm_object_type Type;
 

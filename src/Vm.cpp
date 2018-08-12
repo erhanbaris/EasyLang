@@ -1,6 +1,10 @@
 #include "Vm.h"
 #include "Console.h"
 #include <unordered_map>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+
 #ifdef _WIN32
 # include <windows.h>
 #else
@@ -35,7 +39,12 @@
 #define GSTORE(index, obj) FUNC_BEGIN() *(globalStore.variables + (index)) = obj; FUNC_END()
 #define GLOAD(index) ((vm_object) globalStore.variables[ index ])
 
-#define PEEK() (currentStack[stackIndex - 1])
+
+#define PEEK_INDEX(index) (currentStack[stackIndex - index ])
+#define PEEK_INDEX_PTR(index) (&currentStack[stackIndex - index ])
+
+#define PEEK() (PEEK_INDEX(1))
+#define PEEK_PTR() (PEEK_INDEX_PTR(1))
 #define POP() (currentStack[--stackIndex])
 #define POP_AS(type) (currentStack[--stackIndex]. type )
 #define SET(obj) currentStack[stackIndex - 1] = obj
@@ -46,12 +55,14 @@
 
 #define PUSH_WITH_STACK(currentStack, stackIndex, type, obj) FUNC_BEGIN() currentStack [ stackIndex ]. type = obj . type ; PRINT_STACK(); ++ stackIndex; FUNC_END()
 #define PUSH_WITH_INIT(obj) currentStack [ stackIndex ] = vm_object( obj ) ; PRINT_STACK(); ++ stackIndex;
-//#define PUSH(type, obj) currentStack [ stackIndex ]. type = obj ; PRINT_STACK(); ++ stackIndex;
+#define PUSH_WITH_EMPTY() currentStack [ stackIndex ] = vm_object( ) ; PRINT_STACK(); ++ stackIndex;
+#define PUSH(type, obj) currentStack [ stackIndex ]. type = obj ; PRINT_STACK(); ++ stackIndex;
 #define PUSH_WITH_ASSIGN(obj) currentStack [ stackIndex ] = obj ; PRINT_STACK(); ++ stackIndex;
 #define INC(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type = currentStack [ stackIndex - 1]. type + 1;
 #define DINC(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type = currentStack [ stackIndex - 1]. type - 1;
 #define NEG(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type =  currentStack [ stackIndex - 1]. type * -1;
 #define LOAD_AND_PUSH(index) FUNC_BEGIN() { currentStack[stackIndex].Double = (currentStore->variables + index )->Double;\
+    currentStack[stackIndex].Type = (currentStore->variables + index )->Type;\
     PRINT_STACK(); \
     ++ stackIndex; } FUNC_END()
 
@@ -70,6 +81,32 @@
 #define OPERATION_OR( var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) || GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
 #define IS_EQUAL(condType) GET_ITEM(2, condType) == GET_ITEM(1, condType)
 #define CONVERT(from, to, toType) currentStack[stackIndex - 1]. to = currentStack[stackIndex - 1]. from ; currentStack[stackIndex - 1].Type = toType ;
+
+#define GLOAD_PRE(index) opt_GLOAD_##index:\
+++code;\
+PRINT_OPCODE();\
+PUSH_WITH_ASSIGN(GLOAD( index ));\
+GOTO_OPCODE();
+
+#define GSTORE_PRE(index) opt_GSTORE_##index:\
+++code;\
+PRINT_OPCODE();\
+GSTORE( index , POP());\
+GOTO_OPCODE();
+
+#define LOAD_PRE(index) opt_LOAD_##index:\
+++code;\
+PRINT_OPCODE();\
+LOAD_AND_PUSH( index );\
+GOTO_OPCODE();
+
+#define STORE_PRE(index) opt_STORE_##index:\
+++code;\
+PRINT_OPCODE();\
+STORE( index , POP());\
+GOTO_OPCODE();
+
+
 
 #define ASSIGN_8(data, code)\
     data [7] = *( code + 0);\
@@ -148,12 +185,19 @@ public:
 //	}
 //};
 
+typedef void (two_arg_func)(vm_object*, vm_object*);
+typedef void (one_arg_func)(vm_object*);
+
+struct str_functions {
+	two_arg_func add_str;
+};
+
 class vm_system_impl
 {
 public:
+	const int STORE_SIZE = 1024;
 	vm_system_impl(vm_system* pSystem)
 	{
-		const int STORE_SIZE = 1024;
 		currentStack = new vm_object[1024 * 512];
 		currentStore = new vm_store<vm_object>;
 		stores = new vm_store<vm_object>*[STORE_SIZE];
@@ -170,7 +214,7 @@ public:
 
 	~vm_system_impl()
 	{
-		for (int i = 0; i < 1024; ++i)
+		for (int i = 0; i < STORE_SIZE; ++i)
 			delete stores[i];
 
 		delete[] currentStack;
@@ -191,6 +235,368 @@ public:
 	vm_system* system{ nullptr };
 
 	void* gotoAddresses[128];
+
+	inline bool is_number(vm_object* obj)
+	{
+		return obj != nullptr && (obj->Type == vm_object::vm_object_type::INT || obj->Type == vm_object::vm_object_type::DOUBLE);
+	}
+
+	inline bool is_number(char_type* chr)
+	{
+		char* end = 0;
+		double val = strtod(chr, &end);
+		return end != chr && val != HUGE_VAL;
+	}
+
+	inline void add_str(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_string(left);
+		vm_object* newRight = get_as_string(right);
+
+		size_t leftLen = strlen(static_cast<char_type*>(newLeft->Pointer));
+		size_t rightLen = strlen(static_cast<char_type*>(newRight->Pointer));
+
+		char_type* newStr = new char_type[leftLen + rightLen + 1];
+		std::memcpy(newStr, newLeft->Pointer, leftLen);
+		std::memcpy(newStr + leftLen, newRight->Pointer, rightLen);
+		newStr[leftLen + rightLen] = '\0';
+
+		GET_ITEM(2, Pointer) = newStr;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::STR;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void add_double(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_double(left);
+		vm_object* newRight = get_as_double(right);
+
+		GET_ITEM(2, Double) = newLeft->Double + newRight->Double;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::DOUBLE;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void add_int(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_int(left);
+		vm_object* newRight = get_as_int(right);
+
+		GET_ITEM(2, Int) = newLeft->Int + newRight->Int;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::INT;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void add_bool(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_bool(left);
+		vm_object* newRight = get_as_bool(right);
+
+		GET_ITEM(2, Bool) = newLeft->Bool && newRight->Bool;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void sub_double(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_double(left);
+		vm_object* newRight = get_as_double(right);
+
+		GET_ITEM(2, Double) = newLeft->Double - newRight->Double;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::DOUBLE;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void sub_int(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_int(left);
+		vm_object* newRight = get_as_int(right);
+
+		GET_ITEM(2, Int) = newLeft->Int - newRight->Int;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::INT;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void sub_bool(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_bool(left);
+		vm_object* newRight = get_as_bool(right);
+
+		GET_ITEM(2, Bool) = newLeft->Bool && newRight->Bool;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void seq_str(vm_object* left, vm_object* right)
+	{
+		if (left->Type == right->Type) // string cannot multiply with another string
+		{
+			GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
+			return;
+		}
+
+		if ((left->Type == vm_object::vm_object_type::STR && !is_number(right)) ||
+			(right->Type == vm_object::vm_object_type::STR && !is_number(left)))
+		{
+			GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
+			return;
+		}
+
+		vm_object* strObj = nullptr;
+		vm_object* numberObj = nullptr;
+
+		if (left->Type == vm_object::vm_object_type::STR && is_number(right))
+		{
+			strObj = left;
+			numberObj = get_as_int(right);
+		}
+		else {
+			strObj = right;
+			numberObj = get_as_int(left);
+		}
+
+		size_t strLen = strlen(static_cast<char_type*>(strObj->Pointer));
+		size_t totalLen = strLen * numberObj->Int;
+
+		char_type* newStr = new char_type[totalLen + 1];
+		for(size_t i = 0; i < totalLen; ++i)
+			std::memcpy(newStr + (i * strLen), strObj->Pointer, strLen);
+
+		newStr[totalLen] = '\0';
+
+		GET_ITEM(2, Pointer) = newStr;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::STR;
+	}
+
+	inline void mul_double(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_double(left);
+		vm_object* newRight = get_as_double(right);
+
+		GET_ITEM(2, Double) = newLeft->Double * newRight->Double;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::DOUBLE;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void mul_int(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_int(left);
+		vm_object* newRight = get_as_int(right);
+
+		GET_ITEM(2, Int) = newLeft->Int * newRight->Int;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::INT;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void mul_bool(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_bool(left);
+		vm_object* newRight = get_as_bool(right);
+
+		GET_ITEM(2, Bool) = newLeft->Bool || newRight->Bool;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void div_double(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_double(left);
+		vm_object* newRight = get_as_double(right);
+
+		GET_ITEM(2, Double) = newLeft->Double / newRight->Double;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::DOUBLE;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void div_int(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_double(left);
+		vm_object* newRight = get_as_double(right);
+
+		GET_ITEM(2, Double) = newLeft->Double / newRight->Double;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::DOUBLE;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void div_bool(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_bool(left);
+		vm_object* newRight = get_as_bool(right);
+
+		GET_ITEM(2, Bool) = newLeft->Bool && newRight->Bool;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void eq_str(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_string(left);
+		vm_object* newRight = get_as_string(right);
+
+		GET_ITEM(2, Bool) = strcmp((char_type*)newLeft->Pointer, (char_type*)newRight->Pointer) == 0;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void eq_double(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_double(left);
+		vm_object* newRight = get_as_double(right);
+
+		GET_ITEM(2, Bool) = newLeft->Double == newRight->Double;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void eq_int(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_int(left);
+		vm_object* newRight = get_as_int(right);
+
+		GET_ITEM(2, Bool) = newLeft->Int == newRight->Int;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline void eq_bool(vm_object* left, vm_object* right)
+	{
+		vm_object* newLeft = get_as_bool(left);
+		vm_object* newRight = get_as_bool(right);
+
+		GET_ITEM(2, Bool) = newLeft->Bool == newRight->Bool;
+		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
+
+		delete newLeft;
+		delete newRight;
+	}
+
+	inline vm_object* get_as_string(vm_object* obj)
+	{
+		switch (obj->Type)
+		{
+			case vm_object::vm_object_type::DOUBLE:
+				return new vm_object(AS_STRING(obj->Double));
+
+			case vm_object::vm_object_type::INT:
+				return new vm_object(AS_STRING(obj->Int));
+
+			case vm_object::vm_object_type::BOOL:
+				return new vm_object(AS_STRING(obj->Bool));
+
+			case vm_object::vm_object_type::STR:
+				return new vm_object((char_type*)obj->Pointer);
+
+			default:
+				return new vm_object(_T(""));
+		}
+	}
+
+	inline vm_object* get_as_int(vm_object* obj)
+	{
+		switch (obj->Type)
+		{
+			case vm_object::vm_object_type::DOUBLE:
+				return new vm_object((int)obj->Double);
+
+			case vm_object::vm_object_type::INT:
+				return new vm_object(obj->Int);
+
+			case vm_object::vm_object_type::BOOL:
+				return new vm_object(obj->Bool ? 1 : 0);
+
+			case vm_object::vm_object_type::STR:
+			{
+				char_type* chr = (char_type*)obj->Pointer;
+				if (is_number(chr))
+					return new vm_object();
+
+				new vm_object(std::stoi(chr));
+			}
+
+			default:
+				return new vm_object(0);
+		}
+	}
+
+	inline vm_object* get_as_bool(vm_object* obj)
+	{
+		switch (obj->Type)
+		{
+			case vm_object::vm_object_type::DOUBLE:
+				return new vm_object(obj->Double > 0.0);
+
+			case vm_object::vm_object_type::INT:
+				return new vm_object(obj->Int > 0);
+
+			case vm_object::vm_object_type::BOOL:
+				return new vm_object(obj->Bool);
+
+			case vm_object::vm_object_type::STR:
+				return new vm_object(strlen((char_type*)obj->Pointer) > 0);
+
+			default:
+				return new vm_object(false);
+		}
+	}
+
+	inline vm_object* get_as_double(vm_object* obj)
+	{
+		switch (obj->Type)
+		{
+			case vm_object::vm_object_type::DOUBLE:
+				return new vm_object(obj->Double);
+
+			case vm_object::vm_object_type::INT:
+				return new vm_object((double)obj->Int);
+
+			case vm_object::vm_object_type::BOOL:
+				return new vm_object(obj->Bool ? 1.0 : 0.0);
+
+			case vm_object::vm_object_type::STR:
+			{
+				char_type* chr = (char_type*)obj->Pointer;
+				if (is_number(chr))
+					return new vm_object();
+
+				new vm_object(std::stod(chr));
+			}
+
+			default:
+				return new vm_object(0.0);
+		}
+	}
+
 	void execute(char_type* code, size_t len, size_t startIndex, bool firstInit)
 	{
 		char_type* startPoint = code;
@@ -202,58 +608,198 @@ public:
 		PRINT_OPCODE();
 		GOTO_OPCODE();
 
-	opt_iADD:
+	opt_ADD:
 		++code;
 		PRINT_OPCODE();
-		OPERATION_ADD(Int, vm_object::vm_object_type::INT);
+        FUNC_BEGIN()
+        {
+            auto* left = PEEK_INDEX_PTR(2);
+            auto* right = PEEK_INDEX_PTR(1);
+
+			if (left->Type == vm_object::vm_object_type::STR ||
+				right->Type == vm_object::vm_object_type::STR)
+			{
+				add_str(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::DOUBLE ||
+					 right->Type == vm_object::vm_object_type::DOUBLE)
+			{
+				add_double(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::INT ||
+					 right->Type == vm_object::vm_object_type::INT)
+			{
+				add_int(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::BOOL ||
+					 right->Type == vm_object::vm_object_type::BOOL)
+			{
+				add_bool(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::ARRAY ||
+					right->Type == vm_object::vm_object_type::ARRAY)
+			{
+				// todo: implement
+				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
+			}
+			else if (left->Type == vm_object::vm_object_type::DICT ||
+					 right->Type == vm_object::vm_object_type::DICT)
+			{
+				// todo: implement
+				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
+			}
+			else
+				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
+
+            STACK_DINC();
+        }
+        FUNC_END();
 		GOTO_OPCODE();
 
-	opt_iSUB:
+	opt_SUB:
 		++code;
 		PRINT_OPCODE();
-		OPERATION_SUB(Int, vm_object::vm_object_type::INT);
+		FUNC_BEGIN()
+		{
+			auto* left = PEEK_INDEX_PTR(2);
+			auto* right = PEEK_INDEX_PTR(1);
+
+			if (left->Type == vm_object::vm_object_type::DOUBLE ||
+					 right->Type == vm_object::vm_object_type::DOUBLE)
+			{
+				sub_double(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::INT ||
+					 right->Type == vm_object::vm_object_type::INT)
+			{
+				sub_int(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::BOOL ||
+					 right->Type == vm_object::vm_object_type::BOOL)
+			{
+				sub_bool(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::ARRAY ||
+					 right->Type == vm_object::vm_object_type::ARRAY)
+			{
+				// todo: implement
+				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
+			}
+			else if (left->Type == vm_object::vm_object_type::DICT ||
+					 right->Type == vm_object::vm_object_type::DICT)
+			{
+				// todo: implement
+				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
+			}
+			else
+				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
+
+			STACK_DINC();
+		}
+		FUNC_END();
 		GOTO_OPCODE();
 
-	opt_iMUL:
+	opt_MUL:
 		++code;
 		PRINT_OPCODE();
-		OPERATION_MUL(Int, vm_object::vm_object_type::INT);
+		FUNC_BEGIN()
+		{
+			auto* left = PEEK_INDEX_PTR(2);
+			auto* right = PEEK_INDEX_PTR(1);
+
+			if (left->Type == vm_object::vm_object_type::STR ||
+				right->Type == vm_object::vm_object_type::STR)
+			{
+				seq_str(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::DOUBLE ||
+					 right->Type == vm_object::vm_object_type::DOUBLE)
+			{
+				mul_double(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::INT ||
+					 right->Type == vm_object::vm_object_type::INT)
+			{
+				mul_int(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::BOOL ||
+					 right->Type == vm_object::vm_object_type::BOOL)
+			{
+				mul_bool(left, right);
+			}
+			else
+				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
+
+			STACK_DINC();
+		}
+		FUNC_END();
 		GOTO_OPCODE();
 
-	opt_iDIV:
+	opt_DIV:
 		++code;
 		PRINT_OPCODE();
-		OPERATION_DIV(Int, vm_object::vm_object_type::INT);
-		GOTO_OPCODE();
+		FUNC_BEGIN()
+		{
+			auto* left = PEEK_INDEX_PTR(2);
+			auto* right = PEEK_INDEX_PTR(1);
 
-	opt_dADD:
-		++code;
-		PRINT_OPCODE();
-		OPERATION_ADD(Double, vm_object::vm_object_type::DOUBLE);
-		GOTO_OPCODE();
+			if (left->Type == vm_object::vm_object_type::DOUBLE ||
+					 right->Type == vm_object::vm_object_type::DOUBLE)
+			{
+				div_double(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::INT ||
+					 right->Type == vm_object::vm_object_type::INT)
+			{
+				div_int(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::BOOL ||
+					 right->Type == vm_object::vm_object_type::BOOL)
+			{
+				div_bool(left, right);
+			}
+			else
+				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
 
-	opt_dSUB:
-		++code;
-		PRINT_OPCODE();
-		OPERATION_SUB(Double, vm_object::vm_object_type::DOUBLE);
-		GOTO_OPCODE();
-
-	opt_dMUL:
-		++code;
-		PRINT_OPCODE();
-		OPERATION_MUL(Double, vm_object::vm_object_type::DOUBLE);
-		GOTO_OPCODE();
-
-	opt_dDIV:
-		++code;
-		PRINT_OPCODE();
-		OPERATION_DIV(Double, vm_object::vm_object_type::DOUBLE);
+			STACK_DINC();
+		}
+		FUNC_END();
 		GOTO_OPCODE();
 
 	opt_EQ:
 		++code;
 		PRINT_OPCODE();
-		OPERATION_EQ(Bool, vm_object::vm_object_type::BOOL, Int);
+		FUNC_BEGIN()
+		{
+			auto* left = PEEK_INDEX_PTR(2);
+			auto* right = PEEK_INDEX_PTR(1);
+
+			if (left->Type == vm_object::vm_object_type::STR ||
+				right->Type == vm_object::vm_object_type::STR)
+			{
+				eq_str(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::DOUBLE ||
+					 right->Type == vm_object::vm_object_type::DOUBLE)
+			{
+				eq_double(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::INT ||
+					 right->Type == vm_object::vm_object_type::INT)
+			{
+				eq_int(left, right);
+			}
+			else if (left->Type == vm_object::vm_object_type::BOOL ||
+					 right->Type == vm_object::vm_object_type::BOOL)
+			{
+				eq_bool(left, right);
+			}
+			else
+				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
+
+			STACK_DINC();
+		}
+		FUNC_END();
 		GOTO_OPCODE();
 
 	opt_LT:
@@ -354,38 +900,6 @@ public:
 		}
 		GOTO_OPCODE();
 
-	opt_INITARRAY:
-		++code;
-		PRINT_OPCODE();
-		FUNC_BEGIN()
-			PUSH_WITH_ASSIGN(new vm_array);
-		FUNC_END()
-			GOTO_OPCODE();
-
-	opt_aPUSH:
-		++code;
-		{
-			PRINT_OPCODE();
-			FUNC_BEGIN()
-				vm_object& data = POP();
-			vm_array* array = static_cast<vm_array*>(PEEK().Pointer);
-			array->push(data);
-			FUNC_END()
-		}
-		GOTO_OPCODE();
-
-	opt_aGET:
-		++code;
-		{
-			PRINT_OPCODE();
-			FUNC_BEGIN()
-				vm_object& data = POP();
-			vm_array* array = static_cast<vm_array*>(PEEK().Pointer);
-			PUSH_WITH_ASSIGN(&array->Array[data.Int]);
-			FUNC_END()
-		}
-		GOTO_OPCODE();
-
 	opt_JIF:
 		++code;
 		{
@@ -469,35 +983,23 @@ public:
 		}
 		GOTO_OPCODE();
 
-	opt_LOAD_0:
-		++code;
-		PRINT_OPCODE();
-		LOAD_AND_PUSH(0);
-		GOTO_OPCODE();
-
-	opt_LOAD_1:
-		++code;
-		PRINT_OPCODE();
-		LOAD_AND_PUSH(1);
-		GOTO_OPCODE();
-
-	opt_LOAD_2:
-		++code;
-		PRINT_OPCODE();
-		LOAD_AND_PUSH(2);
-		GOTO_OPCODE();
-
-	opt_LOAD_3:
-		++code;
-		PRINT_OPCODE();
-		LOAD_AND_PUSH(3);
-		GOTO_OPCODE();
-
-	opt_LOAD_4:
-		++code;
-		PRINT_OPCODE();
-		LOAD_AND_PUSH(4);
-		GOTO_OPCODE();
+	LOAD_PRE(0);
+    LOAD_PRE(1);
+    LOAD_PRE(2);
+    LOAD_PRE(3);
+    LOAD_PRE(4);
+    LOAD_PRE(5);
+    LOAD_PRE(6);
+    LOAD_PRE(7);
+    LOAD_PRE(8);
+    LOAD_PRE(9);
+    LOAD_PRE(10);
+    LOAD_PRE(11);
+    LOAD_PRE(12);
+    LOAD_PRE(13);
+    LOAD_PRE(14);
+    LOAD_PRE(15);
+    LOAD_PRE(16);
 
 	opt_STORE:
 		++code;
@@ -505,35 +1007,23 @@ public:
 		STORE(*++code, POP());
 		GOTO_OPCODE();
 
-	opt_STORE_0:
-		++code;
-		PRINT_OPCODE();
-		STORE(0, POP());
-		GOTO_OPCODE();
-
-	opt_STORE_1:
-		++code;
-		PRINT_OPCODE();
-		STORE(1, POP());
-		GOTO_OPCODE();
-
-	opt_STORE_2:
-		++code;
-		PRINT_OPCODE();
-		STORE(2, POP());
-		GOTO_OPCODE();
-
-	opt_STORE_3:
-		++code;
-		PRINT_OPCODE();
-		STORE(3, POP());
-		GOTO_OPCODE();
-
-	opt_STORE_4:
-		++code;
-		PRINT_OPCODE();
-		STORE(4, POP());
-		GOTO_OPCODE();
+    STORE_PRE(0);
+    STORE_PRE(1);
+    STORE_PRE(2);
+    STORE_PRE(3);
+    STORE_PRE(4);
+    STORE_PRE(5);
+    STORE_PRE(6);
+    STORE_PRE(7);
+    STORE_PRE(8);
+    STORE_PRE(9);
+    STORE_PRE(10);
+    STORE_PRE(11);
+    STORE_PRE(12);
+    STORE_PRE(13);
+    STORE_PRE(14);
+    STORE_PRE(15);
+    STORE_PRE(16);
 
 	opt_GLOAD:
 		++code;
@@ -541,35 +1031,23 @@ public:
 		PUSH_WITH_ASSIGN(GLOAD(*++code));
 		GOTO_OPCODE();
 
-	opt_GLOAD_0:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(GLOAD(0));
-		GOTO_OPCODE();
-
-	opt_GLOAD_1:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(GLOAD(1));
-		GOTO_OPCODE();
-
-	opt_GLOAD_2:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(GLOAD(2));
-		GOTO_OPCODE();
-
-	opt_GLOAD_3:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(GLOAD(3));
-		GOTO_OPCODE();
-
-	opt_GLOAD_4:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(GLOAD(4));
-		GOTO_OPCODE();
+    GLOAD_PRE(0);
+    GLOAD_PRE(1);
+    GLOAD_PRE(2);
+    GLOAD_PRE(3);
+    GLOAD_PRE(4);
+    GLOAD_PRE(5);
+    GLOAD_PRE(6);
+    GLOAD_PRE(7);
+    GLOAD_PRE(8);
+    GLOAD_PRE(9);
+    GLOAD_PRE(10);
+    GLOAD_PRE(11);
+    GLOAD_PRE(12);
+    GLOAD_PRE(13);
+    GLOAD_PRE(14);
+    GLOAD_PRE(15);
+    GLOAD_PRE(16);
 
 	opt_GSTORE:
 		++code;
@@ -577,35 +1055,23 @@ public:
 		GSTORE(*++code, POP());
 		GOTO_OPCODE();
 
-	opt_GSTORE_0:
-		++code;
-		PRINT_OPCODE();
-		GSTORE(0, POP());
-		GOTO_OPCODE();
-
-	opt_GSTORE_1:
-		++code;
-		PRINT_OPCODE();
-		GSTORE(1, POP());
-		GOTO_OPCODE();
-
-	opt_GSTORE_2:
-		++code;
-		PRINT_OPCODE();
-		GSTORE(2, POP());
-		GOTO_OPCODE();
-
-	opt_GSTORE_3:
-		++code;
-		PRINT_OPCODE();
-		GSTORE(3, POP());
-		GOTO_OPCODE();
-
-	opt_GSTORE_4:
-		++code;
-		PRINT_OPCODE();
-		GSTORE(4, POP());
-		GOTO_OPCODE();
+    GSTORE_PRE(0);
+    GSTORE_PRE(1);
+    GSTORE_PRE(2);
+    GSTORE_PRE(3);
+    GSTORE_PRE(4);
+    GSTORE_PRE(5);
+    GSTORE_PRE(6);
+    GSTORE_PRE(7);
+    GSTORE_PRE(8);
+    GSTORE_PRE(9);
+    GSTORE_PRE(10);
+    GSTORE_PRE(11);
+    GSTORE_PRE(12);
+    GSTORE_PRE(13);
+    GSTORE_PRE(14);
+    GSTORE_PRE(15);
+    GSTORE_PRE(16);
 
 	opt_CALL:
 		++code;
@@ -639,7 +1105,7 @@ public:
 		POP();
 		GOTO_OPCODE();
 
-	opt_iPUSH:
+    opt_CONST_INT:
 		++code; {
 			PRINT_OPCODE();
 			FUNC_BEGIN()
@@ -652,94 +1118,59 @@ public:
 		}
 		GOTO_OPCODE();
 
-	opt_iPUSH_0:
+    opt_CONST_INT_0:
 		++code;
 		PRINT_OPCODE();
 		PUSH_WITH_ASSIGN(0);
 		GOTO_OPCODE();
 
-	opt_iPUSH_1:
+    opt_CONST_INT_1:
 		++code;
 		PRINT_OPCODE();
 		PUSH_WITH_ASSIGN(1);
 		GOTO_OPCODE();
 
-	opt_iPUSH_2:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(2);
-		GOTO_OPCODE();
+    opt_CONST_DOUBLE:
+        ++code; {
+            PRINT_OPCODE();
+            vm_double_t d;
+            d.Double = 0.0;
+            ASSIGN_8(d.Chars, code);
+            PUSH_WITH_ASSIGN(d.Double);
+        }
+        GOTO_OPCODE();
 
-	opt_iPUSH_3:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(3);
-		GOTO_OPCODE();
+    opt_CONST_DOUBLE_0:
+        ++code; {
+            PRINT_OPCODE();
+            vm_double_t d;
+            d.Double = 0.0;
+            ASSIGN_8(d.Chars, code);
+            PUSH_WITH_ASSIGN(d.Double);
+        }
+        GOTO_OPCODE();
 
-	opt_iPUSH_4:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(4);
-		GOTO_OPCODE();
-
-	opt_dPUSH_0:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(0.0);
-		GOTO_OPCODE();
-
-	opt_dPUSH_1:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(1.0);
-		GOTO_OPCODE();
-
-	opt_dPUSH_2:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(2.0);
-		GOTO_OPCODE();
-
-	opt_dPUSH_3:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(3.0);
-		GOTO_OPCODE();
-
-	opt_dPUSH_4:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(4.0);
-		GOTO_OPCODE();
-
-	opt_bPUSH_0:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(false);
-		GOTO_OPCODE();
-
-	opt_bPUSH_1:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(true);
-		GOTO_OPCODE();
-
-	opt_dPUSH:
-		++code; {
-			PRINT_OPCODE();
-			vm_double_t d;
-			d.Double = 0.0;
-			ASSIGN_8(d.Chars, code);
-			PUSH_WITH_ASSIGN(d.Double);
-		}
-		GOTO_OPCODE();
+    opt_CONST_DOUBLE_1:
+        ++code; {
+            PRINT_OPCODE();
+            vm_double_t d;
+            d.Double = 1.0;
+            PUSH_WITH_ASSIGN(d.Double);
+        }
+        GOTO_OPCODE();
 
 
-	opt_bPUSH:
-		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN((bool)*++code);
-		GOTO_OPCODE();
+    opt_CONST_BOOL_TRUE:
+        ++code;
+        PRINT_OPCODE();
+        PUSH_WITH_ASSIGN(true);
+        GOTO_OPCODE();
+
+    opt_CONST_BOOL_FALSE:
+        ++code;
+        PRINT_OPCODE();
+        PUSH_WITH_ASSIGN(false);
+        GOTO_OPCODE();
 
 	opt_CALL_NATIVE:
 		++code; {
@@ -749,8 +1180,11 @@ public:
 			ASSIGN_4(integer.Chars, code);
 
 			char_type * chars = new char_type[integer.Int + 1];
-			for (int i = integer.Int - 1; i >= 0; --i)
-				chars[i] = *++code;
+			for (int i = 0; i < integer.Int; ++i)
+			{
+				chars[i] = *code;
+				++code;
+			}
 
 			chars[integer.Int] = '\0';
 			if (nativeMethods.find(chars) != nativeMethodsEnd)
@@ -773,17 +1207,21 @@ public:
 						break;
 
 					case vm_object::vm_object_type::STR:
-						PUSH_WITH_INIT(string_type(*static_cast<string_type*>(result->Pointer)));
+						PUSH_WITH_INIT(static_cast<char_type*>(result->Pointer));
 						break;
 					}
 				}
 			}
 			else
+			{
 				console_out << _T("ERROR : Method '") << chars << _T("' Not Found\n");
+				PUSH_WITH_EMPTY();
+				goto opt_HALT;
+			}
 		}
 		GOTO_OPCODE();
 
-	opt_sPUSH:
+    opt_CONST_STR:
 		++code; {
 			PRINT_OPCODE();
 			vm_int_t integer;
@@ -791,8 +1229,11 @@ public:
 			ASSIGN_4(integer.Chars, code);
 
 			char_type * chars = new char_type[integer.Int + 1];
-			for (int i = integer.Int - 1; i >= 0; --i)
-				chars[i] = *++code;
+			for (int i = 0; i < integer.Int; ++i)
+			{
+				chars[i] = *code;
+				++code;
+			}
 
 			chars[integer.Int] = '\0';
 			PUSH_WITH_INIT(chars);
@@ -810,150 +1251,136 @@ public:
 		PRINT_OPCODE();
 		return;
 
-	opt_lADD:
-	opt_lSUB:
-	opt_lMUL:
-	opt_lDIV:
-	opt_I2D:
-		++code;
-		PRINT_OPCODE();
-		CONVERT(Int, Double, vm_object::vm_object_type::DOUBLE);
-		GOTO_OPCODE();
-
-	opt_D2I:
-		++code;
-		PRINT_OPCODE();
-		CONVERT(Double, Int, vm_object::vm_object_type::INT);
-		GOTO_OPCODE();
-
-	opt_I2B:
-		++code;
-		PRINT_OPCODE();
-		CONVERT(Int, Bool, vm_object::vm_object_type::BOOL);
-		GOTO_OPCODE();
-
-	opt_B2I:
-		++code;
-		PRINT_OPCODE();
-		CONVERT(Bool, Int, vm_object::vm_object_type::INT);
-		GOTO_OPCODE();
-
-	opt_D2B:
-		++code;
-		PRINT_OPCODE();
-		CONVERT(Double, Bool, vm_object::vm_object_type::BOOL);
-		GOTO_OPCODE();
-
-	opt_B2D:
-		++code;
-		PRINT_OPCODE();
-		CONVERT(Bool, Double, vm_object::vm_object_type::DOUBLE);
-		GOTO_OPCODE();
-
 	initSystem:
 		void** testCodes = gotoAddresses; // this dummy codes used by vc++ 
-		STORE_ADDRESS(0 /*OPT_HALT*/, opt_HALT);
-		STORE_ADDRESS(1 /*OPT_iADD*/, opt_iADD);
-		STORE_ADDRESS(2 /*OPT_dADD*/, opt_dADD);
-		STORE_ADDRESS(3 /*OPT_lADD*/, opt_lADD);
+        STORE_ADDRESS(vm_inst::OPT_HALT, opt_HALT);
+        STORE_ADDRESS(vm_inst::OPT_ADD, opt_ADD);
+        STORE_ADDRESS(vm_inst::OPT_SUB, opt_SUB);
+        STORE_ADDRESS(vm_inst::OPT_MUL, opt_MUL);
+        STORE_ADDRESS(vm_inst::OPT_DIV, opt_DIV);
 
-		STORE_ADDRESS(4 /*OPT_iSUB*/, opt_iSUB);
-		STORE_ADDRESS(5 /*OPT_dSUB*/, opt_dSUB);
-		STORE_ADDRESS(6 /*OPT_lSUB*/, opt_lSUB);
+        STORE_ADDRESS(vm_inst::OPT_EQ, opt_EQ);
+        STORE_ADDRESS(vm_inst::OPT_LT, opt_LT);
+        STORE_ADDRESS(vm_inst::OPT_LTE, opt_LTE);
+        STORE_ADDRESS(vm_inst::OPT_GT, opt_GT);
+        STORE_ADDRESS(vm_inst::OPT_GTE, opt_GTE);
 
-		STORE_ADDRESS(7 /*OPT_iMUL*/, opt_iMUL);
-		STORE_ADDRESS(8 /*OPT_dMUL*/, opt_dMUL);
-		STORE_ADDRESS(9 /*OPT_lMUL*/, opt_lMUL);
+        STORE_ADDRESS(vm_inst::OPT_AND, opt_AND);
+        STORE_ADDRESS(vm_inst::OPT_OR, opt_OR);
+        STORE_ADDRESS(vm_inst::OPT_DUP, opt_DUP);
+        STORE_ADDRESS(vm_inst::OPT_POP, opt_POP);
+        STORE_ADDRESS(vm_inst::OPT_JMP, opt_JMP);
 
-		STORE_ADDRESS(10 /*OPT_iDIV*/, opt_iDIV);
-		STORE_ADDRESS(11 /*OPT_dDIV*/, opt_dDIV);
-		STORE_ADDRESS(12 /*OPT_lDIV*/, opt_lDIV);
+        STORE_ADDRESS(vm_inst::OPT_CONST_STR, opt_CONST_STR);
+        STORE_ADDRESS(vm_inst::OPT_CONST_INT, opt_CONST_INT);
+        STORE_ADDRESS(vm_inst::OPT_CONST_INT_0, opt_CONST_INT_0);
+        STORE_ADDRESS(vm_inst::OPT_CONST_INT_1, opt_CONST_INT_1);
+        STORE_ADDRESS(vm_inst::OPT_CONST_BOOL_TRUE, opt_CONST_BOOL_TRUE);
+        STORE_ADDRESS(vm_inst::OPT_CONST_BOOL_FALSE, opt_CONST_BOOL_FALSE);
+        STORE_ADDRESS(vm_inst::OPT_CONST_DOUBLE, opt_CONST_DOUBLE);
+        STORE_ADDRESS(vm_inst::OPT_CONST_DOUBLE_0, opt_CONST_DOUBLE_0);
+        STORE_ADDRESS(vm_inst::OPT_CONST_DOUBLE_1, opt_CONST_DOUBLE_1);
 
-		STORE_ADDRESS(13 /*OPT_EQ*/, opt_EQ);
-		STORE_ADDRESS(14 /*OPT_LT*/, opt_LT);
-		STORE_ADDRESS(15 /*OPT_LTE*/, opt_LTE);
-		STORE_ADDRESS(16 /*OPT_GT*/, opt_GT);
-		STORE_ADDRESS(17 /*OPT_GTE*/, opt_GTE);
+//        STORE_ADDRESS(vm_inst::OPT_DELETE, opt_DELETE);
 
-		STORE_ADDRESS(18 /*OPT_AND*/, opt_AND);
-		STORE_ADDRESS(19 /*OPT_OR*/, opt_OR);
-		STORE_ADDRESS(20 /*OPT_DUP*/, opt_DUP);
-		STORE_ADDRESS(21 /*OPT_POP*/, opt_POP);
-		STORE_ADDRESS(22 /*OPT_JMP*/, opt_JMP);
+        STORE_ADDRESS(vm_inst::OPT_IF_EQ, opt_IF_EQ);
+        STORE_ADDRESS(vm_inst::OPT_JIF, opt_JIF);
+        STORE_ADDRESS(vm_inst::OPT_JNIF, opt_JNIF);
+        STORE_ADDRESS(vm_inst::OPT_INC, opt_INC);
+        STORE_ADDRESS(vm_inst::OPT_DINC, opt_DINC);
 
-		STORE_ADDRESS(23 /*OPT_IF_EQ*/, opt_IF_EQ);
+        STORE_ADDRESS(vm_inst::OPT_LOAD, opt_LOAD);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_0, opt_LOAD_0);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_1, opt_LOAD_1);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_2, opt_LOAD_2);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_3, opt_LOAD_3);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_4, opt_LOAD_4);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_5, opt_LOAD_5);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_6, opt_LOAD_6);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_7, opt_LOAD_7);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_8, opt_LOAD_8);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_9, opt_LOAD_9);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_10, opt_LOAD_10);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_11, opt_LOAD_11);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_12, opt_LOAD_12);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_13, opt_LOAD_13);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_14, opt_LOAD_14);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_15, opt_LOAD_15);
+        STORE_ADDRESS(vm_inst::OPT_LOAD_16, opt_LOAD_16);
 
-		STORE_ADDRESS(24 /*OPT_JIF*/, opt_JIF);
-		STORE_ADDRESS(25 /*OPT_JNIF*/, opt_JNIF);
-		STORE_ADDRESS(26 /*OPT_INC*/, opt_INC);
-		STORE_ADDRESS(27 /*OPT_DINC*/, opt_DINC);
+        STORE_ADDRESS(vm_inst::OPT_STORE, opt_STORE);
+        STORE_ADDRESS(vm_inst::OPT_STORE_0, opt_STORE_0);
+        STORE_ADDRESS(vm_inst::OPT_STORE_1, opt_STORE_1);
+        STORE_ADDRESS(vm_inst::OPT_STORE_2, opt_STORE_2);
+        STORE_ADDRESS(vm_inst::OPT_STORE_3, opt_STORE_3);
+        STORE_ADDRESS(vm_inst::OPT_STORE_4, opt_STORE_4);
+        STORE_ADDRESS(vm_inst::OPT_STORE_5, opt_STORE_5);
+        STORE_ADDRESS(vm_inst::OPT_STORE_6, opt_STORE_6);
+        STORE_ADDRESS(vm_inst::OPT_STORE_7, opt_STORE_7);
+        STORE_ADDRESS(vm_inst::OPT_STORE_8, opt_STORE_8);
+        STORE_ADDRESS(vm_inst::OPT_STORE_9, opt_STORE_9);
+        STORE_ADDRESS(vm_inst::OPT_STORE_10, opt_STORE_10);
+        STORE_ADDRESS(vm_inst::OPT_STORE_11, opt_STORE_11);
+        STORE_ADDRESS(vm_inst::OPT_STORE_12, opt_STORE_12);
+        STORE_ADDRESS(vm_inst::OPT_STORE_13, opt_STORE_13);
+        STORE_ADDRESS(vm_inst::OPT_STORE_14, opt_STORE_14);
+        STORE_ADDRESS(vm_inst::OPT_STORE_15, opt_STORE_15);
+        STORE_ADDRESS(vm_inst::OPT_STORE_16, opt_STORE_16);
 
-		STORE_ADDRESS(28 /*OPT_LOAD*/, opt_LOAD);
-		STORE_ADDRESS(29 /*OPT_LOAD_0*/, opt_LOAD_0);
-		STORE_ADDRESS(30 /*OPT_LOAD_1*/, opt_LOAD_1);
-		STORE_ADDRESS(31 /*OPT_LOAD_2*/, opt_LOAD_2);
-		STORE_ADDRESS(32 /*OPT_LOAD_3*/, opt_LOAD_3);
-		STORE_ADDRESS(33 /*OPT_LOAD_4*/, opt_LOAD_4);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD, opt_GLOAD);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_0, opt_GLOAD_0);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_1, opt_GLOAD_1);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_2, opt_GLOAD_2);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_3, opt_GLOAD_3);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_4, opt_GLOAD_4);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_5, opt_GLOAD_5);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_6, opt_GLOAD_6);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_7, opt_GLOAD_7);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_8, opt_GLOAD_8);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_9, opt_GLOAD_9);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_10, opt_GLOAD_10);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_11, opt_GLOAD_11);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_12, opt_GLOAD_12);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_13, opt_GLOAD_13);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_14, opt_GLOAD_14);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_15, opt_GLOAD_15);
+        STORE_ADDRESS(vm_inst::OPT_GLOAD_16, opt_GLOAD_16);
 
-		STORE_ADDRESS(34 /*OPT_STORE*/, opt_STORE);
-		STORE_ADDRESS(35 /*OPT_STORE_0*/, opt_STORE_0);
-		STORE_ADDRESS(36 /*OPT_STORE_1*/, opt_STORE_1);
-		STORE_ADDRESS(37 /*OPT_STORE_2*/, opt_STORE_2);
-		STORE_ADDRESS(38 /*OPT_STORE_3*/, opt_STORE_3);
-		STORE_ADDRESS(39 /*OPT_STORE_4*/, opt_STORE_4);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE, opt_GSTORE);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_0, opt_GSTORE_0);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_1, opt_GSTORE_1);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_2, opt_GSTORE_2);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_3, opt_GSTORE_3);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_4, opt_GSTORE_4);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_5, opt_GSTORE_5);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_6, opt_GSTORE_6);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_7, opt_GSTORE_7);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_8, opt_GSTORE_8);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_9, opt_GSTORE_9);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_10, opt_GSTORE_10);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_11, opt_GSTORE_11);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_12, opt_GSTORE_12);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_13, opt_GSTORE_13);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_14, opt_GSTORE_14);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_15, opt_GSTORE_15);
+        STORE_ADDRESS(vm_inst::OPT_GSTORE_16, opt_GSTORE_16);
 
-		STORE_ADDRESS(40 /*OPT_GLOAD*/, opt_GLOAD);
-		STORE_ADDRESS(41 /*OPT_GLOAD_0*/, opt_GLOAD_0);
-		STORE_ADDRESS(42 /*OPT_GLOAD_1*/, opt_GLOAD_1);
-		STORE_ADDRESS(43 /*OPT_GLOAD_2*/, opt_GLOAD_2);
-		STORE_ADDRESS(44 /*OPT_GLOAD_3*/, opt_GLOAD_3);
-		STORE_ADDRESS(45 /*OPT_GLOAD_4*/, opt_GLOAD_4);
+        STORE_ADDRESS(vm_inst::OPT_CALL, opt_CALL);
+        STORE_ADDRESS(vm_inst::OPT_RETURN, opt_RETURN);
 
-		STORE_ADDRESS(46 /*OPT_GSTORE*/, opt_GSTORE);
-		STORE_ADDRESS(47 /*OPT_GSTORE_0*/, opt_GSTORE_0);
-		STORE_ADDRESS(48 /*OPT_GSTORE_1*/, opt_GSTORE_1);
-		STORE_ADDRESS(49 /*OPT_GSTORE_2*/, opt_GSTORE_2);
-		STORE_ADDRESS(50 /*OPT_GSTORE_3*/, opt_GSTORE_3);
-		STORE_ADDRESS(51 /*OPT_GSTORE_4*/, opt_GSTORE_4);
+//        STORE_ADDRESS(vm_inst::OPT_PUSH, opt_PUSH);
+        STORE_ADDRESS(vm_inst::OPT_PRINT, opt_PRINT);
+        STORE_ADDRESS(vm_inst::OPT_NEG, opt_NEG);
 
-		STORE_ADDRESS(52 /*OPT_CALL*/, opt_CALL);
-		STORE_ADDRESS(53 /*OPT_RETURN*/, opt_RETURN);
-
-		STORE_ADDRESS(54 /*OPT_iPUSH*/, opt_iPUSH);
-		STORE_ADDRESS(55 /*OPT_dPUSH*/, opt_dPUSH);
-		STORE_ADDRESS(56 /*OPT_bPUSH*/, opt_bPUSH);
-		STORE_ADDRESS(57 /*OPT_sPUSH*/, opt_sPUSH);
-		STORE_ADDRESS(58 /*OPT_PRINT*/, opt_PRINT);
-		STORE_ADDRESS(59 /*OPT_NEG*/, opt_NEG);
-
-		STORE_ADDRESS(60 /*OPT_I2D*/, opt_I2D);
-		STORE_ADDRESS(61 /*OPT_D2I*/, opt_D2I);
-		STORE_ADDRESS(62 /*OPT_I2B*/, opt_I2B);
-		STORE_ADDRESS(63 /*OPT_B2I*/, opt_B2I);
-		STORE_ADDRESS(64 /*OPT_D2B*/, opt_D2B);
-		STORE_ADDRESS(65 /*OPT_B2D*/, opt_B2D);
-		STORE_ADDRESS(66 /*OPT_iPUSH_0*/, opt_iPUSH_0);
-		STORE_ADDRESS(67 /*OPT_iPUSH_1*/, opt_iPUSH_1);
-		STORE_ADDRESS(68 /*OPT_iPUSH_2*/, opt_iPUSH_2);
-		STORE_ADDRESS(69 /*OPT_iPUSH_3*/, opt_iPUSH_3);
-		STORE_ADDRESS(70 /*OPT_iPUSH_4*/, opt_iPUSH_4);
-		STORE_ADDRESS(71 /*OPT_dPUSH_0*/, opt_dPUSH_0);
-		STORE_ADDRESS(72 /*OPT_dPUSH_1*/, opt_dPUSH_1);
-		STORE_ADDRESS(73 /*OPT_dPUSH_2*/, opt_dPUSH_2);
-		STORE_ADDRESS(74 /*OPT_dPUSH_3*/, opt_dPUSH_3);
-		STORE_ADDRESS(75 /*OPT_dPUSH_4*/, opt_dPUSH_4);
-		STORE_ADDRESS(76 /*OPT_bPUSH_0*/, opt_bPUSH_0);
-		STORE_ADDRESS(77 /*OPT_bPUSH_1*/, opt_bPUSH_1);
-        STORE_ADDRESS(78 /*OPT_CALL_NATIVE*/, opt_CALL_NATIVE);
-    //	STORE_ADDRESS(79 /*OPT_METHOD_DEF*/, opt_METHOD_DEF);
-		STORE_ADDRESS(80 /*OPT_INITARRAY*/, opt_INITARRAY);
-		STORE_ADDRESS(82 /*OPT_aPUSH*/, opt_aPUSH);
-		STORE_ADDRESS(88 /*OPT_aGET*/, opt_aGET);
+        STORE_ADDRESS(vm_inst::OPT_CALL_NATIVE, opt_CALL_NATIVE);
+//        STORE_ADDRESS(vm_inst::OPT_METHOD_DEF, opt_METHOD_DEF);
+//        STORE_ADDRESS(vm_inst::OPT_INITARRAY, opt_INITARRAY);
+//        STORE_ADDRESS(vm_inst::OPT_INITDICT, opt_INITDICT);
 	}
 
 	void dumpOpcode(char_type* code, size_t len)
 	{
-		size_t index = 0;
+        size_t index = 0;
 		while (index < len) {
 			console_out << _T(">>> ") << index++ << _T(". ");
 			console_out << vm_instToString((vm_inst)*code);
@@ -966,11 +1393,13 @@ public:
 			case vm_inst::OPT_GSTORE:
 			case vm_inst::OPT_CALL:
 			{
+				++code;
 				vm_int_t integer;
 				integer.Int = 0;
 				ASSIGN_4(integer.Chars, code);
 				console_out << _T(" ") << integer.Int;
 				index += 4;
+				--code;
 			}
 			break;
 
@@ -980,22 +1409,26 @@ public:
 			case vm_inst::OPT_JNIF:
             case vm_inst::OPT_CONST_INT:
 			{
+			    ++code;
 				vm_int_t integer;
 				integer.Int = 0;
 				ASSIGN_4(integer.Chars, code);
 				console_out << _T(" ") << integer.Int;
 				index += 4;
+				--code;
 			}
 			break;
 
             case vm_inst::OPT_CONST_DOUBLE:
 			{
+				++code;
 				vm_double_t d;
 				d.Double = 0;
 				ASSIGN_8(d.Chars, code);
 
 				console_out << _T(" ") << d.Double;
 				index += 8;
+				--code;
 			}
 			break;
 
@@ -1025,6 +1458,7 @@ public:
 
 			case vm_inst::OPT_METHOD_DEF:
 			{
+				++code;
 				vm_int_t integer;
 				integer.Int = 0;
 				ASSIGN_4(integer.Chars, code);
@@ -1032,12 +1466,16 @@ public:
 				index += integer.Int;
 
 				char_type * chars = new char_type[integer.Int + 1];
-				for (int i = integer.Int - 1; i >= 0; --i)
-					chars[i] = *++code;
+				for (int i = 0; i < integer.Int; ++i)
+				{
+					chars[i] = *code;
+					++code;
+				}
 
 				chars[integer.Int] = '\0';
 
 				console_out << _T(" \"") << chars << _T("\"");
+				--code;
 			}
 			break;
 
@@ -1060,8 +1498,8 @@ public:
 			break;
 			}
 
+            ++code;
 			console_out << '\n';
-			++code;
 		}
 
 		console_out << '\n';
