@@ -30,7 +30,7 @@ using namespace std::chrono;
 TEST_CASE("VM Fibonacci tests 2") {
 	auto* engine = new ENGINE;
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
-    engine->Execute(_T("func fibonacci(num){     if num == 0 then         return 0    if num == 1 then         return 1    left = fibonacci(num - 1)    right = fibonacci(num - 2)     return left + right }"));
+    engine->Execute(_T("func fibonacci(num){     if num == 1 || num == 2 then return 1    return fibonacci(num - 1) + fibonacci(num - 2) }"));
 	auto* result = engine->Execute(_T("fibonacci(25)"));
 
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();

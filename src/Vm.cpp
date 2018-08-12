@@ -192,35 +192,9 @@ struct str_functions {
 	two_arg_func add_str;
 };
 
-class vm_system_impl
+namespace
 {
-public:
 	const int STORE_SIZE = 1024;
-	vm_system_impl(vm_system* pSystem)
-	{
-		currentStack = new vm_object[1024 * 512];
-		currentStore = new vm_store<vm_object>;
-		stores = new vm_store<vm_object>*[STORE_SIZE];
-
-		for (size_t i = 0; i < STORE_SIZE; ++i)
-			stores[i] = new vm_store<vm_object>;
-
-		stores[0] = currentStore;
-		storesCount = 0;
-		stackIndex = 0;
-		system = pSystem;
-		nativeMethodsEnd = nativeMethods.end();
-	}
-
-	~vm_system_impl()
-	{
-		for (int i = 0; i < STORE_SIZE; ++i)
-			delete stores[i];
-
-		delete[] currentStack;
-		delete[] stores;
-	}
-
 	size_t storesCount;
 	vm_store<vm_object>** stores{ nullptr };
 	vm_store<vm_object>* currentStore{ nullptr };
@@ -236,19 +210,141 @@ public:
 
 	void* gotoAddresses[128];
 
-	inline bool is_number(vm_object* obj)
+	void create(vm_system* pSystem)
+	{
+		currentStack = new vm_object[1024 * 512];
+		currentStore = new vm_store<vm_object>;
+		stores = new vm_store<vm_object>*[STORE_SIZE];
+
+		for (size_t i = 0; i < STORE_SIZE; ++i)
+			stores[i] = new vm_store<vm_object>;
+
+		stores[0] = currentStore;
+		storesCount = 0;
+		stackIndex = 0;
+		system = pSystem;
+		nativeMethodsEnd = nativeMethods.end();
+	}
+
+	void destroy()
+	{
+		for (int i = 0; i < STORE_SIZE; ++i)
+			delete stores[i];
+
+		delete[] currentStack;
+		delete[] stores;
+	}
+
+
+	inline static bool is_number(vm_object* obj)
 	{
 		return obj != nullptr && (obj->Type == vm_object::vm_object_type::INT || obj->Type == vm_object::vm_object_type::DOUBLE);
 	}
 
-	inline bool is_number(char_type* chr)
+	inline static bool is_number(char_type* chr)
 	{
 		char* end = 0;
 		double val = strtod(chr, &end);
 		return end != chr && val != HUGE_VAL;
 	}
 
-	inline void add_str(vm_object* left, vm_object* right)
+	inline static vm_object* get_as_string(vm_object* obj)
+	{
+		switch (obj->Type)
+		{
+			case vm_object::vm_object_type::DOUBLE:
+				return new vm_object(AS_STRING(obj->Double));
+
+			case vm_object::vm_object_type::INT:
+				return new vm_object(AS_STRING(obj->Int));
+
+			case vm_object::vm_object_type::BOOL:
+				return new vm_object(AS_STRING(obj->Bool));
+
+			case vm_object::vm_object_type::STR:
+				return new vm_object((char_type*)obj->Pointer);
+
+			default:
+				return new vm_object(_T(""));
+		}
+	}
+
+	inline static vm_object* get_as_int(vm_object* obj)
+	{
+		switch (obj->Type)
+		{
+			case vm_object::vm_object_type::DOUBLE:
+				return new vm_object((int)obj->Double);
+
+			case vm_object::vm_object_type::INT:
+				return new vm_object(obj->Int);
+
+			case vm_object::vm_object_type::BOOL:
+				return new vm_object(obj->Bool ? 1 : 0);
+
+			case vm_object::vm_object_type::STR:
+			{
+				char_type* chr = (char_type*)obj->Pointer;
+				if (is_number(chr))
+					return new vm_object();
+
+				new vm_object(std::stoi(chr));
+			}
+
+			default:
+				return new vm_object(0);
+		}
+	}
+
+	inline static vm_object* get_as_bool(vm_object* obj)
+	{
+		switch (obj->Type)
+		{
+			case vm_object::vm_object_type::DOUBLE:
+				return new vm_object(obj->Double > 0.0);
+
+			case vm_object::vm_object_type::INT:
+				return new vm_object(obj->Int > 0);
+
+			case vm_object::vm_object_type::BOOL:
+				return new vm_object(obj->Bool);
+
+			case vm_object::vm_object_type::STR:
+				return new vm_object(strlen((char_type*)obj->Pointer) > 0);
+
+			default:
+				return new vm_object(false);
+		}
+	}
+
+	inline static vm_object* get_as_double(vm_object* obj)
+	{
+		switch (obj->Type)
+		{
+			case vm_object::vm_object_type::DOUBLE:
+				return new vm_object(obj->Double);
+
+			case vm_object::vm_object_type::INT:
+				return new vm_object((double)obj->Int);
+
+			case vm_object::vm_object_type::BOOL:
+				return new vm_object(obj->Bool ? 1.0 : 0.0);
+
+			case vm_object::vm_object_type::STR:
+			{
+				char_type* chr = (char_type*)obj->Pointer;
+				if (is_number(chr))
+					return new vm_object();
+
+				new vm_object(std::stod(chr));
+			}
+
+			default:
+				return new vm_object(0.0);
+		}
+	}
+
+	inline static void add_str(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_string(left);
 		vm_object* newRight = get_as_string(right);
@@ -268,7 +364,7 @@ public:
 		delete newRight;
 	}
 
-	inline void add_double(vm_object* left, vm_object* right)
+	inline static void add_double(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_double(left);
 		vm_object* newRight = get_as_double(right);
@@ -280,7 +376,7 @@ public:
 		delete newRight;
 	}
 
-	inline void add_int(vm_object* left, vm_object* right)
+	inline static void add_int(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_int(left);
 		vm_object* newRight = get_as_int(right);
@@ -292,7 +388,7 @@ public:
 		delete newRight;
 	}
 
-	inline void add_bool(vm_object* left, vm_object* right)
+	inline static void add_bool(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_bool(left);
 		vm_object* newRight = get_as_bool(right);
@@ -304,7 +400,7 @@ public:
 		delete newRight;
 	}
 
-	inline void sub_double(vm_object* left, vm_object* right)
+	inline static void sub_double(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_double(left);
 		vm_object* newRight = get_as_double(right);
@@ -316,7 +412,7 @@ public:
 		delete newRight;
 	}
 
-	inline void sub_int(vm_object* left, vm_object* right)
+	inline static void sub_int(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_int(left);
 		vm_object* newRight = get_as_int(right);
@@ -328,7 +424,7 @@ public:
 		delete newRight;
 	}
 
-	inline void sub_bool(vm_object* left, vm_object* right)
+	inline static void sub_bool(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_bool(left);
 		vm_object* newRight = get_as_bool(right);
@@ -340,7 +436,7 @@ public:
 		delete newRight;
 	}
 
-	inline void seq_str(vm_object* left, vm_object* right)
+	inline static void seq_str(vm_object* left, vm_object* right)
 	{
 		if (left->Type == right->Type) // string cannot multiply with another string
 		{
@@ -381,7 +477,7 @@ public:
 		GET_ITEM(2, Type) = vm_object::vm_object_type::STR;
 	}
 
-	inline void mul_double(vm_object* left, vm_object* right)
+	inline static void mul_double(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_double(left);
 		vm_object* newRight = get_as_double(right);
@@ -393,7 +489,7 @@ public:
 		delete newRight;
 	}
 
-	inline void mul_int(vm_object* left, vm_object* right)
+	inline static void mul_int(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_int(left);
 		vm_object* newRight = get_as_int(right);
@@ -405,7 +501,7 @@ public:
 		delete newRight;
 	}
 
-	inline void mul_bool(vm_object* left, vm_object* right)
+	inline static void mul_bool(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_bool(left);
 		vm_object* newRight = get_as_bool(right);
@@ -417,7 +513,7 @@ public:
 		delete newRight;
 	}
 
-	inline void div_double(vm_object* left, vm_object* right)
+	inline static void div_double(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_double(left);
 		vm_object* newRight = get_as_double(right);
@@ -429,7 +525,7 @@ public:
 		delete newRight;
 	}
 
-	inline void div_int(vm_object* left, vm_object* right)
+	inline static void div_int(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_double(left);
 		vm_object* newRight = get_as_double(right);
@@ -441,7 +537,7 @@ public:
 		delete newRight;
 	}
 
-	inline void div_bool(vm_object* left, vm_object* right)
+	inline static void div_bool(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_bool(left);
 		vm_object* newRight = get_as_bool(right);
@@ -465,7 +561,7 @@ public:
 		delete newRight;
 	}
 
-	inline void eq_double(vm_object* left, vm_object* right)
+	inline static void eq_double(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_double(left);
 		vm_object* newRight = get_as_double(right);
@@ -477,7 +573,7 @@ public:
 		delete newRight;
 	}
 
-	inline void eq_int(vm_object* left, vm_object* right)
+	inline static void eq_int(vm_object* left, vm_object* right)
 	{
 		vm_object* newLeft = get_as_int(left);
 		vm_object* newRight = get_as_int(right);
@@ -501,103 +597,7 @@ public:
 		delete newRight;
 	}
 
-	inline vm_object* get_as_string(vm_object* obj)
-	{
-		switch (obj->Type)
-		{
-			case vm_object::vm_object_type::DOUBLE:
-				return new vm_object(AS_STRING(obj->Double));
-
-			case vm_object::vm_object_type::INT:
-				return new vm_object(AS_STRING(obj->Int));
-
-			case vm_object::vm_object_type::BOOL:
-				return new vm_object(AS_STRING(obj->Bool));
-
-			case vm_object::vm_object_type::STR:
-				return new vm_object((char_type*)obj->Pointer);
-
-			default:
-				return new vm_object(_T(""));
-		}
-	}
-
-	inline vm_object* get_as_int(vm_object* obj)
-	{
-		switch (obj->Type)
-		{
-			case vm_object::vm_object_type::DOUBLE:
-				return new vm_object((int)obj->Double);
-
-			case vm_object::vm_object_type::INT:
-				return new vm_object(obj->Int);
-
-			case vm_object::vm_object_type::BOOL:
-				return new vm_object(obj->Bool ? 1 : 0);
-
-			case vm_object::vm_object_type::STR:
-			{
-				char_type* chr = (char_type*)obj->Pointer;
-				if (is_number(chr))
-					return new vm_object();
-
-				new vm_object(std::stoi(chr));
-			}
-
-			default:
-				return new vm_object(0);
-		}
-	}
-
-	inline vm_object* get_as_bool(vm_object* obj)
-	{
-		switch (obj->Type)
-		{
-			case vm_object::vm_object_type::DOUBLE:
-				return new vm_object(obj->Double > 0.0);
-
-			case vm_object::vm_object_type::INT:
-				return new vm_object(obj->Int > 0);
-
-			case vm_object::vm_object_type::BOOL:
-				return new vm_object(obj->Bool);
-
-			case vm_object::vm_object_type::STR:
-				return new vm_object(strlen((char_type*)obj->Pointer) > 0);
-
-			default:
-				return new vm_object(false);
-		}
-	}
-
-	inline vm_object* get_as_double(vm_object* obj)
-	{
-		switch (obj->Type)
-		{
-			case vm_object::vm_object_type::DOUBLE:
-				return new vm_object(obj->Double);
-
-			case vm_object::vm_object_type::INT:
-				return new vm_object((double)obj->Int);
-
-			case vm_object::vm_object_type::BOOL:
-				return new vm_object(obj->Bool ? 1.0 : 0.0);
-
-			case vm_object::vm_object_type::STR:
-			{
-				char_type* chr = (char_type*)obj->Pointer;
-				if (is_number(chr))
-					return new vm_object();
-
-				new vm_object(std::stod(chr));
-			}
-
-			default:
-				return new vm_object(0.0);
-		}
-	}
-
-	void execute(char_type* code, size_t len, size_t startIndex, bool firstInit)
+	void static execute(char_type* code, size_t len, size_t startIndex, bool firstInit)
 	{
 		char_type* startPoint = code;
 		code += startIndex;
@@ -1378,7 +1378,7 @@ public:
 //        STORE_ADDRESS(vm_inst::OPT_INITDICT, opt_INITDICT);
 	}
 
-	void dumpOpcode(char_type* code, size_t len)
+	static void dumpOpcode(char_type* code, size_t len)
 	{
         size_t index = 0;
 		while (index < len) {
@@ -1505,7 +1505,7 @@ public:
 		console_out << '\n';
 	}
 
-	void dumpStack()
+	static void dumpStack()
 	{
 		int index = stackIndex;
 		while (index > 0) {
@@ -1544,9 +1544,9 @@ public:
 		}
 
 		console_out << '\n';
-
 	}
-	void dump(char_type* code, size_t len)
+
+	static void dump(char_type* code, size_t len)
 	{
 		size_t index = 0;
 		while (index < len) {
@@ -1558,12 +1558,12 @@ public:
 
 		console_out << '\n';
 	}
-};
+}
 
 vm_system::vm_system()
 {
-	this->impl = new vm_system_impl(this);
-	this->impl->execute(nullptr, 0, 0, true);
+	create(this);
+	::execute(nullptr, 0, 0, true);
 }
 
 vm_system::~vm_system()
@@ -1573,35 +1573,35 @@ vm_system::~vm_system()
 
 void vm_system::execute(char_type* code, size_t len, size_t startIndex)
 {
-	impl->execute(code, len, startIndex, false);
+	::execute(code, len, startIndex, false);
 }
 
 void vm_system::dump(char_type* code, size_t len)
 {
-	impl->dump(code, len);
+	::dump(code, len);
 }
 
 void vm_system::dumpOpcode(char_type* code, size_t len)
 {
-	impl->dumpOpcode(code, len);
+	::dumpOpcode(code, len);
 }
 
 void vm_system::dumpStack()
 {
-	impl->dumpStack();
+	::dumpStack();
 }
 
 size_t vm_system::getUInt()
 {
-	return impl->currentStack[impl->stackIndex - 1].Int;
+	return currentStack[::stackIndex - 1].Int;
 }
 
 vm_object const * vm_system::getObject()
 {
-	if (impl->stackIndex > 0)
+	if (::stackIndex > 0)
 	{
-		//console_out << impl->stackIndex << '\n';
-		return &impl->currentStack[--impl->stackIndex];
+		//console_out << ::stackIndex << '\n';
+		return &::currentStack[--::stackIndex];
 	}
 
 	return nullptr;
@@ -1609,6 +1609,6 @@ vm_object const * vm_system::getObject()
 
 void vm_system::addMethod(string_type const & name, VmMethod method)
 {
-	this->impl->nativeMethods[name] = method;
-	this->impl->nativeMethodsEnd = this->impl->nativeMethods.end();
+	::nativeMethods[name] = method;
+	::nativeMethodsEnd = ::nativeMethods.end();
 }

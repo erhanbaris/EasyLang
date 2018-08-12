@@ -50,6 +50,12 @@ public:
 		Type = vm_object_type::EMPTY;
 	}
 
+	~vm_object()
+	{
+		if (Type == vm_object_type::STR)
+			delete (char_type*)Pointer;
+	}
+
 	vm_object(int i)
 	{
 		Int = i;
