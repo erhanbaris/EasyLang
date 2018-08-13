@@ -30,6 +30,93 @@ typedef union vm_long_u { vm_char_t Chars[8];  long Long; } vm_long_t;
 typedef union vm_int_u { vm_char_t Chars[4];  int Int; } vm_int_t;
 typedef bool vm_bool_t;
 
+
+
+
+typedef uint64_t Value;
+
+// A mask that selects the sign bit.
+#define SIGN_BIT ((uint64_t)1 << 63)
+
+// The bits that must be set to indicate a quiet NaN.
+#define QNAN ((uint64_t)0x7ffc000000000000)
+
+// If the NaN bits are set, it's not a number.
+#define IS_NUM(value) (((value) & QNAN) != QNAN)
+
+// An object pointer is a NaN with a set sign bit.
+#define IS_OBJ(value) (((value) & (QNAN | SIGN_BIT)) == (QNAN | SIGN_BIT))
+
+#define IS_FALSE(value)     ((value) == FALSE_VAL)
+#define IS_NULL(value)      ((value) == NULL_VAL)
+#define IS_UNDEFINED(value) ((value) == UNDEFINED_VAL)
+
+// Masks out the tag bits used to identify the singleton value.
+#define MASK_TAG (7)
+
+// Tag values for the different singleton values.
+#define TAG_NAN       (0)
+#define TAG_NULL      (1)
+#define TAG_FALSE     (2)
+#define TAG_TRUE      (3)
+#define TAG_UNDEFINED (4)
+#define TAG_UNUSED2   (5)
+#define TAG_UNUSED3   (6)
+#define TAG_UNUSED4   (7)
+
+// Value -> 0 or 1.
+#define AS_BOOL(value) ((value) == TRUE_VAL)
+
+// Value -> Obj*.
+#define AS_OBJ(value) ((vm_object*)(uintptr_t)((value) & ~(SIGN_BIT | QNAN)))
+
+// Singleton values.
+#define NULL_VAL      ((Value)(uint64_t)(QNAN | TAG_NULL))
+#define FALSE_VAL     ((Value)(uint64_t)(QNAN | TAG_FALSE))
+#define TRUE_VAL      ((Value)(uint64_t)(QNAN | TAG_TRUE))
+#define UNDEFINED_VAL ((Value)(uint64_t)(QNAN | TAG_UNDEFINED))
+
+// Gets the singleton type tag for a Value (which must be a singleton).
+#define GET_TAG(value) ((int)((value) & MASK_TAG))
+
+
+typedef union
+{
+	uint64_t bits64;
+	uint32_t bits32[2];
+	double num;
+} DoubleBits;
+
+static inline bool isBool(Value value)
+{
+	return value == TRUE_VAL || value == FALSE_VAL;
+}
+
+static inline Value numberToValue(double num)
+{
+	DoubleBits data;
+	data.num = num;
+	return data.bits64;
+}
+
+static inline double valueToNumber(Value num)
+{
+	DoubleBits data;
+	data.bits64 = num;
+	return data.num;
+}
+
+static inline Value wrenObjectToValue(vm_object* obj)
+{
+	// The triple casting is necessary here to satisfy some compilers:
+	// 1. (uintptr_t) Convert the pointer to a number of the right size.
+	// 2. (uint64_t)  Pad it up to 64 bits in 32-bit builds.
+	// 3. Or in the bits to make a tagged Nan.
+	// 4. Cast to a typedef'd value.
+	return (Value)(SIGN_BIT | QNAN | (uint64_t)(uintptr_t)(obj));
+}
+
+
 class vm_object
 {
 public:
@@ -164,129 +251,118 @@ public:
 };
 
 DECLARE_ENUM(vm_inst,
-OPT_HALT, // 0
-OPT_ADD, // 1
-OPT_SUB, // 2
-OPT_MUL, // 3
-OPT_DIV, // 4
+OPT_HALT,	//	0
+OPT_ADD,	//	1
+OPT_SUB,	//	2
+OPT_MUL,	//	3
+OPT_DIV,	//	4
+OPT_EQ,	//	5
+OPT_LT,	//	6
+OPT_LTE,	//	7
+OPT_GT,	//	8
+OPT_GTE,	//	9
+OPT_AND,	//	10
+OPT_OR,	//	11
+OPT_DUP,	//	12
+OPT_POP,	//	13
+OPT_CONST_STR,	//	14
+OPT_CONST_INT,	//	15
+OPT_CONST_INT_0,	//	16
+OPT_CONST_INT_1,	//	17
+OPT_CONST_BOOL_TRUE,	//	18
+OPT_CONST_BOOL_FALSE,	//	19
+OPT_CONST_DOUBLE,	//	20
+OPT_CONST_DOUBLE_0,	//	21
+OPT_CONST_DOUBLE_1,	//	22
+OPT_DELETE,	//	23
+OPT_JMP,	//	24
+OPT_IF_EQ,	//	25
+OPT_JIF,	//	26
+OPT_JNIF,	//	27
+OPT_INC,	//	28
+OPT_DINC,	//	29
+OPT_LOAD,	//	30
+OPT_LOAD_0,	//	31
+OPT_LOAD_1,	//	32
+OPT_LOAD_2,	//	33
+OPT_LOAD_3,	//	34
+OPT_LOAD_4,	//	35
+OPT_LOAD_5,	//	36
+OPT_LOAD_6,	//	37
+OPT_LOAD_7,	//	38
+OPT_LOAD_8,	//	39
+OPT_LOAD_9,	//	40
+OPT_LOAD_10,	//	41
+OPT_LOAD_11,	//	42
+OPT_LOAD_12,	//	43
+OPT_LOAD_13,	//	44
+OPT_LOAD_14,	//	45
+OPT_LOAD_15,	//	46
+OPT_LOAD_16,	//	47
+OPT_STORE,	//	48
+OPT_STORE_0,	//	49
+OPT_STORE_1,	//	50
+OPT_STORE_2,	//	51
+OPT_STORE_3,	//	52
+OPT_STORE_4,	//	53
+OPT_STORE_5,	//	54
+OPT_STORE_6,	//	55
+OPT_STORE_7,	//	56
+OPT_STORE_8,	//	57
+OPT_STORE_9,	//	58
+OPT_STORE_10,	//	59
+OPT_STORE_11,	//	60
+OPT_STORE_12,	//	61
+OPT_STORE_13,	//	62
+OPT_STORE_14,	//	63
+OPT_STORE_15,	//	64
+OPT_STORE_16,	//	65
+OPT_GLOAD,	//	66
+OPT_GLOAD_0,	//	67
+OPT_GLOAD_1,	//	68
+OPT_GLOAD_2,	//	69
+OPT_GLOAD_3,	//	70
+OPT_GLOAD_4,	//	71
+OPT_GLOAD_5,	//	72
+OPT_GLOAD_6,	//	73
+OPT_GLOAD_7,	//	74
+OPT_GLOAD_8,	//	75
+OPT_GLOAD_9,	//	76
+OPT_GLOAD_10,	//	77
+OPT_GLOAD_11,	//	78
+OPT_GLOAD_12,	//	79
+OPT_GLOAD_13,	//	80
+OPT_GLOAD_14,	//	81
+OPT_GLOAD_15,	//	82
+OPT_GLOAD_16,	//	83
+OPT_GSTORE,	//	84
+OPT_GSTORE_0,	//	85
+OPT_GSTORE_1,	//	86
+OPT_GSTORE_2,	//	87
+OPT_GSTORE_3,	//	88
+OPT_GSTORE_4,	//	89
+OPT_GSTORE_5,	//	90
+OPT_GSTORE_6,	//	91
+OPT_GSTORE_7,	//	92
+OPT_GSTORE_8,	//	93
+OPT_GSTORE_9,	//	94
+OPT_GSTORE_10,	//	95
+OPT_GSTORE_11,	//	96
+OPT_GSTORE_12,	//	97
+OPT_GSTORE_13,	//	98
+OPT_GSTORE_14,	//	99
+OPT_GSTORE_15,	//	100
+OPT_GSTORE_16,	//	101
+OPT_CALL,	//	102
+OPT_RETURN,	//	103
+OPT_PUSH,	//	104
+OPT_PRINT,	//	105
+OPT_NEG,	//	106
+OPT_CALL_NATIVE,	//	107
+OPT_METHOD_DEF,	//	108
+OPT_INITARRAY,	//	109
+OPT_INITDICT	//	110
 
-OPT_EQ, // 5
-OPT_LT, // 6
-OPT_LTE, // 7
-OPT_GT, // 8
-OPT_GTE, // 9
-
-OPT_AND, // 10
-OPT_OR, // 11
-OPT_DUP, // 12
-OPT_POP, // 13
-OPT_JMP, // 14
-
-OPT_CONST_STR, // 15
-OPT_CONST_INT, // 16
-OPT_CONST_INT_0, // 16
-OPT_CONST_INT_1, // 16
-OPT_CONST_BOOL_TRUE, // 17
-OPT_CONST_BOOL_FALSE, // 17
-OPT_CONST_DOUBLE, // 18
-OPT_CONST_DOUBLE_0, // 18
-OPT_CONST_DOUBLE_1, // 18
-
-OPT_DELETE, // 19
-
-OPT_IF_EQ, // 20
-OPT_JIF, // 21
-OPT_JNIF, // 22
-OPT_INC, // 23
-OPT_DINC, // 24
-
-OPT_LOAD, // 25
-OPT_LOAD_0, // 27
-OPT_LOAD_1, // 27
-OPT_LOAD_2, // 27
-OPT_LOAD_3, // 27
-OPT_LOAD_4, // 27
-OPT_LOAD_5, // 27
-OPT_LOAD_6, // 27
-OPT_LOAD_7, // 27
-OPT_LOAD_8, // 27
-OPT_LOAD_9, // 27
-OPT_LOAD_10, // 27
-OPT_LOAD_11, // 27
-OPT_LOAD_12, // 27
-OPT_LOAD_13, // 27
-OPT_LOAD_14, // 27
-OPT_LOAD_15, // 27
-OPT_LOAD_16, // 27
-
-OPT_STORE, // 26
-OPT_STORE_0, // 26
-OPT_STORE_1, // 26
-OPT_STORE_2, // 26
-OPT_STORE_3, // 26
-OPT_STORE_4, // 26
-OPT_STORE_5, // 26
-OPT_STORE_6, // 26
-OPT_STORE_7, // 26
-OPT_STORE_8, // 26
-OPT_STORE_9, // 26
-OPT_STORE_10, // 26
-OPT_STORE_11, // 27
-OPT_STORE_12, // 27
-OPT_STORE_13, // 27
-OPT_STORE_14, // 27
-OPT_STORE_15, // 27
-OPT_STORE_16, // 27
-
-OPT_GLOAD, // 27
-OPT_GLOAD_0, // 27
-OPT_GLOAD_1, // 27
-OPT_GLOAD_2, // 27
-OPT_GLOAD_3, // 27
-OPT_GLOAD_4, // 27
-OPT_GLOAD_5, // 27
-OPT_GLOAD_6, // 27
-OPT_GLOAD_7, // 27
-OPT_GLOAD_8, // 27
-OPT_GLOAD_9, // 27
-OPT_GLOAD_10, // 27
-OPT_GLOAD_11, // 27
-OPT_GLOAD_12, // 27
-OPT_GLOAD_13, // 27
-OPT_GLOAD_14, // 27
-OPT_GLOAD_15, // 27
-OPT_GLOAD_16, // 27
-
-OPT_GSTORE, // 28
-OPT_GSTORE_0, // 26
-OPT_GSTORE_1, // 26
-OPT_GSTORE_2, // 26
-OPT_GSTORE_3, // 26
-OPT_GSTORE_4, // 26
-OPT_GSTORE_5, // 26
-OPT_GSTORE_6, // 26
-OPT_GSTORE_7, // 26
-OPT_GSTORE_8, // 26
-OPT_GSTORE_9, // 26
-OPT_GSTORE_10, // 26
-OPT_GSTORE_11, // 27
-OPT_GSTORE_12, // 27
-OPT_GSTORE_13, // 27
-OPT_GSTORE_14, // 27
-OPT_GSTORE_15, // 27
-OPT_GSTORE_16, // 27
-
-OPT_CALL, // 29
-OPT_RETURN, // 30
-
-OPT_PUSH, // 31
-OPT_PRINT, // 32
-OPT_NEG, // 33
-
-OPT_CALL_NATIVE, // 34
-OPT_METHOD_DEF, // 35
-OPT_INITARRAY, // 36
-OPT_INITDICT // 37
 )
 
 
