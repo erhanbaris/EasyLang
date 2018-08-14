@@ -12,6 +12,6 @@ std::unordered_map<string_type, std::unordered_map<string_type, FunctionInfo*>> 
 void System::WarmUp()
 {
 	IOLibInit();
-	CoreLibInit();
+    //CoreLibInit();
 	ArrayLibInit();
 }

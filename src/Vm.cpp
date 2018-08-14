@@ -37,7 +37,7 @@
 #define LOAD(index) ((vm_object) currentStore[ index ])
 
 #define GSTORE(index, obj) FUNC_BEGIN() *(globalStore.variables + (index)) = obj; FUNC_END()
-#define GLOAD(index) ((vm_object) globalStore.variables[ index ])
+#define GLOAD(index) (globalStore.variables[ index ])
 
 
 #define PEEK_INDEX(index) (currentStack[stackIndex - index ])
@@ -46,7 +46,8 @@
 #define PEEK() (PEEK_INDEX(1))
 #define PEEK_PTR() (PEEK_INDEX_PTR(1))
 #define POP() (currentStack[--stackIndex])
-#define POP_AS(type) (currentStack[--stackIndex]. type )
+#define POP_VALUE() (currentStack[--stackIndex])
+#define POP_AS(type) AS_BOOL(currentStack[--stackIndex])
 #define SET(obj) currentStack[stackIndex - 1] = obj
 
 #define OPERATION(currentStack, stackIndex, op, type) currentStack [ stackIndex - 2]. type = currentStack [ stackIndex - 2]. type ##op currentStack [ stackIndex - 1]. type ;\
@@ -54,20 +55,21 @@
     -- stackIndex ;
 
 #define PUSH_WITH_STACK(currentStack, stackIndex, type, obj) FUNC_BEGIN() currentStack [ stackIndex ]. type = obj . type ; PRINT_STACK(); ++ stackIndex; FUNC_END()
-#define PUSH_WITH_INIT(obj) currentStack [ stackIndex ] = vm_object( obj ) ; PRINT_STACK(); ++ stackIndex;
-#define PUSH_WITH_EMPTY() currentStack [ stackIndex ] = vm_object( ) ; PRINT_STACK(); ++ stackIndex;
+#define PUSH_WITH_INIT(obj) currentStack [ stackIndex ] = GET_VALUE_FROM_OBJ(new vm_object( obj )) ; PRINT_STACK(); ++ stackIndex;
+#define PUSH_WITH_EMPTY() currentStack [ stackIndex ] = 0 ; PRINT_STACK(); ++ stackIndex;
 #define PUSH(type, obj) currentStack [ stackIndex ]. type = obj ; PRINT_STACK(); ++ stackIndex;
 #define PUSH_WITH_ASSIGN(obj) currentStack [ stackIndex ] = obj ; PRINT_STACK(); ++ stackIndex;
+#define PUSH_WITH_ASSIGN_INT(obj) currentStack [ stackIndex ] = numberToValue( obj ) ; PRINT_STACK(); ++ stackIndex;
 #define INC(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type = currentStack [ stackIndex - 1]. type + 1;
 #define DINC(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type = currentStack [ stackIndex - 1]. type - 1;
 #define NEG(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type =  currentStack [ stackIndex - 1]. type * -1;
-#define LOAD_AND_PUSH(index) FUNC_BEGIN() { currentStack[stackIndex].Double = (currentStore->variables + index )->Double;\
-    currentStack[stackIndex].Type = (currentStore->variables + index )->Type;\
+#define LOAD_AND_PUSH(index) FUNC_BEGIN() { currentStack[stackIndex] = *(currentStore->variables + index );\
     PRINT_STACK(); \
     ++ stackIndex; } FUNC_END()
 
 #define STACK_DINC() PRINT_AND_CHECK_STACK(); -- stackIndex ;
 #define GET_ITEM(index, type) currentStack[stackIndex - index ]. type
+#define GET_VALUE(index) currentStack[stackIndex - index ]
 #define OPERATION_ADD(var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) +  GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
 #define OPERATION_SUB(var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) -  GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
 #define OPERATION_MUL(var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) *  GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
@@ -196,15 +198,15 @@ namespace
 {
 	const int STORE_SIZE = 1024;
 	size_t storesCount;
-	vm_store<vm_object>** stores{ nullptr };
-	vm_store<vm_object>* currentStore{ nullptr };
-	vm_store<vm_object> globalStore;
+    vm_store<Value>** stores{ nullptr };
+    vm_store<Value>* currentStore{ nullptr };
+    vm_store<Value> globalStore;
 	std::unordered_map<string_type, VmMethod> nativeMethods;
 	std::unordered_map<string_type, VmMethod>::iterator nativeMethodsEnd;
 	std::unordered_map<string_type, size_t> methods;
 	std::unordered_map<string_type, size_t>::iterator methodsEnd;
 
-	vm_object* currentStack{ nullptr };
+    Value* currentStack{ nullptr };
 	size_t stackIndex;
 	vm_system* system{ nullptr };
 
@@ -212,12 +214,12 @@ namespace
 
 	void create(vm_system* pSystem)
 	{
-		currentStack = new vm_object[1024 * 512];
-		currentStore = new vm_store<vm_object>;
-		stores = new vm_store<vm_object>*[STORE_SIZE];
+        currentStack = new Value[1024 * 512];
+        currentStore = new vm_store<Value>;
+        stores = new vm_store<Value>*[STORE_SIZE];
 
 		for (size_t i = 0; i < STORE_SIZE; ++i)
-			stores[i] = new vm_store<vm_object>;
+            stores[i] = new vm_store<Value>;
 
 		stores[0] = currentStore;
 		storesCount = 0;
@@ -236,9 +238,9 @@ namespace
 	}
 
 
-	inline static bool is_number(vm_object* obj)
+    inline static bool is_number(Value obj)
 	{
-		return obj != nullptr && (obj->Type == vm_object::vm_object_type::INT || obj->Type == vm_object::vm_object_type::DOUBLE);
+        return IS_NUM(obj);
 	}
 
 	inline static bool is_number(char_type* chr)
@@ -248,354 +250,155 @@ namespace
 		return end != chr && val != HUGE_VAL;
 	}
 
-	inline static vm_object* get_as_string(vm_object* obj)
+    inline static vm_object* get_as_string(Value val)
 	{
-		switch (obj->Type)
-		{
-			case vm_object::vm_object_type::DOUBLE:
-				return new vm_object(AS_STRING(obj->Double));
+        if (IS_OBJ(val))
+        {
+            vm_object* obj = AS_OBJ(val);
+            switch (obj->Type)
+            {
+                case vm_object::vm_object_type::STR:
+                    return new vm_object((char_type*)obj->Pointer);
 
-			case vm_object::vm_object_type::INT:
-				return new vm_object(AS_STRING(obj->Int));
+                default:
+                    return new vm_object(_T(""));
+            }
+        }
 
-			case vm_object::vm_object_type::BOOL:
-				return new vm_object(AS_STRING(obj->Bool));
-
-			case vm_object::vm_object_type::STR:
-				return new vm_object((char_type*)obj->Pointer);
-
-			default:
-				return new vm_object(_T(""));
-		}
+        return nullptr;
 	}
 
 	inline static vm_object* get_as_int(vm_object* obj)
 	{
-		switch (obj->Type)
-		{
-			case vm_object::vm_object_type::DOUBLE:
-				return new vm_object((int)obj->Double);
 
-			case vm_object::vm_object_type::INT:
-				return new vm_object(obj->Int);
-
-			case vm_object::vm_object_type::BOOL:
-				return new vm_object(obj->Bool ? 1 : 0);
-
-			case vm_object::vm_object_type::STR:
-			{
-				char_type* chr = (char_type*)obj->Pointer;
-				if (is_number(chr))
-					return new vm_object();
-
-				new vm_object(std::stoi(chr));
-			}
-
-			default:
-				return new vm_object(0);
-		}
+        return nullptr;
 	}
 
 	inline static vm_object* get_as_bool(vm_object* obj)
 	{
-		switch (obj->Type)
-		{
-			case vm_object::vm_object_type::DOUBLE:
-				return new vm_object(obj->Double > 0.0);
-
-			case vm_object::vm_object_type::INT:
-				return new vm_object(obj->Int > 0);
-
-			case vm_object::vm_object_type::BOOL:
-				return new vm_object(obj->Bool);
-
-			case vm_object::vm_object_type::STR:
-				return new vm_object(strlen((char_type*)obj->Pointer) > 0);
-
-			default:
-				return new vm_object(false);
-		}
+        return nullptr;
 	}
 
 	inline static vm_object* get_as_double(vm_object* obj)
 	{
-		switch (obj->Type)
-		{
-			case vm_object::vm_object_type::DOUBLE:
-				return new vm_object(obj->Double);
 
-			case vm_object::vm_object_type::INT:
-				return new vm_object((double)obj->Int);
-
-			case vm_object::vm_object_type::BOOL:
-				return new vm_object(obj->Bool ? 1.0 : 0.0);
-
-			case vm_object::vm_object_type::STR:
-			{
-				char_type* chr = (char_type*)obj->Pointer;
-				if (is_number(chr))
-					return new vm_object();
-
-				new vm_object(std::stod(chr));
-			}
-
-			default:
-				return new vm_object(0.0);
-		}
+        return nullptr;
 	}
 
 	inline static void add_str(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_string(left);
-		vm_object* newRight = get_as_string(right);
 
-		size_t leftLen = strlen(static_cast<char_type*>(newLeft->Pointer));
-		size_t rightLen = strlen(static_cast<char_type*>(newRight->Pointer));
-
-		char_type* newStr = new char_type[leftLen + rightLen + 1];
-		std::memcpy(newStr, newLeft->Pointer, leftLen);
-		std::memcpy(newStr + leftLen, newRight->Pointer, rightLen);
-		newStr[leftLen + rightLen] = '\0';
-
-		GET_ITEM(2, Pointer) = newStr;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::STR;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline static void add_double(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_double(left);
-		vm_object* newRight = get_as_double(right);
 
-		GET_ITEM(2, Double) = newLeft->Double + newRight->Double;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::DOUBLE;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline static void add_int(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_int(left);
-		vm_object* newRight = get_as_int(right);
 
-		GET_ITEM(2, Int) = newLeft->Int + newRight->Int;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::INT;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline static void add_bool(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_bool(left);
-		vm_object* newRight = get_as_bool(right);
 
-		GET_ITEM(2, Bool) = newLeft->Bool && newRight->Bool;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline static void sub_double(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_double(left);
-		vm_object* newRight = get_as_double(right);
 
-		GET_ITEM(2, Double) = newLeft->Double - newRight->Double;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::DOUBLE;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline static void sub_int(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_int(left);
-		vm_object* newRight = get_as_int(right);
 
-		GET_ITEM(2, Int) = newLeft->Int - newRight->Int;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::INT;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline static void sub_bool(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_bool(left);
-		vm_object* newRight = get_as_bool(right);
 
-		GET_ITEM(2, Bool) = newLeft->Bool && newRight->Bool;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline static void seq_str(vm_object* left, vm_object* right)
 	{
-		if (left->Type == right->Type) // string cannot multiply with another string
-		{
-			GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
-			return;
-		}
 
-		if ((left->Type == vm_object::vm_object_type::STR && !is_number(right)) ||
-			(right->Type == vm_object::vm_object_type::STR && !is_number(left)))
-		{
-			GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
-			return;
-		}
-
-		vm_object* strObj = nullptr;
-		vm_object* numberObj = nullptr;
-
-		if (left->Type == vm_object::vm_object_type::STR && is_number(right))
-		{
-			strObj = left;
-			numberObj = get_as_int(right);
-		}
-		else {
-			strObj = right;
-			numberObj = get_as_int(left);
-		}
-
-		size_t strLen = strlen(static_cast<char_type*>(strObj->Pointer));
-		size_t totalLen = strLen * numberObj->Int;
-
-		char_type* newStr = new char_type[totalLen + 1];
-		for(size_t i = 0; i < totalLen; ++i)
-			std::memcpy(newStr + (i * strLen), strObj->Pointer, strLen);
-
-		newStr[totalLen] = '\0';
-
-		GET_ITEM(2, Pointer) = newStr;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::STR;
 	}
 
 	inline static void mul_double(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_double(left);
-		vm_object* newRight = get_as_double(right);
 
-		GET_ITEM(2, Double) = newLeft->Double * newRight->Double;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::DOUBLE;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline static void mul_int(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_int(left);
-		vm_object* newRight = get_as_int(right);
 
-		GET_ITEM(2, Int) = newLeft->Int * newRight->Int;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::INT;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline static void mul_bool(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_bool(left);
-		vm_object* newRight = get_as_bool(right);
 
-		GET_ITEM(2, Bool) = newLeft->Bool || newRight->Bool;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline static void div_double(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_double(left);
-		vm_object* newRight = get_as_double(right);
 
-		GET_ITEM(2, Double) = newLeft->Double / newRight->Double;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::DOUBLE;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline static void div_int(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_double(left);
-		vm_object* newRight = get_as_double(right);
 
-		GET_ITEM(2, Double) = newLeft->Double / newRight->Double;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::DOUBLE;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline static void div_bool(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_bool(left);
-		vm_object* newRight = get_as_bool(right);
 
-		GET_ITEM(2, Bool) = newLeft->Bool && newRight->Bool;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline void eq_str(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_string(left);
-		vm_object* newRight = get_as_string(right);
 
-		GET_ITEM(2, Bool) = strcmp((char_type*)newLeft->Pointer, (char_type*)newRight->Pointer) == 0;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline static void eq_double(vm_object* left, vm_object* right)
-	{
-		vm_object* newLeft = get_as_double(left);
-		vm_object* newRight = get_as_double(right);
-
-		GET_ITEM(2, Bool) = newLeft->Double == newRight->Double;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
-
-		delete newLeft;
-		delete newRight;
+    {
 	}
 
 	inline static void eq_int(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_int(left);
-		vm_object* newRight = get_as_int(right);
 
-		GET_ITEM(2, Bool) = newLeft->Int == newRight->Int;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
-
-		delete newLeft;
-		delete newRight;
 	}
 
 	inline void eq_bool(vm_object* left, vm_object* right)
 	{
-		vm_object* newLeft = get_as_bool(left);
-		vm_object* newRight = get_as_bool(right);
 
-		GET_ITEM(2, Bool) = newLeft->Bool == newRight->Bool;
-		GET_ITEM(2, Type) = vm_object::vm_object_type::BOOL;
-
-		delete newLeft;
-		delete newRight;
 	}
+
+    static inline bool is_equal()
+    {
+        Value left = GET_VALUE(2);
+        Value right = GET_VALUE(1);
+
+        if (IS_BOOL(left) && IS_BOOL(right))
+            return AS_BOOL(left) == AS_BOOL(right);
+
+        if (IS_NUM(left) && IS_NUM(right))
+            return valueToNumber(valueToNumber(left)) == valueToNumber(valueToNumber(right));
+
+        if ((IS_BOOL(left) && IS_NUM(right)) ||
+            (IS_BOOL(right) && IS_NUM(left)))
+        {
+            if (IS_BOOL(left))
+                return (double)AS_BOOL(left) == valueToNumber(right);
+
+            return (double)AS_BOOL(right) == valueToNumber(left);
+        }
+
+        vm_object* leftObj = AS_OBJ(left);
+        vm_object* rightObj = AS_OBJ(right);
+
+        return false;
+    }
 
 	void static execute(char_type* code, size_t len, size_t startIndex, bool firstInit)
 	{
@@ -613,43 +416,15 @@ namespace
 		PRINT_OPCODE();
         FUNC_BEGIN()
         {
-            auto* left = PEEK_INDEX_PTR(2);
-            auto* right = PEEK_INDEX_PTR(1);
+            Value left = GET_VALUE(2);
+            Value right = GET_VALUE(1);
 
-			if (left->Type == vm_object::vm_object_type::STR ||
-				right->Type == vm_object::vm_object_type::STR)
-			{
-				add_str(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::DOUBLE ||
-					 right->Type == vm_object::vm_object_type::DOUBLE)
-			{
-				add_double(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::INT ||
-					 right->Type == vm_object::vm_object_type::INT)
-			{
-				add_int(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::BOOL ||
-					 right->Type == vm_object::vm_object_type::BOOL)
-			{
-				add_bool(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::ARRAY ||
-					right->Type == vm_object::vm_object_type::ARRAY)
-			{
-				// todo: implement
-				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
-			}
-			else if (left->Type == vm_object::vm_object_type::DICT ||
-					 right->Type == vm_object::vm_object_type::DICT)
-			{
-				// todo: implement
-				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
-			}
-			else
-				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
+            if (IS_NUM(left) && IS_NUM(right))
+                GET_VALUE(2) = numberToValue(valueToNumber(left) + valueToNumber(right));
+            else if (IS_BOOL(left) && IS_BOOL(right))
+                GET_VALUE(2) = AS_BOOL(left) || AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+            else
+                GET_VALUE(2) = NULL_VAL;
 
             STACK_DINC();
         }
@@ -660,42 +435,19 @@ namespace
 		++code;
 		PRINT_OPCODE();
 		FUNC_BEGIN()
-		{
-			auto* left = PEEK_INDEX_PTR(2);
-			auto* right = PEEK_INDEX_PTR(1);
+        {
+            Value left = GET_VALUE(2);
+            Value right = GET_VALUE(1);
 
-			if (left->Type == vm_object::vm_object_type::DOUBLE ||
-					 right->Type == vm_object::vm_object_type::DOUBLE)
-			{
-				sub_double(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::INT ||
-					 right->Type == vm_object::vm_object_type::INT)
-			{
-				sub_int(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::BOOL ||
-					 right->Type == vm_object::vm_object_type::BOOL)
-			{
-				sub_bool(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::ARRAY ||
-					 right->Type == vm_object::vm_object_type::ARRAY)
-			{
-				// todo: implement
-				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
-			}
-			else if (left->Type == vm_object::vm_object_type::DICT ||
-					 right->Type == vm_object::vm_object_type::DICT)
-			{
-				// todo: implement
-				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
-			}
-			else
-				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
+            if (IS_NUM(left) && IS_NUM(right))
+                GET_VALUE(2) = numberToValue(valueToNumber(left) - valueToNumber(right));
+            else if (IS_BOOL(left) && IS_BOOL(right))
+                GET_VALUE(2) = AS_BOOL(left) && AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+            else
+                GET_VALUE(2) = NULL_VAL;
 
-			STACK_DINC();
-		}
+            STACK_DINC();
+        }
 		FUNC_END();
 		GOTO_OPCODE();
 
@@ -704,31 +456,6 @@ namespace
 		PRINT_OPCODE();
 		FUNC_BEGIN()
 		{
-			auto* left = PEEK_INDEX_PTR(2);
-			auto* right = PEEK_INDEX_PTR(1);
-
-			if (left->Type == vm_object::vm_object_type::STR ||
-				right->Type == vm_object::vm_object_type::STR)
-			{
-				seq_str(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::DOUBLE ||
-					 right->Type == vm_object::vm_object_type::DOUBLE)
-			{
-				mul_double(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::INT ||
-					 right->Type == vm_object::vm_object_type::INT)
-			{
-				mul_int(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::BOOL ||
-					 right->Type == vm_object::vm_object_type::BOOL)
-			{
-				mul_bool(left, right);
-			}
-			else
-				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
 
 			STACK_DINC();
 		}
@@ -740,26 +467,6 @@ namespace
 		PRINT_OPCODE();
 		FUNC_BEGIN()
 		{
-			auto* left = PEEK_INDEX_PTR(2);
-			auto* right = PEEK_INDEX_PTR(1);
-
-			if (left->Type == vm_object::vm_object_type::DOUBLE ||
-					 right->Type == vm_object::vm_object_type::DOUBLE)
-			{
-				div_double(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::INT ||
-					 right->Type == vm_object::vm_object_type::INT)
-			{
-				div_int(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::BOOL ||
-					 right->Type == vm_object::vm_object_type::BOOL)
-			{
-				div_bool(left, right);
-			}
-			else
-				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
 
 			STACK_DINC();
 		}
@@ -770,33 +477,8 @@ namespace
 		++code;
 		PRINT_OPCODE();
 		FUNC_BEGIN()
-		{
-			auto* left = PEEK_INDEX_PTR(2);
-			auto* right = PEEK_INDEX_PTR(1);
-
-			if (left->Type == vm_object::vm_object_type::STR ||
-				right->Type == vm_object::vm_object_type::STR)
-			{
-				eq_str(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::DOUBLE ||
-					 right->Type == vm_object::vm_object_type::DOUBLE)
-			{
-				eq_double(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::INT ||
-					 right->Type == vm_object::vm_object_type::INT)
-			{
-				eq_int(left, right);
-			}
-			else if (left->Type == vm_object::vm_object_type::BOOL ||
-					 right->Type == vm_object::vm_object_type::BOOL)
-			{
-				eq_bool(left, right);
-			}
-			else
-				GET_ITEM(2, Type) = vm_object::vm_object_type::EMPTY;
-
+        {
+            GET_VALUE(2) = is_equal() ? TRUE_VAL : FALSE_VAL;
 			STACK_DINC();
 		}
 		FUNC_END();
@@ -805,70 +487,59 @@ namespace
 	opt_LT:
 		++code;
 		PRINT_OPCODE();
-		OPERATION_LT(Bool, vm_object::vm_object_type::BOOL, Int);
+        //OPERATION_LT(Bool, vm_object::vm_object_type::BOOL, Int);
 		GOTO_OPCODE();
 
 	opt_LTE:
 		++code;
 		PRINT_OPCODE();
-		OPERATION_LTE(Bool, vm_object::vm_object_type::BOOL, Int);
+        //OPERATION_LTE(Bool, vm_object::vm_object_type::BOOL, Int);
 		GOTO_OPCODE();
 
 	opt_GT:
 		++code;
 		PRINT_OPCODE();
-		OPERATION_GT(Bool, vm_object::vm_object_type::BOOL, Int);
+        //OPERATION_GT(Bool, vm_object::vm_object_type::BOOL, Int);
 		GOTO_OPCODE();
 
 	opt_GTE:
 		++code;
 		PRINT_OPCODE();
-		OPERATION_GTE(Bool, vm_object::vm_object_type::BOOL, Int);
+        //OPERATION_GTE(Bool, vm_object::vm_object_type::BOOL, Int);
 		GOTO_OPCODE();
 
 	opt_AND:
 		++code;
 		PRINT_OPCODE();
-		OPERATION_AND(Bool, vm_object::vm_object_type::BOOL);
+        FUNC_BEGIN()
+        {
+            Value left = GET_VALUE(2);
+            Value right = GET_VALUE(1);
+
+            GET_VALUE(2) = AS_BOOL(left) && AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+            STACK_DINC()
+        }
+        FUNC_END()
 		GOTO_OPCODE();
 
 	opt_OR:
 		++code;
 		PRINT_OPCODE();
-		OPERATION_OR(Bool, vm_object::vm_object_type::BOOL);
+        FUNC_BEGIN()
+        {
+            Value left = GET_VALUE(2);
+            Value right = GET_VALUE(1);
+
+            GET_VALUE(2) = AS_BOOL(left) || AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+            STACK_DINC()
+        }
+        FUNC_END()
 		GOTO_OPCODE();
 
 	opt_DUP:
 		++code;
 		PRINT_OPCODE();
-		switch (currentStack[stackIndex - 1].Type)
-		{
-		case vm_object::vm_object_type::ARRAY:
-			// todo : implement
-			break;
 
-		case vm_object::vm_object_type::STR:
-		{
-			string_type* newStr = new string_type(*static_cast<string_type*>(currentStack[stackIndex - 1].Pointer));
-			PUSH_WITH_INIT(newStr);
-		}
-		break;
-
-		case vm_object::vm_object_type::DICT:
-			break;
-
-		case vm_object::vm_object_type::INT:
-			PUSH_WITH_STACK(currentStack, stackIndex, Int, currentStack[stackIndex - 1]);
-			break;
-
-		case vm_object::vm_object_type::DOUBLE:
-			PUSH_WITH_STACK(currentStack, stackIndex, Double, currentStack[stackIndex - 1]);
-			break;
-
-		case vm_object::vm_object_type::BOOL:
-			PUSH_WITH_STACK(currentStack, stackIndex, Bool, currentStack[stackIndex - 1]);
-			break;
-		}
 
 		GOTO_OPCODE();
 
@@ -877,12 +548,14 @@ namespace
 		{
 			PRINT_OPCODE();
 			FUNC_BEGIN()
-				vm_int_t integer;
-			integer.Int = 0;
+            {
+                vm_int_t integer;
+                integer.Int = 0;
 
-			ASSIGN_4(integer.Chars, code);
+                ASSIGN_4(integer.Chars, code);
 
-			code += integer.Int;
+                code += integer.Int;
+            }
 			FUNC_END()
 		}
 		GOTO_OPCODE();
@@ -892,10 +565,12 @@ namespace
 		{
 			PRINT_OPCODE();
 			FUNC_BEGIN()
-				vm_int_t integer;
-			integer.Int = 0;
-			ASSIGN_4(integer.Chars, code);
-			methods[integer.Chars] = startPoint - code;
+            {
+                vm_int_t integer;
+                integer.Int = 0;
+                ASSIGN_4(integer.Chars, code);
+                methods[integer.Chars] = startPoint - code;
+            }
 			FUNC_END()
 		}
 		GOTO_OPCODE();
@@ -905,7 +580,10 @@ namespace
 		{
 			PRINT_OPCODE();
 			FUNC_BEGIN()
-				if (POP_AS(Bool))
+            {
+                Value asdASD = POP_VALUE();
+                bool a = AS_BOOL(asdASD);
+                if (a)
 					code += 4;
 				else
 				{
@@ -913,6 +591,7 @@ namespace
 					ASSIGN_4(integer.Chars, code);
 					code += integer.Int;
 				}
+            }
 			FUNC_END()
 		}
 		GOTO_OPCODE();
@@ -922,7 +601,7 @@ namespace
 		{
 			PRINT_OPCODE();
 			FUNC_BEGIN()
-				if (IS_EQUAL(Int))
+                if (is_equal())
 					code += 4;
 				else
 				{
@@ -941,7 +620,7 @@ namespace
 		{
 			PRINT_OPCODE();
 			FUNC_BEGIN()
-				if (!IS_EQUAL(Int))
+                if (!is_equal())
 				{
 					vm_int_t integer;
 					integer.Int = 0;
@@ -957,29 +636,16 @@ namespace
 		GOTO_OPCODE();
 
 	opt_INC:
-		++code;
-		PRINT_OPCODE();
-		INC(currentStack, stackIndex, Int);
-		GOTO_OPCODE();
-
 	opt_NEG:
-		++code;
-		PRINT_OPCODE();
-		NEG(currentStack, stackIndex, Int);
-		GOTO_OPCODE();
-
-	opt_DINC:
-		++code;
-		PRINT_OPCODE();
-		DINC(currentStack, stackIndex, Int);
-		GOTO_OPCODE();
+    opt_DINC:
+        GOTO_OPCODE();
 
 	opt_LOAD:
 		++code;
 		{
 			PRINT_OPCODE();
 			int data = *++code;
-			LOAD_AND_PUSH(data);
+            LOAD_AND_PUSH(data);
 		}
 		GOTO_OPCODE();
 
@@ -1078,12 +744,14 @@ namespace
 		{
 			PRINT_OPCODE();
 			FUNC_BEGIN()
-				currentStore = stores[++storesCount];
-			vm_int_t integer;
-			integer.Int = 0;
-			ASSIGN_4(integer.Chars, code);
-			currentStore->startAddress = (code - startPoint);
-			code += integer.Int;
+            {
+                currentStore = stores[++storesCount];
+                vm_int_t integer;
+                integer.Int = 0;
+                ASSIGN_4(integer.Chars, code);
+                currentStore->startAddress = (code - startPoint);
+                code += integer.Int;
+            }
 			FUNC_END()
 		}
 		GOTO_OPCODE();
@@ -1093,8 +761,10 @@ namespace
 		{
 			PRINT_OPCODE();
 			FUNC_BEGIN()
-				code = startPoint + currentStore->startAddress;
-			currentStore = stores[--storesCount];
+            {
+                code = startPoint + currentStore->startAddress;
+                currentStore = stores[--storesCount];
+            }
 			FUNC_END()
 		}
 		GOTO_OPCODE();
@@ -1109,11 +779,13 @@ namespace
 		++code; {
 			PRINT_OPCODE();
 			FUNC_BEGIN()
-				vm_int_t integer;
-			integer.Int = 0;
-			ASSIGN_4(integer.Chars, code);
-			PUSH_WITH_ASSIGN(integer.Int);
-			FUNC_END()
+            {
+                vm_int_t integer;
+                integer.Int = 0;
+                ASSIGN_4(integer.Chars, code);
+                PUSH_WITH_ASSIGN_INT(integer.Int);
+            }
+            FUNC_END()
 				// console_out << _T("PUSH : ") << Operations::Peek<int>(currentStack, stackIndex) << '\n';
 		}
 		GOTO_OPCODE();
@@ -1121,13 +793,13 @@ namespace
     opt_CONST_INT_0:
 		++code;
 		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(0);
+        PUSH_WITH_ASSIGN_INT(0);
 		GOTO_OPCODE();
 
     opt_CONST_INT_1:
 		++code;
 		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(1);
+        PUSH_WITH_ASSIGN_INT(1);
 		GOTO_OPCODE();
 
     opt_CONST_DOUBLE:
@@ -1136,7 +808,7 @@ namespace
             vm_double_t d;
             d.Double = 0.0;
             ASSIGN_8(d.Chars, code);
-            PUSH_WITH_ASSIGN(d.Double);
+            PUSH_WITH_ASSIGN_INT(d.Double);
         }
         GOTO_OPCODE();
 
@@ -1146,7 +818,7 @@ namespace
             vm_double_t d;
             d.Double = 0.0;
             ASSIGN_8(d.Chars, code);
-            PUSH_WITH_ASSIGN(d.Double);
+            PUSH_WITH_ASSIGN_INT(d.Double);
         }
         GOTO_OPCODE();
 
@@ -1155,7 +827,7 @@ namespace
             PRINT_OPCODE();
             vm_double_t d;
             d.Double = 1.0;
-            PUSH_WITH_ASSIGN(d.Double);
+            PUSH_WITH_ASSIGN_INT(d.Double);
         }
         GOTO_OPCODE();
 
@@ -1192,7 +864,7 @@ namespace
 				vm_object* result = nativeMethods[chars](system);
 				if (result != nullptr)
 				{
-					switch (result->Type)
+                    /*switch (result->Type)
 					{
 					case vm_object::vm_object_type::BOOL:
 						PUSH_WITH_INIT(result->Bool);
@@ -1209,7 +881,7 @@ namespace
 					case vm_object::vm_object_type::STR:
 						PUSH_WITH_INIT(static_cast<char_type*>(result->Pointer));
 						break;
-					}
+                    }*/
 				}
 			}
 			else
@@ -1497,7 +1169,7 @@ namespace
 	static void dumpStack()
 	{
 		int index = stackIndex;
-		while (index > 0) {
+        /*while (index > 0) {
 			console_out << _T(">>> ") << index << _T(". ");
 			vm_object item = currentStack[index];
 			switch (item.Type)
@@ -1531,7 +1203,7 @@ namespace
 
 			--index;
 		}
-
+*/
 		console_out << '\n';
 	}
 
@@ -1582,18 +1254,19 @@ void vm_system::dumpStack()
 
 size_t vm_system::getUInt()
 {
-	return currentStack[::stackIndex - 1].Int;
+
+    return numberToValue(currentStack[::stackIndex - 1]);
 }
 
-vm_object const * vm_system::getObject()
+Value vm_system::getObject()
 {
-	if (::stackIndex > 0)
-	{
-		//console_out << ::stackIndex << '\n';
-		return &::currentStack[--::stackIndex];
-	}
+    if (::stackIndex > 0)
+    {
+        //console_out << ::stackIndex << '\n';
+        return ::currentStack[--::stackIndex];
+    }
 
-	return nullptr;
+    return NULL_VAL;
 }
 
 void vm_system::addMethod(string_type const & name, VmMethod method)

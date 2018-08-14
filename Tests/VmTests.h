@@ -31,14 +31,14 @@ TEST_CASE("VM Fibonacci tests 2") {
 	auto* engine = new ENGINE;
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
     engine->Execute(_T("func fibonacci(num){     if num == 1 || num == 2 then return 1    return fibonacci(num - 1) + fibonacci(num - 2) }"));
-	auto* result = engine->Execute(_T("fibonacci(25)"));
+    auto* result = engine->Execute(_T("fibonacci(40)"));
 
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 	duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
 	std::cout << "It took me " << time_span.count() << " seconds.";
 	std::cout << std::endl;
 
-	REQUIRE(result->Integer == 75025);
+    REQUIRE(result->Double == 75025.0);
 	delete engine;
 	delete result;
 }

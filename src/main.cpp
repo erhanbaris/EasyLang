@@ -34,9 +34,7 @@
 #include "Lexer.h"
 #include "Console.h"
 
-#include "../Tests/LexerTests.h"
-#include "../Tests/AstTests.h"
-#include "../Tests/VmTests.h"
+
 //#include "../Tests/InterpreterTests.h"
 
 using namespace std;

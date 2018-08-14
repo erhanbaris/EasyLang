@@ -5,7 +5,7 @@
 
 vm_object* print(vm_system* vm)
 {
-    auto* item = vm->getObject();
+    /*auto* item = vm->getObject();
     if (item != nullptr)
         switch (item->Type) {
             case vm_object::vm_object_type::BOOL:
@@ -23,7 +23,7 @@ vm_object* print(vm_system* vm)
             case vm_object::vm_object_type::STR:
                 console_out << static_cast<char_type*>(item->Pointer) << '\n';
                 break;
-        }
+        }*/
 
     return nullptr;
 }

@@ -48,6 +48,7 @@ typedef uint64_t Value;
 #define IS_OBJ(value) (((value) & (QNAN | SIGN_BIT)) == (QNAN | SIGN_BIT))
 
 #define IS_FALSE(value)     ((value) == FALSE_VAL)
+#define IS_BOOL(value)      (value == TRUE_VAL || value == FALSE_VAL)
 #define IS_NULL(value)      ((value) == NULL_VAL)
 #define IS_UNDEFINED(value) ((value) == UNDEFINED_VAL)
 
@@ -79,6 +80,7 @@ typedef uint64_t Value;
 // Gets the singleton type tag for a Value (which must be a singleton).
 #define GET_TAG(value) ((int)((value) & MASK_TAG))
 
+#define GET_VALUE_FROM_OBJ(obj) ((Value)(SIGN_BIT | QNAN | (uint64_t)(uintptr_t)(obj)))
 
 typedef union
 {
@@ -121,15 +123,10 @@ class vm_object
 {
 public:
 	enum class vm_object_type : char {
-		EMPTY,
-		INT,
-		DOUBLE,
-		BOOL,
+        EMPTY,
 		STR,
         ARRAY,
-        DICT,
-		NATIVE_CALL,
-		CALL
+        DICT
 	};
 
 	vm_object()
@@ -141,24 +138,6 @@ public:
 	{
 		if (Type == vm_object_type::STR)
 			delete (char_type*)Pointer;
-	}
-
-	vm_object(int i)
-	{
-		Int = i;
-		Type = vm_object_type::INT;
-	}
-
-	vm_object(double d)
-	{
-		Double = d;
-		Type = vm_object_type::DOUBLE;
-	}
-
-	vm_object(bool b)
-	{
-		Bool = b;
-		Type = vm_object_type::BOOL;
 	}
 
     vm_object(char_type* b)
@@ -196,6 +175,8 @@ public:
 	}
 
 	vm_object_type Type;
+    bool IsDeleted;
+    vm_object* NextObject;
 
 	union {
 		bool Bool;
@@ -377,7 +358,7 @@ public:
 	void dumpStack();
     void dump(char_type* code, size_t len);
 	size_t getUInt();
-	vm_object const* getObject();
+    Value getObject();
 
 private:
 	vm_system_impl* impl;

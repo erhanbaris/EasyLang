@@ -533,36 +533,38 @@ PrimativeValue* VmBackend::Execute()
 	
 	this->Compile(this->impl->codes);
 	impl->system.execute(&impl->codes[0], impl->codes.size(), codeStart);	
-	auto const * lastItem = impl->system.getObject();
+    Value lastItem = impl->system.getObject();
 
-	if (lastItem != nullptr)
-		switch (lastItem->Type)
-		{
-			case vm_object::vm_object_type::INT:
-				result = new PrimativeValue(lastItem->Int);
-				break;
+    if (lastItem != NULL_VAL)
+    {
+        if (IS_NUM(lastItem))
+        {
+            result = new PrimativeValue(valueToNumber(lastItem));
+        }
+        else if (IS_BOOL(lastItem))
+        {
+            result = new PrimativeValue(AS_BOOL(lastItem));
+        }
+        else
+        {
+            vm_object* obj = AS_OBJ(lastItem);
+            switch (obj->Type)
+            {
+                case vm_object::vm_object_type::EMPTY:
+                    result = new PrimativeValue();
+                    break;
 
-			case vm_object::vm_object_type::DOUBLE:
-				result = new PrimativeValue(lastItem->Double);
-				break;
+                case vm_object::vm_object_type::ARRAY:
+                    console_out << _T("(ARRAY) Size: ") << static_cast<vm_array*>(obj->Pointer)->Indicator << '\n';
+                    break;
 
-			case vm_object::vm_object_type::BOOL:
-				result = new PrimativeValue(lastItem->Bool);
-				break;
-
-			case vm_object::vm_object_type::EMPTY:
-				result = new PrimativeValue();
-				break;
-
-			case vm_object::vm_object_type::ARRAY:
-				console_out << _T("(ARRAY) Size: ") << static_cast<vm_array*>(lastItem->Pointer)->Indicator << '\n';
-				break;
-
-			case vm_object::vm_object_type::STR:
-                char_type* str = static_cast<char_type*>(lastItem->Pointer);
-				result = new PrimativeValue(string_type(str));
-				break;
-		}
+                case vm_object::vm_object_type::STR:
+                    char_type* str = static_cast<char_type*>(obj->Pointer);
+                    result = new PrimativeValue(string_type(str));
+                    break;
+            }
+        }
+    }
 
 	if (result != nullptr)
 		console_out << result->Describe() << '\n';
