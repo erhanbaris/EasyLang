@@ -329,102 +329,6 @@ BACKEND_ITEM_TYPE VmBackend::operationResultType(BACKEND_ITEM_TYPE from, BACKEND
     return BACKEND_ITEM_TYPE::EMPTY;
 }
 
-BACKEND_ITEM_TYPE VmBackend::detectType(Ast* ast)
-{
-	if (ast == nullptr)
-		return BACKEND_ITEM_TYPE::EMPTY;
-
-	switch (ast->GetType())
-	{
-		case EASY_AST_TYPE::UNARY:
-		{
-			auto* unary = static_cast<UnaryAst*>(ast);
-			return detectType(unary->Data);
-		}
-
-		case EASY_AST_TYPE::PRIMATIVE:
-		{
-			auto type = static_cast<PrimativeAst*>(ast)->Value->Type;
-			switch (type)
-			{
-
-				case PrimativeValue::Type::PRI_INTEGER:
-					return BACKEND_ITEM_TYPE::INT;
-
-				case PrimativeValue::Type::PRI_DOUBLE:
-					return BACKEND_ITEM_TYPE::DOUBLE;
-
-				case PrimativeValue::Type::PRI_STRING:
-					return BACKEND_ITEM_TYPE::STRING;
-
-				case PrimativeValue::Type::PRI_BOOL:
-					return BACKEND_ITEM_TYPE::BOOL;
-
-				case PrimativeValue::Type::PRI_ARRAY:
-					return BACKEND_ITEM_TYPE::ARRAY;
-
-				case PrimativeValue::Type::PRI_DICTIONARY:
-					return BACKEND_ITEM_TYPE::DICTIONARY;
-
-				case PrimativeValue::Type::PRI_NULL:
-					return BACKEND_ITEM_TYPE::EMPTY;
-			}
-		}
-
-		case EASY_AST_TYPE::RETURN:
-			return BACKEND_ITEM_TYPE::EMPTY;
-
-		case EASY_AST_TYPE::PARENTHESES_BLOCK:
-            return detectType(static_cast<ParenthesesGroupAst*>(ast)->Data);
-
-		case EASY_AST_TYPE::EXPR_STATEMENT:
-			return detectType(static_cast<ExprStatementAst*>(ast)->Expr);
-			break;
-
-		case EASY_AST_TYPE::ASSIGNMENT:
-			return BACKEND_ITEM_TYPE::EMPTY;
-			break;
-
-		case EASY_AST_TYPE::BLOCK:
-			return BACKEND_ITEM_TYPE::EMPTY;
-			break;
-
-		case EASY_AST_TYPE::FUNCTION_DECLERATION:
-			//static_cast<FunctionDefinetionAst*>(ast)->accept(this);
-			break;
-
-
-		case EASY_AST_TYPE::IF_STATEMENT:
-			return BACKEND_ITEM_TYPE::EMPTY;
-
-		case EASY_AST_TYPE::FOR:
-			return BACKEND_ITEM_TYPE::EMPTY;
-
-		case EASY_AST_TYPE::BINARY_OPERATION:
-		{
-			auto binary = static_cast<BinaryAst*>(ast);
-			BACKEND_ITEM_TYPE rightType =  detectType(binary->Right);
-			BACKEND_ITEM_TYPE leftType =  detectType(binary->Left);
-
-            return operationResultType(rightType, leftType);
-		}
-			break;
-
-		case EASY_AST_TYPE::STRUCT_OPERATION:
-			//static_cast<StructAst*>(ast)->accept(this);
-			break;
-
-		case EASY_AST_TYPE::CONTROL_OPERATION:
-			return BACKEND_ITEM_TYPE::BOOL;
-			break;
-
-		case EASY_AST_TYPE::NONE:
-			return BACKEND_ITEM_TYPE::EMPTY;
-	}
-
-	return BACKEND_ITEM_TYPE::EMPTY;
-}
-
 PrimativeValue* VmBackend::getAstItem(Ast* ast)
 {
 	if (ast == nullptr)
@@ -539,8 +443,18 @@ PrimativeValue* VmBackend::Execute()
     {
         if (IS_NUM(lastItem))
         {
-            result = new PrimativeValue(valueToNumber(lastItem));
-        }
+			double num = valueToNumber(lastItem);
+
+			if (std::isinf(num) || std::isnan(num))
+				result = new PrimativeValue("");
+			else
+			{
+				if (trunc(num) == num)
+					result = new PrimativeValue((int)num);
+				else
+					result = new PrimativeValue(num);
+			}
+		}
         else if (IS_BOOL(lastItem))
         {
             result = new PrimativeValue(AS_BOOL(lastItem));
@@ -640,23 +554,22 @@ void VmBackend::visit(BlockAst* ast)
 void VmBackend::visit(IfStatementAst* ast)
 {
 	this->getAstItem(ast->ControlOpt);
-	/*auto lastOperator = this->opcodes[this->opcodes.size() - 1]->OpCode;
+	vm_inst lastOperator = (vm_inst)this->opcodes[this->opcodes.size() - 1];
 
 	OpcodeItem* condition = nullptr;
 	switch (lastOperator)
 	{
 	case vm_inst::OPT_EQ:
-		condition = new OpcodeItem(vm_inst::OPT_IF_EQ);
 		this->opcodes.erase(this->opcodes.begin() + (this->opcodes.size() - 1));
+		this->opcodes.push_back(vm_inst::OPT_IF_EQ);
 		break;
 
 	default:
-		condition = new OpcodeItem(vm_inst::OPT_JIF);
+		this->opcodes.push_back(vm_inst::OPT_JIF);
 		break;
-	}*/
+	}
 
-	this->opcodes.push_back(vm_inst::OPT_JIF);
-    size_t ifPoint = this->opcodes.size();
+	size_t ifPoint = this->opcodes.size();
     size_t jumpPoint = 0;
     vm_int_t i;
     this->opcodes.push_back(0);
@@ -972,12 +885,16 @@ void VmBackend::visit(ControlAst* ast)
 
 void VmBackend::visit(BinaryAst* ast)
 {
-	BACKEND_ITEM_TYPE rightType =  detectType(ast->Right);
-	BACKEND_ITEM_TYPE leftType =  detectType(ast->Left);
-	auto binaryResultType = detectType(ast);
-
-	getAstItem(ast->Left);
-	getAstItem(ast->Right);
+	if (ast->Right->GetType() == EASY_AST_TYPE::BINARY_OPERATION &&
+	   (reinterpret_cast<BinaryAst*>(ast->Right)->Op == EASY_OPERATOR_TYPE::MULTIPLICATION || reinterpret_cast<BinaryAst*>(ast->Right)->Op == EASY_OPERATOR_TYPE::DIVISION))
+	{
+		getAstItem(ast->Right);
+		getAstItem(ast->Left);
+	}
+	else {
+		getAstItem(ast->Left);
+		getAstItem(ast->Right);
+	};
 
 	switch (ast->Op)
 	{
@@ -1085,7 +1002,6 @@ void VmBackend::visit(FunctionCallAst* ast)
         size_t totalParameters = ast->Args.size();
         for (size_t i = totalParameters; i > 0; --i)
         {
-            BACKEND_ITEM_TYPE type = detectType(ast->Args[i - 1]);
             getAstItem(ast->Args[i - 1]);
         }
       

@@ -347,6 +347,26 @@ public:
 	{
 		if (match({ EASY_OPERATOR_TYPE ::MINUS})){
             EASY_OPERATOR_TYPE opt = getOperator(previous());
+            Token* nextItem = peek();
+
+            if (nextItem->GetType() == EASY_TOKEN_TYPE::TOKEN_DOUBLE ||
+				nextItem->GetType() == EASY_TOKEN_TYPE::TOKEN_INTEGER)
+			{
+				PrimativeAst* ast = reinterpret_cast<PrimativeAst*>(primaryExpr());
+				switch (ast->Value->Type)
+				{
+					case PrimativeValue::Type::PRI_INTEGER:
+						ast->Value->Integer *= -1;
+						break;
+
+					case PrimativeValue::Type::PRI_DOUBLE:
+						ast->Value->Double *= -1;
+						break;
+				}
+
+				return ast;
+			}
+
 			ExprAst* right = unaryExpr();
             return new UnaryAst(opt, right);
 		}

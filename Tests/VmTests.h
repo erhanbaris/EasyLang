@@ -38,9 +38,26 @@ TEST_CASE("VM Fibonacci tests") {
 	std::cout << "It took me " << time_span.count() << " seconds.";
 	std::cout << std::endl;
 
-	REQUIRE(result->Double == 75025.0);
+	REQUIRE(result->Integer == 75025);
 	delete engine;
 	delete result;
+}
+
+TEST_CASE("number tests") {
+    auto *engine = new ENGINE;
+
+    REQUIRE(engine->Execute(_T("1 == 1.0"))->Bool == true);
+    REQUIRE(engine->Execute(_T("1.0 == 1"))->Bool == true);
+    REQUIRE(engine->Execute(_T("-1"))->Integer == -1);
+    REQUIRE(engine->Execute(_T("-1.1"))->Double == -1.1);
+    REQUIRE(engine->Execute(_T("-1.1 < 1"))->Bool == true);
+    REQUIRE(engine->Execute(_T("-1.1 <= 1"))->Bool == true);
+    REQUIRE(engine->Execute(_T("-1.1 > 1"))->Bool == false);
+    REQUIRE(engine->Execute(_T("-1.1 >= 1"))->Bool == false);
+    REQUIRE(engine->Execute(_T("60-100"))->Integer == -60);
+    REQUIRE(engine->Execute(_T("(40 - (10 * 10))"))->Integer == -60);
+
+    delete engine;
 }
 
 TEST_CASE("bool tests") {
@@ -108,6 +125,14 @@ TEST_CASE("string tests") {
 	REQUIRE(engine->Execute(_T("\"true\" == false"))->Bool == false);
 	REQUIRE(engine->Execute(_T("\"false\" == false"))->Bool == true);
 	REQUIRE(engine->Execute(_T("\"false\" == true"))->Bool == false);
+
+
+	REQUIRE(engine->Execute(_T("data = 0 if data > 1 then true else false"))->Bool == false);
+	REQUIRE(engine->Execute(_T("data = 10 if data > 1 then true else false"))->Bool == true);
+	REQUIRE(engine->Execute(_T("if \"erhan\" == \"erhan\" then true else false"))->Bool == true);
+	REQUIRE(engine->Execute(_T("if \"erhan\" != \"erhan\" then true else false"))->Bool == false);
+	REQUIRE(engine->Execute(_T("if 1 < -0.1 then true else false"))->Bool == false);
+	REQUIRE(engine->Execute(_T("if \"true\" == true then true else false"))->Bool == true);
 
 
 	delete engine;
