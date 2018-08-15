@@ -566,8 +566,7 @@ PrimativeValue* VmBackend::Execute()
         }
     }
 
-	if (result != nullptr)
-		console_out << result->Describe() << '\n';
+	
 
 	return result;
 }
@@ -941,9 +940,9 @@ void VmBackend::visit(ControlAst* ast)
 		this->opcodes.push_back(vm_inst::OPT_EQ);
 		break;
 
-	//case NOT_EQUAL:
-	//	this->opcodes.push_back(new OpcodeItem(vm_inst::opt_n));
-	//	break;
+	case NOT_EQUAL:
+		this->opcodes.push_back(vm_inst::OPT_NOT_EQ);
+		break;
 
 	case GREATOR:
 		this->opcodes.push_back(vm_inst::OPT_GT);

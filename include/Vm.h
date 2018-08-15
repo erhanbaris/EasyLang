@@ -47,6 +47,8 @@ typedef uint64_t Value;
 // An object pointer is a NaN with a set sign bit.
 #define IS_OBJ(value) (((value) & (QNAN | SIGN_BIT)) == (QNAN | SIGN_BIT))
 
+#define IS_STRING(value) (IS_OBJ(value) && AS_OBJ(value)->Type == vm_object::vm_object_type::STR)
+
 #define IS_FALSE(value)     ((value) == FALSE_VAL)
 #define IS_BOOL(value)      (value == TRUE_VAL || value == FALSE_VAL)
 #define IS_NULL(value)      ((value) == NULL_VAL)
@@ -158,13 +160,6 @@ public:
 		Pointer = const_cast<void*>((void*)array);
 		Type = vm_object_type::ARRAY;
 	}
-    
-    vm_object& operator=(vm_object const & other)
-    {
-        Type = other.Type;
-        Double = other.Double;
-        return *this;
-    }
 
 	static vm_object* CreateFromString(char_type* b)
 	{
@@ -179,9 +174,6 @@ public:
     vm_object* NextObject;
 
 	union {
-		bool Bool;
-		int Int;
-		double Double;
 		void* Pointer{nullptr};
 		VmMethodCallback Method;
 	};
@@ -342,8 +334,8 @@ OPT_NEG,	//	106
 OPT_CALL_NATIVE,	//	107
 OPT_METHOD_DEF,	//	108
 OPT_INITARRAY,	//	109
-OPT_INITDICT	//	110
-
+OPT_INITDICT,	//	110
+OPT_NOT_EQ	//	111
 )
 
 

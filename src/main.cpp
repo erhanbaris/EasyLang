@@ -20,6 +20,8 @@
 #include "VmEasyEngine.h"
 #include "VmBackend.h"
 #include "Vm.h"
+#include "../Tests/LexerTests.h"
+#include "../Tests/AstTests.h"
 #include "../Tests/VmTests.h"
 //#include "InterpreterBackend.h"
 //#include "InterpreterEasyEngine.h"
@@ -107,8 +109,12 @@ int main(int argc, char_type* argv[]) {
 	{
         try {
 			auto* result = engine->Execute(line);
+
 			if (result != nullptr)
+			{
+				console_out << result->Describe() << '\n';
 				delete result;
+			}
 
         } catch (exception& e) {
 			console_out << _T("#ERROR ") << e.what() << '\n';

@@ -13,7 +13,7 @@
 #endif
 
 #define PRINT_ACTIVE 0
-#define PERFORMANCE_MODE 1
+#define PERFORMANCE_MODE 0
 
 #if PRINT_ACTIVE == 1
 #define PRINT_OPCODE() console_out << _T(" > ") << vm_instToString((vm_inst)*code) << '\n';
@@ -380,10 +380,10 @@ namespace
         Value right = GET_VALUE(1);
 
         if (IS_BOOL(left) && IS_BOOL(right))
-            return AS_BOOL(left) == AS_BOOL(right);
+            return left == right;
 
         if (IS_NUM(left) && IS_NUM(right))
-            return valueToNumber(valueToNumber(left)) == valueToNumber(valueToNumber(right));
+            return left == right;
 
         if ((IS_BOOL(left) && IS_NUM(right)) ||
             (IS_BOOL(right) && IS_NUM(left)))
@@ -394,8 +394,70 @@ namespace
             return (double)AS_BOOL(right) == valueToNumber(left);
         }
 
-        vm_object* leftObj = AS_OBJ(left);
-        vm_object* rightObj = AS_OBJ(right);
+		if (IS_STRING(right) || IS_STRING(left))
+		{
+			char* leftStr = nullptr;
+			char* rightStr = nullptr;
+
+			bool deleteLeftStr = false;
+			bool deleteRightStr = false;
+
+			if (IS_STRING(right))
+				rightStr = (char_type*)AS_OBJ(right)->Pointer;
+			else if (IS_NUM(right))
+			{
+				double val = valueToNumber(right);
+				if (std::isinf(val) || std::isnan(val))
+					rightStr = "";
+				else
+				{
+					rightStr = new char_type[10];
+					sprintf(rightStr, "%g", val);
+				}
+
+				deleteRightStr = true;
+			}
+			else if (IS_BOOL(right))
+			{
+				rightStr = new char_type[6];
+				std::memcpy(rightStr, IS_FALSE(right) ? "false" : "true", 5);
+				rightStr[5] = 0;
+				deleteRightStr = true;
+			}
+
+			if (IS_STRING(left))
+				leftStr = (char_type*)AS_OBJ(left)->Pointer;
+			else if (IS_NUM(left))
+			{
+				double val = valueToNumber(left);
+				if (std::isinf(val) || std::isnan(val))
+					leftStr = "";
+				else
+				{
+					leftStr = new char_type[10];
+					sprintf(leftStr, "%g", val);
+				}
+
+				deleteLeftStr = true;
+			}
+			else if (IS_BOOL(left))
+			{
+				leftStr = new char_type[6];
+				std::memcpy(leftStr, IS_FALSE(left) ? "false" : "true", 5);
+				leftStr[5] = 0;
+				deleteLeftStr = true;
+			}
+
+			bool status = std::strcmp(leftStr, rightStr) == 0;
+
+			if (deleteLeftStr)
+				delete leftStr;
+
+			if (deleteRightStr)
+				delete rightStr;
+
+			return status;
+		}
 
         return false;
     }
@@ -477,8 +539,19 @@ namespace
 		++code;
 		PRINT_OPCODE();
 		FUNC_BEGIN()
-        {
-            GET_VALUE(2) = is_equal() ? TRUE_VAL : FALSE_VAL;
+		{
+			GET_VALUE(2) = is_equal() ? TRUE_VAL : FALSE_VAL;
+			STACK_DINC();
+		}
+		FUNC_END();
+		GOTO_OPCODE();
+
+	opt_NOT_EQ:
+		++code;
+		PRINT_OPCODE();
+		FUNC_BEGIN()
+		{
+			GET_VALUE(2) = is_equal() ? FALSE_VAL : TRUE_VAL;
 			STACK_DINC();
 		}
 		FUNC_END();
@@ -487,25 +560,73 @@ namespace
 	opt_LT:
 		++code;
 		PRINT_OPCODE();
-        //OPERATION_LT(Bool, vm_object::vm_object_type::BOOL, Int);
+		{
+			Value left = GET_VALUE(2);
+			Value right = GET_VALUE(1);
+
+			if (IS_NUM(left) && IS_NUM(right))
+				GET_VALUE(2) = numberToValue(valueToNumber(left) < valueToNumber(right));
+			else if (IS_BOOL(left) && IS_BOOL(right))
+				GET_VALUE(2) = AS_BOOL(left) < AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+			else
+				GET_VALUE(2) = NULL_VAL;
+
+			STACK_DINC();
+		}
 		GOTO_OPCODE();
 
 	opt_LTE:
 		++code;
 		PRINT_OPCODE();
-        //OPERATION_LTE(Bool, vm_object::vm_object_type::BOOL, Int);
+		{
+			Value left = GET_VALUE(2);
+			Value right = GET_VALUE(1);
+
+			if (IS_NUM(left) && IS_NUM(right))
+				GET_VALUE(2) = numberToValue(valueToNumber(left) <= valueToNumber(right));
+			else if (IS_BOOL(left) && IS_BOOL(right))
+				GET_VALUE(2) = AS_BOOL(left) <= AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+			else
+				GET_VALUE(2) = NULL_VAL;
+
+			STACK_DINC();
+		}
 		GOTO_OPCODE();
 
 	opt_GT:
 		++code;
 		PRINT_OPCODE();
-        //OPERATION_GT(Bool, vm_object::vm_object_type::BOOL, Int);
+		{
+			Value left = GET_VALUE(2);
+			Value right = GET_VALUE(1);
+
+			if (IS_NUM(left) && IS_NUM(right))
+				GET_VALUE(2) = numberToValue(valueToNumber(left) > valueToNumber(right));
+			else if (IS_BOOL(left) && IS_BOOL(right))
+				GET_VALUE(2) = AS_BOOL(left) > AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+			else
+				GET_VALUE(2) = NULL_VAL;
+
+			STACK_DINC();
+		}
 		GOTO_OPCODE();
 
 	opt_GTE:
 		++code;
 		PRINT_OPCODE();
-        //OPERATION_GTE(Bool, vm_object::vm_object_type::BOOL, Int);
+		{
+			Value left = GET_VALUE(2);
+			Value right = GET_VALUE(1);
+
+			if (IS_NUM(left) && IS_NUM(right))
+				GET_VALUE(2) = numberToValue(valueToNumber(left) >= valueToNumber(right));
+			else if (IS_BOOL(left) && IS_BOOL(right))
+				GET_VALUE(2) = AS_BOOL(left) >= AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+			else
+				GET_VALUE(2) = NULL_VAL;
+
+			STACK_DINC();
+		}
 		GOTO_OPCODE();
 
 	opt_AND:
@@ -835,13 +956,13 @@ namespace
     opt_CONST_BOOL_TRUE:
         ++code;
         PRINT_OPCODE();
-        PUSH_WITH_ASSIGN(true);
+        PUSH_WITH_ASSIGN(TRUE_VAL);
         GOTO_OPCODE();
 
     opt_CONST_BOOL_FALSE:
         ++code;
         PRINT_OPCODE();
-        PUSH_WITH_ASSIGN(false);
+		PUSH_WITH_ASSIGN(FALSE_VAL);
         GOTO_OPCODE();
 
 	opt_CALL_NATIVE:
@@ -1036,6 +1157,7 @@ namespace
 		STORE_ADDRESS(108 /*OPT_METHOD_DEF*/, opt_METHOD_DEF);
 //		STORE_ADDRESS(109 /*OPT_INITARRAY*/, opt_INITARRAY);
 //		STORE_ADDRESS(110 /*OPT_INITDICT*/, opt_INITDICT);
+		STORE_ADDRESS(111 /*OPT_NOT_EQ*/, opt_NOT_EQ);
 
 	}
 
