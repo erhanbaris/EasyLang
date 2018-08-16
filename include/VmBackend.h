@@ -34,7 +34,6 @@ public:
 	void Prepare(std::shared_ptr<std::vector<Ast*>> pAsts) override;
 	PrimativeValue* getPrimative(Ast* ast);
 	PrimativeValue* getAstItem(Ast* ast);
-	BACKEND_ITEM_TYPE operationResultType(BACKEND_ITEM_TYPE from, BACKEND_ITEM_TYPE to);
 	PrimativeValue* Execute() override;
 	void Execute(std::vector<char_type> const & opcodes) override;
 	void Compile(std::vector<char_type> & opcode) override;

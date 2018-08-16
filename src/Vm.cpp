@@ -542,6 +542,15 @@ namespace
 		PRINT_OPCODE();
 		FUNC_BEGIN()
 		{
+			Value left = GET_VALUE(2);
+			Value right = GET_VALUE(1);
+
+			if (IS_NUM(left) && IS_NUM(right))
+				GET_VALUE(2) = numberToValue(valueToNumber(left) / valueToNumber(right));
+			else if (IS_BOOL(left) && IS_BOOL(right))
+				GET_VALUE(2) = AS_BOOL(left) || AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+			else
+				GET_VALUE(2) = NULL_VAL;
 
 			STACK_DINC();
 		}
@@ -670,6 +679,26 @@ namespace
         FUNC_END()
 		GOTO_OPCODE();
 
+	opt_INITARRAY:
+		++code;
+		PRINT_OPCODE();
+		FUNC_BEGIN()
+		{
+			vm_int_t integer;
+			integer.Int = 0;
+			ASSIGN_4(integer.Chars, code);
+			vm_array* array = new vm_array;
+
+			for(size_t i = 0; i < integer.Int; ++i)
+			{
+				Value val = POP();
+				array->push(val);
+			}
+
+			PUSH_WITH_INIT(array);
+		}
+		GOTO_OPCODE();
+
 	opt_DUP:
 		++code;
 		PRINT_OPCODE();
@@ -769,11 +798,51 @@ namespace
 		}
 		GOTO_OPCODE();
 
-	opt_INC:
+
 	opt_NEG:
-    opt_DINC:
-		STACK_DINC();
-        GOTO_OPCODE();
+		++code;
+		PRINT_OPCODE();
+		{
+			Value val = GET_VALUE(1);
+
+			if (IS_NUM(val))
+				GET_VALUE(1) = numberToValue(valueToNumber(val) * -1);
+			else if (IS_BOOL(val))
+				GET_VALUE(1) = AS_BOOL(val) ? FALSE_VAL : TRUE_VAL;
+			else
+				GET_VALUE(1) = val;
+		}
+		GOTO_OPCODE();
+
+	opt_INC:
+		++code;
+		PRINT_OPCODE();
+		{
+			Value val = GET_VALUE(1);
+
+			if (IS_NUM(val))
+				GET_VALUE(1) = numberToValue(valueToNumber(val) + 1);
+			else if (IS_BOOL(val))
+				GET_VALUE(1) = AS_BOOL(val) ? FALSE_VAL : TRUE_VAL;
+			else
+				GET_VALUE(1) = val;
+		}
+		GOTO_OPCODE();
+
+	opt_DINC:
+		++code;
+		PRINT_OPCODE();
+		{
+			Value val = GET_VALUE(1);
+
+			if (IS_NUM(val))
+				GET_VALUE(1) = numberToValue(valueToNumber(val) - 1);
+			else if (IS_BOOL(val))
+				GET_VALUE(1) = AS_BOOL(val) ? FALSE_VAL : TRUE_VAL;
+			else
+				GET_VALUE(1) = val;
+		}
+		GOTO_OPCODE();
 
 	opt_LOAD:
 		++code;
@@ -1169,7 +1238,7 @@ namespace
 		STORE_ADDRESS(106 /*OPT_NEG*/, opt_NEG);
 		STORE_ADDRESS(107 /*OPT_CALL_NATIVE*/, opt_CALL_NATIVE);
 		STORE_ADDRESS(108 /*OPT_METHOD_DEF*/, opt_METHOD_DEF);
-//		STORE_ADDRESS(109 /*OPT_INITARRAY*/, opt_INITARRAY);
+		STORE_ADDRESS(109 /*OPT_INITARRAY*/, opt_INITARRAY);
 //		STORE_ADDRESS(110 /*OPT_INITDICT*/, opt_INITDICT);
 		STORE_ADDRESS(111 /*OPT_NOT_EQ*/, opt_NOT_EQ);
 

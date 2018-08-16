@@ -183,25 +183,19 @@ class vm_array{
 public:
 	mutable size_t Length{16};
 	mutable size_t Indicator{0};
-	mutable vm_object* Array {nullptr};
+	mutable Value* Array {nullptr};
 
-	void push(vm_object && obj)
-	{
-		Array[Indicator++] = std::move(obj);
-		if (Indicator == Length)
-			resizeTo(Length * 2);
-	}
 
-	void push(vm_object & obj)
+	void push(Value obj)
 	{
 		Array[Indicator++] = obj;
 		if (Indicator == Length)
 			resizeTo(Length * 2);
 	}
 
-	vm_object* get(size_t index) const
+	Value get(size_t index) const
 	{
-		return &Array[index];
+		return Array[index];
 	}
 
 	void resizeTo(size_t newSize) const
@@ -213,7 +207,7 @@ public:
 
 	vm_array()
 	{
-		Array = new vm_object[Length];
+		Array = new Value[Length];
 	}
 	
 	~vm_array()

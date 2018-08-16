@@ -306,29 +306,6 @@ PrimativeValue* VmBackend::getPrimative(Ast* ast)
 	return primative;
 }
 
-BACKEND_ITEM_TYPE VmBackend::operationResultType(BACKEND_ITEM_TYPE from, BACKEND_ITEM_TYPE to)
-{
-	if (from == BACKEND_ITEM_TYPE::INT && to == BACKEND_ITEM_TYPE::DOUBLE)
-		return BACKEND_ITEM_TYPE::DOUBLE;
-	else if (to == BACKEND_ITEM_TYPE::INT && from == BACKEND_ITEM_TYPE::DOUBLE)
-		return BACKEND_ITEM_TYPE::DOUBLE;
-	else if (to == BACKEND_ITEM_TYPE::INT && from == BACKEND_ITEM_TYPE::INT)
-		return BACKEND_ITEM_TYPE::INT;
-	else if (from == BACKEND_ITEM_TYPE::INT && to == BACKEND_ITEM_TYPE::BOOL)
-		return BACKEND_ITEM_TYPE::INT;
-	else if (to == BACKEND_ITEM_TYPE::INT && from == BACKEND_ITEM_TYPE::BOOL)
-		return BACKEND_ITEM_TYPE::INT;
-	else if (to == BACKEND_ITEM_TYPE::BOOL && from == BACKEND_ITEM_TYPE::BOOL)
-		return BACKEND_ITEM_TYPE::BOOL;
-	else if (from == BACKEND_ITEM_TYPE::DOUBLE && to == BACKEND_ITEM_TYPE::BOOL)
-		return BACKEND_ITEM_TYPE::DOUBLE;
-	else if (to == BACKEND_ITEM_TYPE::DOUBLE && from == BACKEND_ITEM_TYPE::BOOL)
-		return BACKEND_ITEM_TYPE::DOUBLE;
-	else if (to == BACKEND_ITEM_TYPE::DOUBLE && from == BACKEND_ITEM_TYPE::DOUBLE)
-		return BACKEND_ITEM_TYPE::DOUBLE;
-    return BACKEND_ITEM_TYPE::EMPTY;
-}
-
 PrimativeValue* VmBackend::getAstItem(Ast* ast)
 {
 	if (ast == nullptr)
@@ -752,15 +729,21 @@ void VmBackend::visit(PrimativeValue* value) {
 	{
 	case PrimativeValue::Type::PRI_ARRAY:
 	{
-		this->opcodes.push_back(vm_inst::OPT_INITARRAY);
 		if (value != nullptr)
 		{
 			size_t arrayLength = value->Array->size();
 			for (size_t i = 0; i < arrayLength; ++i)
 			{
 				visit(value->Array->at(i));
-				//this->opcodes.push_back(vm_inst::OPT_aPUSH);
 			}
+
+			this->opcodes.push_back(vm_inst::OPT_INITARRAY);
+			vm_int_t i;
+			i.Int = arrayLength;
+			this->opcodes.push_back(i.Chars[3]);
+			this->opcodes.push_back(i.Chars[2]);
+			this->opcodes.push_back(i.Chars[1]);
+			this->opcodes.push_back(i.Chars[0]);
 		}
 	}
 	break;
@@ -1017,6 +1000,7 @@ void VmBackend::visit(FunctionCallAst* ast)
 
 void VmBackend::visit(UnaryAst* ast)
 {
+	getAstItem(ast->Data);
 	this->opcodes.push_back(vm_inst::OPT_NEG);
 }
 
