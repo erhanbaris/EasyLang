@@ -431,10 +431,10 @@ namespace
 			bool status = std::strcmp(leftStr, rightStr) == 0;
 
 			if (deleteLeftStr)
-				delete leftStr;
+				delete[] leftStr;
 
 			if (deleteRightStr)
-				delete rightStr;
+				delete[] rightStr;
 
 			return status;
 		}
@@ -484,10 +484,10 @@ namespace
 				GET_VALUE(2) = GET_VALUE_FROM_OBJ(new vm_object(newStr));
 
 				if (deleteLeftStr)
-					delete leftStr;
+					delete[] leftStr;
 
 				if (deleteRightStr)
-					delete rightStr;
+					delete[] rightStr;
 			}
             else
                 GET_VALUE(2) = NULL_VAL;

@@ -885,16 +885,9 @@ void VmBackend::visit(ControlAst* ast)
 
 void VmBackend::visit(BinaryAst* ast)
 {
-	if (ast->Right->GetType() == EASY_AST_TYPE::BINARY_OPERATION &&
-	   (reinterpret_cast<BinaryAst*>(ast->Right)->Op == EASY_OPERATOR_TYPE::MULTIPLICATION || reinterpret_cast<BinaryAst*>(ast->Right)->Op == EASY_OPERATOR_TYPE::DIVISION))
-	{
-		getAstItem(ast->Right);
-		getAstItem(ast->Left);
-	}
-	else {
-		getAstItem(ast->Left);
-		getAstItem(ast->Right);
-	};
+	getAstItem(ast->Left);
+	getAstItem(ast->Right);
+
 
 	switch (ast->Op)
 	{
