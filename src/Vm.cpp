@@ -689,7 +689,7 @@ namespace
 			ASSIGN_4(integer.Chars, code);
 			vm_array* array = new vm_array;
 
-			for(size_t i = 0; i < integer.Int; ++i)
+			for (size_t i = 0; i < integer.Int; ++i)
 			{
 				Value val = POP();
 				array->push(val);
@@ -698,7 +698,17 @@ namespace
 			PUSH_WITH_INIT(array);
 		}
 		GOTO_OPCODE();
-
+	
+	opt_INITEMPTYARRAY:
+		++code;
+		PRINT_OPCODE();
+		FUNC_BEGIN()
+		{
+			vm_array* array = new vm_array;
+			PUSH_WITH_INIT(array);
+		}
+		GOTO_OPCODE();
+		
 	opt_DUP:
 		++code;
 		PRINT_OPCODE();
@@ -1116,6 +1126,45 @@ namespace
 		}
 		GOTO_OPCODE();
 
+	opt_INDEX:
+		++code;
+		PRINT_OPCODE();
+		FUNC_BEGIN()
+		{
+			Value index = POP_VALUE();
+			Value obj = POP_VALUE();
+
+			int indexNumber = (int)valueToNumber(index);
+			if (IS_STRING(obj))
+			{
+				char_type* str = static_cast<char_type*>(AS_OBJ(obj)->Pointer);
+				size_t strLen = strlen(str);
+				if (strLen > indexNumber && indexNumber > -1)
+				{
+					char_type* chars = new char_type[2];
+					chars[0] = str[indexNumber];
+					chars[1] = '\0';
+					PUSH_WITH_INIT(chars);
+				}
+				else {
+					PUSH_WITH_ASSIGN(NULL_VAL);
+				}
+			}
+			else
+			{
+				vm_array* array = static_cast<vm_array*>(AS_OBJ(obj)->Pointer);
+				if (array->Indicator > indexNumber && indexNumber > -1)
+				{
+					PUSH_WITH_ASSIGN(array->get(indexNumber));
+				}
+				else {
+					PUSH_WITH_ASSIGN(NULL_VAL);
+				}
+			}
+		}
+		FUNC_END();
+		GOTO_OPCODE();
+
 	opt_PRINT:
 		++code;
 		PRINT_OPCODE();
@@ -1241,6 +1290,8 @@ namespace
 		STORE_ADDRESS(109 /*OPT_INITARRAY*/, opt_INITARRAY);
 //		STORE_ADDRESS(110 /*OPT_INITDICT*/, opt_INITDICT);
 		STORE_ADDRESS(111 /*OPT_NOT_EQ*/, opt_NOT_EQ);
+		STORE_ADDRESS(112 /*OPT_INDEX*/, opt_INDEX);
+		STORE_ADDRESS(113 /*OPT_INITEMPTYARRAY*/, opt_INITEMPTYARRAY);
 
 	}
 
@@ -1257,6 +1308,7 @@ namespace
 			case vm_inst::OPT_STORE:
 			case vm_inst::OPT_GLOAD:
 			case vm_inst::OPT_GSTORE:
+			case vm_inst::OPT_INITARRAY:
 			case vm_inst::OPT_CALL:
 			{
 				++code;

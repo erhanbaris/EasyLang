@@ -429,6 +429,28 @@ public:
 			expr = new ControlAst(expr, opt, right);
 		}
 
+		if (match({ EASY_OPERATOR_TYPE::APPEND }))
+		{
+			EASY_OPERATOR_TYPE opt = static_cast<OperatorToken*>(previous())->Value;
+			ExprAst* value = orExpr();
+			if (expr->GetType() == EASY_AST_TYPE::VARIABLE)
+				return new StructAst(expr, opt, value);
+
+			throw ParseError(_T("Invalid append"));
+		}
+		else if (match({ EASY_OPERATOR_TYPE::INDEXER }))
+		{
+			EASY_OPERATOR_TYPE opt = static_cast<OperatorToken*>(previous())->Value;
+			ExprAst* value = orExpr();
+			if (expr->GetType() == EASY_AST_TYPE::VARIABLE ||
+				expr->GetType() == EASY_AST_TYPE::BINARY_OPERATION ||
+				expr->GetType() == EASY_AST_TYPE::STRUCT_OPERATION || 
+				expr->GetType() == EASY_AST_TYPE::UNARY)
+				return new StructAst(expr, opt, value);
+
+			throw ParseError(_T("Invalid append"));
+		}
+
 		return expr;
 	}
 
@@ -450,26 +472,6 @@ public:
 			throw ParseError(_T("Invalid assignment"));
 		}
         
-        if (match({ EASY_OPERATOR_TYPE::APPEND }))
-        {
-            EASY_OPERATOR_TYPE opt = static_cast<OperatorToken*>(previous())->Value;
-            ExprAst* value = orExpr();
-            if (expr->GetType() == EASY_AST_TYPE::VARIABLE)
-                return new StructAst(expr, opt, value);
-            
-            throw ParseError(_T("Invalid append"));
-        }
-		else if (match({ EASY_OPERATOR_TYPE::INDEXER }))
-		{
-			EASY_OPERATOR_TYPE opt = static_cast<OperatorToken*>(previous())->Value;
-			ExprAst* value = orExpr();
-			if (expr->GetType() == EASY_AST_TYPE::VARIABLE)
-				return new StructAst(expr, opt, value);
-
-			throw ParseError(_T("Invalid append"));
-		}
-        
-
 		return expr;
 	}
 

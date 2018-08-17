@@ -62,33 +62,6 @@ TEST_CASE("number tests") {
 	REQUIRE(engine->Execute(_T("7 + 3 * (10 / (12 / (3 + 1) - 1))"))->Integer == 22);
 	REQUIRE(engine->Execute(_T("2 + 7 * 4"))->Integer == 30);
 
-	/*
-(40 - (10 * 10))
->>> 0. OPT_CONST_INT 40
->>> 5. OPT_CONST_INT 10
->>> 10. OPT_CONST_INT 10
->>> 15. OPT_MUL
->>> 16. OPT_SUB
->>> 17. OPT_HALT
-
-
-7 + 3 * (10 / (12 / (3 + 1) - 1))
->>> 0. OPT_CONST_INT 7
->>> 5. OPT_CONST_INT 3
->>> 10. OPT_CONST_INT 10
->>> 15. OPT_CONST_INT 12
->>> 20. OPT_CONST_INT 3
->>> 25. OPT_CONST_INT_1
->>> 26. OPT_ADD
->>> 27. OPT_DIV
->>> 28. OPT_CONST_INT_1
->>> 29. OPT_SUB
->>> 30. OPT_DIV
->>> 31. OPT_MUL
->>> 32. OPT_ADD
->>> 33. OPT_HALT
-*/
-
     delete engine;
 }
 
@@ -165,6 +138,7 @@ TEST_CASE("string tests") {
 	REQUIRE(engine->Execute(_T("if \"erhan\" != \"erhan\" then true else false"))->Bool == false);
 	REQUIRE(engine->Execute(_T("if 1 < -0.1 then true else false"))->Bool == false);
 	REQUIRE(engine->Execute(_T("if \"true\" == true then true else false"))->Bool == true);
+	REQUIRE((*engine->Execute(_T("(\"erhan\" * 2)"))->String) == "erhanerhan");
 
 
 	delete engine;

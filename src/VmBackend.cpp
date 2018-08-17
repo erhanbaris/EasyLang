@@ -732,18 +732,23 @@ void VmBackend::visit(PrimativeValue* value) {
 		if (value != nullptr)
 		{
 			size_t arrayLength = value->Array->size();
-			for (size_t i = 0; i < arrayLength; ++i)
+			for (int i = arrayLength - 1; i >= 0; --i)
 			{
 				visit(value->Array->at(i));
 			}
 
-			this->opcodes.push_back(vm_inst::OPT_INITARRAY);
-			vm_int_t i;
-			i.Int = arrayLength;
-			this->opcodes.push_back(i.Chars[3]);
-			this->opcodes.push_back(i.Chars[2]);
-			this->opcodes.push_back(i.Chars[1]);
-			this->opcodes.push_back(i.Chars[0]);
+			if (arrayLength > 0)
+			{
+				this->opcodes.push_back(vm_inst::OPT_INITARRAY);
+				vm_int_t i;
+				i.Int = arrayLength;
+				this->opcodes.push_back(i.Chars[3]);
+				this->opcodes.push_back(i.Chars[2]);
+				this->opcodes.push_back(i.Chars[1]);
+				this->opcodes.push_back(i.Chars[0]);
+			}
+			else 
+				this->opcodes.push_back(vm_inst::OPT_INITEMPTYARRAY);
 		}
 	}
 	break;
@@ -904,7 +909,7 @@ void VmBackend::visit(StructAst* ast)
 		break;
 
 	case INDEXER:
-		//this->opcodes.push_back(vm_inst::OPT_aGET);
+		this->opcodes.push_back(vm_inst::OPT_INDEX);
 		break;
 
 	default:
