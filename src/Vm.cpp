@@ -372,9 +372,9 @@ namespace
 	inline char_type * get_string(Value value, bool & newAllocated)
 	{
 		char_type * returnValue = nullptr;
-
+        vm_object* o = AS_OBJ(value);
 		if (IS_STRING(value))
-			returnValue = (char_type*)AS_OBJ(value)->Pointer;
+            returnValue = (char_type*)o->Pointer;
 		else if (IS_NUM(value))
 		{
 			double val = valueToNumber(value);
@@ -529,6 +529,36 @@ namespace
 				GET_VALUE(2) = numberToValue(valueToNumber(left) * valueToNumber(right));
 			else if (IS_BOOL(left) && IS_BOOL(right))
 				GET_VALUE(2) = AS_BOOL(left) || AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+            else if ((IS_STRING(right) && IS_NUM(left)) ||
+                     (IS_STRING(left) && IS_NUM(right)))
+			{
+                bool deleteStr = false;
+                char* strValue = nullptr;
+                int numValue;
+
+                if (IS_NUM(left))
+                {
+                    strValue = get_string(right, deleteStr);
+                    numValue = (int)valueToNumber(left);
+                }
+                else
+                {
+                    strValue = get_string(left, deleteStr);
+                    numValue = valueToNumber(right);
+                }
+
+                size_t numLen = strlen(strValue);
+                char_type* newStr = new char_type[(numLen * numValue) + 1];
+
+                for(size_t i = 0; i < numValue; ++i)
+                    std::memcpy(newStr + (numLen * i), strValue, numLen);
+
+                newStr[(numLen * numValue)] = '\0';
+				GET_VALUE(2) = GET_VALUE_FROM_OBJ(new vm_object(newStr));
+
+                if (deleteStr)
+                    delete[] strValue;
+			}
 			else
 				GET_VALUE(2) = NULL_VAL;
 
@@ -708,7 +738,49 @@ namespace
 			PUSH_WITH_INIT(array);
 		}
 		GOTO_OPCODE();
-		
+
+    opt_APPEND:
+        ++code;
+        PRINT_OPCODE();
+        FUNC_BEGIN()
+        {
+            Value data = GET_VALUE(1);
+            Value variable = GET_VALUE(2);
+
+            if (IS_STRING(variable))
+            {
+                bool deleteAfterAdd;
+                char_type* appendStr = get_string(data, deleteAfterAdd);
+                size_t appendStrLen = strlen(appendStr);
+
+                char_type* str = static_cast<char_type*>(AS_OBJ(variable)->Pointer);
+                size_t strLen = strlen(str);
+
+                if (appendStrLen > 0)
+                {
+                    char_type* chars = new char_type[appendStrLen + strLen + 1];
+                    std::memcpy(chars, str, strLen);
+                    std::memcpy(chars + strLen, appendStr, appendStrLen);
+                    chars[appendStrLen + strLen] = '\0';
+                    delete[] str;
+
+                    if (deleteAfterAdd)
+                        delete[] appendStr;
+
+					AS_OBJ(variable)->Pointer = chars;
+                }
+            }
+            else
+            {
+                vm_array* array = static_cast<vm_array*>(AS_OBJ(variable)->Pointer);
+                array->push(data);
+            }
+
+            STACK_DINC();
+        }
+        FUNC_END();
+        GOTO_OPCODE();
+
 	opt_DUP:
 		++code;
 		PRINT_OPCODE();
@@ -754,9 +826,7 @@ namespace
 			PRINT_OPCODE();
 			FUNC_BEGIN()
             {
-                Value asdASD = POP_VALUE();
-                bool a = AS_BOOL(asdASD);
-                if (a)
+                if (AS_BOOL(POP_VALUE()))
 					code += 4;
 				else
 				{
@@ -1291,13 +1361,16 @@ namespace
 //		STORE_ADDRESS(110 /*OPT_INITDICT*/, opt_INITDICT);
 		STORE_ADDRESS(111 /*OPT_NOT_EQ*/, opt_NOT_EQ);
 		STORE_ADDRESS(112 /*OPT_INDEX*/, opt_INDEX);
-		STORE_ADDRESS(113 /*OPT_INITEMPTYARRAY*/, opt_INITEMPTYARRAY);
+        STORE_ADDRESS(113 /*OPT_INITEMPTYARRAY*/, opt_INITEMPTYARRAY);
+        STORE_ADDRESS(114 /*OPT_APPEND*/, opt_APPEND);
+
 
 	}
 
 	static void dumpOpcode(char_type* code, size_t len)
 	{
         size_t index = 0;
+        console_out << _T("\r\n------------DUMP OPCODES------------\r\n\r\n");
 		while (index < len) {
 			console_out << _T(">>> ") << index++ << _T(". ");
 			console_out << vm_instToString((vm_inst)*code);
@@ -1399,19 +1472,24 @@ namespace
 
             case vm_inst::OPT_CONST_STR:
 			{
+				++code;
 				vm_int_t integer;
 				integer.Int = 0;
 				ASSIGN_4(integer.Chars, code);
 				index += 4;
 				index += integer.Int;
 
-				char_type * chars = new char_type[integer.Int + 1];
-				for (int i = integer.Int - 1; i >= 0; --i)
-					chars[i] = *++code;
+                char_type * chars = new char_type[integer.Int + 1];
+                for (int i = 0; i < integer.Int; ++i)
+                {
+                    chars[i] = *code;
+                    ++code;
+                }
 
 				chars[integer.Int] = '\0';
 
 				console_out << _T(" \"") << chars << _T("\"");
+                --code;
 			}
 			break;
 			}
@@ -1420,7 +1498,7 @@ namespace
 			console_out << '\n';
 		}
 
-		console_out << '\n';
+        console_out << _T("\r\n------------DUMP OPCODES------------\r\n\r\n");
 	}
 
 	static void dumpStack()

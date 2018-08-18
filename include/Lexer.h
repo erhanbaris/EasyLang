@@ -132,8 +132,8 @@ static std::unordered_map<string_type, EASY_KEYWORD_TYPE> Keywords {
 	{ _T("int"), EASY_KEYWORD_TYPE::TYPE_INT },
 	{ _T("double"), EASY_KEYWORD_TYPE::TYPE_DOUBLE },
 	{ _T("string"), EASY_KEYWORD_TYPE::TYPE_STRING },
-	{ _T("array"), EASY_KEYWORD_TYPE::TYPE_ARRAY },
-	{ _T("dict"), EASY_KEYWORD_TYPE::TYPE_DICTIONARY },
+    //{ _T("array"), EASY_KEYWORD_TYPE::TYPE_ARRAY },
+    { _T("dict"), EASY_KEYWORD_TYPE::TYPE_DICTIONARY },
 };
 static std::unordered_map<string_type, EASY_KEYWORD_TYPE>::const_iterator KeywordsEnd = Keywords.cend();
 

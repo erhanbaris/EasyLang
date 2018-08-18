@@ -500,15 +500,13 @@ void VmBackend::visit(AssignmentAst* ast)
 	else
 		variables = this->impl->variables;
 
-	if (variables->find(ast->Name) != variables->end())
-	{
-		auto item = variables->find(ast->Name);
-		delete item->second;
-	}
-
 	auto* varInfo = new VariableInfo;
-	varInfo->Index = variables->size();
-	varInfo->Name = ast->Name;
+    if (variables->find(ast->Name) != variables->end())
+        varInfo->Index = variables->find(ast->Name)->second->Index;
+    else
+        varInfo->Index = variables->size();
+
+    varInfo->Name = ast->Name;
 	(*variables)[ast->Name] = varInfo;
 	
 	this->getAstItem(ast->Data);
@@ -905,7 +903,7 @@ void VmBackend::visit(StructAst* ast)
 	switch (ast->Op)
 	{
 	case APPEND:
-		//this->opcodes.push_back(vm_inst::OPT_aPUSH);
+        this->opcodes.push_back(vm_inst::OPT_APPEND);
 		break;
 
 	case INDEXER:

@@ -48,6 +48,7 @@ typedef uint64_t Value;
 #define IS_OBJ(value) (((value) & (QNAN | SIGN_BIT)) == (QNAN | SIGN_BIT))
 
 #define IS_STRING(value) (IS_OBJ(value) && AS_OBJ(value)->Type == vm_object::vm_object_type::STR)
+#define IS_ARRAY(value) (IS_OBJ(value) && AS_OBJ(value)->Type == vm_object::vm_object_type::ARRAY)
 
 #define IS_FALSE(value)     ((value) == FALSE_VAL)
 #define IS_BOOL(value)      (value == TRUE_VAL || value == FALSE_VAL)
@@ -331,7 +332,8 @@ OPT_INITARRAY,	//	109
 OPT_INITDICT,	//	110
 OPT_NOT_EQ,	//	111
 OPT_INDEX,	//	112
-OPT_INITEMPTYARRAY	//	113
+OPT_INITEMPTYARRAY,	//	113
+OPT_APPEND	//	113
 )
 
 

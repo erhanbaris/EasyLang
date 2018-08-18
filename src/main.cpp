@@ -43,10 +43,6 @@ using namespace std;
 
 int main(int argc, char_type* argv[]) {
 
-	Value asd = numberToValue(123);
-
-	double my = valueToNumber(asd);
-	bool isNumber = IS_NUM(asd);
     System::WarmUp();
 	// Unit tests
     Catch::Session().run(argc, argv);
