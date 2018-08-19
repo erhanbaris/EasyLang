@@ -15,6 +15,7 @@ public:
     }
 };
 
+typedef uint64_t Value;
 class vm_array;
 class vm_object;
 class vm_system;
@@ -22,7 +23,7 @@ class vm_system_impl;
 template <typename T> class vm_store;
 template <typename T> class vm_stack;
 
-typedef vm_object*(*VmMethod)(vm_system* vm);
+typedef Value(*VmMethod)(vm_system* vm);
 typedef void(*VmMethodCallback)(vm_system* vm, size_t totalArgs);
 typedef char_type vm_char_t;
 typedef union vm_double_u { vm_char_t Chars[8];  double Double; } vm_double_t;
@@ -30,10 +31,6 @@ typedef union vm_long_u { vm_char_t Chars[8];  long Long; } vm_long_t;
 typedef union vm_int_u { vm_char_t Chars[4];  int Int; } vm_int_t;
 typedef bool vm_bool_t;
 
-
-
-
-typedef uint64_t Value;
 
 // A mask that selects the sign bit.
 #define SIGN_BIT ((uint64_t)1 << 63)
@@ -109,16 +106,6 @@ static inline double valueToNumber(Value num)
 	DoubleBits data;
 	data.bits64 = num;
 	return data.num;
-}
-
-static inline Value wrenObjectToValue(vm_object* obj)
-{
-	// The triple casting is necessary here to satisfy some compilers:
-	// 1. (uintptr_t) Convert the pointer to a number of the right size.
-	// 2. (uint64_t)  Pad it up to 64 bits in 32-bit builds.
-	// 3. Or in the bits to make a tagged Nan.
-	// 4. Cast to a typedef'd value.
-	return (Value)(SIGN_BIT | QNAN | (uint64_t)(uintptr_t)(obj));
 }
 
 

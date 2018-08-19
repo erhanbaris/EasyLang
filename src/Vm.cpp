@@ -237,138 +237,6 @@ namespace
 		delete[] stores;
 	}
 
-
-    inline static bool is_number(Value obj)
-	{
-        return IS_NUM(obj);
-	}
-
-	inline static bool is_number(char_type* chr)
-	{
-		char* end = 0;
-		double val = strtod(chr, &end);
-		return end != chr && val != HUGE_VAL;
-	}
-
-    inline static vm_object* get_as_string(Value val)
-	{
-        if (IS_OBJ(val))
-        {
-            vm_object* obj = AS_OBJ(val);
-            switch (obj->Type)
-            {
-                case vm_object::vm_object_type::STR:
-                    return new vm_object((char_type*)obj->Pointer);
-
-                default:
-                    return new vm_object(_T(""));
-            }
-        }
-
-        return nullptr;
-	}
-
-	inline static vm_object* get_as_int(vm_object* obj)
-	{
-
-        return nullptr;
-	}
-
-	inline static vm_object* get_as_bool(vm_object* obj)
-	{
-        return nullptr;
-	}
-
-	inline static vm_object* get_as_double(vm_object* obj)
-	{
-
-        return nullptr;
-	}
-
-	inline static void add_str(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void add_double(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void add_int(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void add_bool(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void sub_double(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void sub_int(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void sub_bool(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void seq_str(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void mul_double(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void mul_int(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void mul_bool(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void div_double(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void div_int(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void div_bool(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline void eq_str(vm_object* left, vm_object* right)
-	{
-
-	}
-
-	inline static void eq_double(vm_object* left, vm_object* right)
-    {
-	}
-
-	inline static void eq_int(vm_object* left, vm_object* right)
-	{
-
-	}
-
 	inline char_type * get_string(Value value, bool & newAllocated)
 	{
 		char_type * returnValue = nullptr;
@@ -1145,28 +1013,15 @@ namespace
 			chars[integer.Int] = '\0';
 			if (nativeMethods.find(chars) != nativeMethodsEnd)
 			{
-				vm_object* result = nativeMethods[chars](system);
-				if (result != nullptr)
-				{
-                    /*switch (result->Type)
-					{
-					case vm_object::vm_object_type::BOOL:
-						PUSH_WITH_INIT(result->Bool);
-						break;
-
-					case vm_object::vm_object_type::DOUBLE:
-						PUSH_WITH_INIT(result->Double);
-						GOTO_OPCODE();
-
-					case vm_object::vm_object_type::INT:
-						PUSH_WITH_INIT(result->Int);
-						break;
-
-					case vm_object::vm_object_type::STR:
-						PUSH_WITH_INIT(static_cast<char_type*>(result->Pointer));
-						break;
-                    }*/
-				}
+                Value result = nativeMethods[chars](system);
+                if (result != NULL_VAL)
+                {
+                    PUSH_WITH_INIT(static_cast<char_type*>(AS_OBJ(result)->Pointer));
+                }
+                else
+                {
+                    PUSH_WITH_ASSIGN(NULL_VAL);
+                }
 			}
 			else
 			{
