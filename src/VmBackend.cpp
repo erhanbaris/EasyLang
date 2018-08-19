@@ -416,44 +416,45 @@ PrimativeValue* VmBackend::Execute()
 	impl->system.execute(&impl->codes[0], impl->codes.size(), codeStart);	
     Value lastItem = impl->system.getObject();
 
-    if (lastItem != NULL_VAL)
+    if (IS_NUM(lastItem))
     {
-        if (IS_NUM(lastItem))
-        {
-			double num = valueToNumber(lastItem);
+        double num = valueToNumber(lastItem);
 
-			if (std::isinf(num) || std::isnan(num))
-				result = new PrimativeValue("");
-			else
-			{
-				if (trunc(num) == num)
-					result = new PrimativeValue((int)num);
-				else
-					result = new PrimativeValue(num);
-			}
-		}
-        else if (IS_BOOL(lastItem))
-        {
-            result = new PrimativeValue(AS_BOOL(lastItem));
-        }
+        if (std::isinf(num) || std::isnan(num))
+            result = new PrimativeValue("");
         else
         {
-            vm_object* obj = AS_OBJ(lastItem);
-            switch (obj->Type)
-            {
-                case vm_object::vm_object_type::EMPTY:
-                    result = new PrimativeValue();
-                    break;
+            if (trunc(num) == num)
+                result = new PrimativeValue((int)num);
+            else
+                result = new PrimativeValue(num);
+        }
+    }
+    else if (IS_BOOL(lastItem))
+    {
+        result = new PrimativeValue(AS_BOOL(lastItem));
+    }
+    else if (lastItem == NULL_VAL)
+    {
+        result = new PrimativeValue();
+    }
+    else
+    {
+        vm_object* obj = AS_OBJ(lastItem);
+        switch (obj->Type)
+        {
+            case vm_object::vm_object_type::EMPTY:
+                result = new PrimativeValue();
+                break;
 
-                case vm_object::vm_object_type::ARRAY:
-                    console_out << _T("(ARRAY) Size: ") << static_cast<vm_array*>(obj->Pointer)->Indicator << '\n';
-                    break;
+            case vm_object::vm_object_type::ARRAY:
+                console_out << _T("(ARRAY) Size: ") << static_cast<vm_array*>(obj->Pointer)->Indicator << '\n';
+                break;
 
-                case vm_object::vm_object_type::STR:
-                    char_type* str = static_cast<char_type*>(obj->Pointer);
-                    result = new PrimativeValue(string_type(str));
-                    break;
-            }
+            case vm_object::vm_object_type::STR:
+                char_type* str = static_cast<char_type*>(obj->Pointer);
+                result = new PrimativeValue(string_type(str));
+                break;
         }
     }
 

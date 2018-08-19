@@ -111,37 +111,80 @@ TEST_CASE("bool tests") {
 
 
 TEST_CASE("string tests") {
-	auto* engine = new ENGINE;
+    auto* engine = new ENGINE;
 
-	REQUIRE(engine->Execute(_T("\"erhan\" == \"erhan\""))->Bool == true);
+    REQUIRE(engine->Execute(_T("\"erhan\" == \"erhan\""))->Bool == true);
 
-	REQUIRE(engine->Execute(_T("\"1\" == 1"))->Bool == true);
-	REQUIRE(engine->Execute(_T("\"1.2\" == 1.2"))->Bool == true);
+    REQUIRE(engine->Execute(_T("\"1\" == 1"))->Bool == true);
+    REQUIRE(engine->Execute(_T("\"1.2\" == 1.2"))->Bool == true);
 
-	REQUIRE(engine->Execute(_T("1 == \"1\""))->Bool == true);
-	REQUIRE(engine->Execute(_T("1.2 == \"1.2\""))->Bool == true);
+    REQUIRE(engine->Execute(_T("1 == \"1\""))->Bool == true);
+    REQUIRE(engine->Execute(_T("1.2 == \"1.2\""))->Bool == true);
 
-	REQUIRE(engine->Execute(_T("true == \"true\""))->Bool == true);
-	REQUIRE(engine->Execute(_T("false == \"true\""))->Bool == false);
-	REQUIRE(engine->Execute(_T("false == \"false\""))->Bool == true);
-	REQUIRE(engine->Execute(_T("true == \"false\""))->Bool == false);
+    REQUIRE(engine->Execute(_T("true == \"true\""))->Bool == true);
+    REQUIRE(engine->Execute(_T("false == \"true\""))->Bool == false);
+    REQUIRE(engine->Execute(_T("false == \"false\""))->Bool == true);
+    REQUIRE(engine->Execute(_T("true == \"false\""))->Bool == false);
 
-	REQUIRE(engine->Execute(_T("\"true\" == true"))->Bool == true);
-	REQUIRE(engine->Execute(_T("\"true\" == false"))->Bool == false);
-	REQUIRE(engine->Execute(_T("\"false\" == false"))->Bool == true);
-	REQUIRE(engine->Execute(_T("\"false\" == true"))->Bool == false);
-
-
-	REQUIRE(engine->Execute(_T("data = 0 if data > 1 then true else false"))->Bool == false);
-	REQUIRE(engine->Execute(_T("data = 10 if data > 1 then true else false"))->Bool == true);
-	REQUIRE(engine->Execute(_T("if \"erhan\" == \"erhan\" then true else false"))->Bool == true);
-	REQUIRE(engine->Execute(_T("if \"erhan\" != \"erhan\" then true else false"))->Bool == false);
-	REQUIRE(engine->Execute(_T("if 1 < -0.1 then true else false"))->Bool == false);
-	REQUIRE(engine->Execute(_T("if \"true\" == true then true else false"))->Bool == true);
-	REQUIRE((*engine->Execute(_T("(\"erhan\" * 2)"))->String) == "erhanerhan");
+    REQUIRE(engine->Execute(_T("\"true\" == true"))->Bool == true);
+    REQUIRE(engine->Execute(_T("\"true\" == false"))->Bool == false);
+    REQUIRE(engine->Execute(_T("\"false\" == false"))->Bool == true);
+    REQUIRE(engine->Execute(_T("\"false\" == true"))->Bool == false);
 
 
-	delete engine;
+    REQUIRE(engine->Execute(_T("data = 0 if data > 1 then true else false"))->Bool == false);
+    REQUIRE(engine->Execute(_T("data = 10 if data > 1 then true else false"))->Bool == true);
+    REQUIRE(engine->Execute(_T("if \"erhan\" == \"erhan\" then true else false"))->Bool == true);
+    REQUIRE(engine->Execute(_T("if \"erhan\" != \"erhan\" then true else false"))->Bool == false);
+    REQUIRE(engine->Execute(_T("if 1 < -0.1 then true else false"))->Bool == false);
+    REQUIRE(engine->Execute(_T("if \"true\" == true then true else false"))->Bool == true);
+    REQUIRE((*engine->Execute(_T("(\"erhan\" * 2)"))->String) == "erhanerhan");
+
+
+    delete engine;
+}
+
+
+TEST_CASE("core::toInt tests") {
+    auto* engine = new ENGINE;
+
+    REQUIRE(engine->Execute(_T("a = \"123\" core::toInt(a)"))->Integer == 123);
+    REQUIRE(engine->Execute(_T("a = \"123.1\" core::toInt(a)"))->Integer == 123);
+    REQUIRE(engine->Execute(_T("a = true core::toInt(a)"))->Integer == 1);
+    REQUIRE(engine->Execute(_T("a = false core::toInt(a)"))->Integer == 0);
+    REQUIRE(engine->Execute(_T("a = \"a\" core::toInt(a)"))->Type == PrimativeValue::Type::PRI_NULL);
+    REQUIRE(engine->Execute(_T("a = [] core::toInt(a)"))->Type == PrimativeValue::Type::PRI_NULL);
+    REQUIRE(engine->Execute(_T("a = [1,2,3] core::toInt(a)"))->Type == PrimativeValue::Type::PRI_NULL);
+    REQUIRE(engine->Execute(_T("a = 123 core::toInt(a)"))->Integer == 123);
+
+    delete engine;
+}
+
+TEST_CASE("core::toDouble tests") {
+    auto* engine = new ENGINE;
+
+    REQUIRE(engine->Execute(_T("a = \"123\" core::toDouble(a)"))->Integer == 123);
+    REQUIRE(engine->Execute(_T("a = \"123.1\" core::toDouble(a)"))->Double == 123.1);
+    REQUIRE(engine->Execute(_T("a = true core::toDouble(a)"))->Integer == 1);
+    REQUIRE(engine->Execute(_T("a = false core::toDouble(a)"))->Integer == 0);
+    REQUIRE(engine->Execute(_T("a = \"a\" core::toDouble(a)"))->Type == PrimativeValue::Type::PRI_NULL);
+    REQUIRE(engine->Execute(_T("a = [] core::toDouble(a)"))->Type == PrimativeValue::Type::PRI_NULL);
+    REQUIRE(engine->Execute(_T("a = [1,2,3] core::toDouble(a)"))->Type == PrimativeValue::Type::PRI_NULL);
+    REQUIRE(engine->Execute(_T("a = 123 core::toDouble(a)"))->Integer == 123);
+
+    delete engine;
+}
+
+TEST_CASE("core::toString tests") {
+    auto* engine = new ENGINE;
+
+
+    REQUIRE(engine->Execute(_T("a = [] core::toString(a)"))->Type == PrimativeValue::Type::PRI_NULL);
+    REQUIRE(engine->Execute(_T("a = [1,2,3] core::toString(a)"))->Type == PrimativeValue::Type::PRI_NULL);
+    REQUIRE(*engine->Execute(_T("a = 123 core::toString(a)"))->String == "123");
+    REQUIRE(*engine->Execute(_T("a = 123.1 core::toString(a)"))->String == "123.1");
+
+    delete engine;
 }
 
 #endif //EASYLANG_VMTESTS_H

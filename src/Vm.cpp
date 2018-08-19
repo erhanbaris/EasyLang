@@ -1014,14 +1014,7 @@ namespace
 			if (nativeMethods.find(chars) != nativeMethodsEnd)
 			{
                 Value result = nativeMethods[chars](system);
-                if (result != NULL_VAL)
-                {
-                    PUSH_WITH_INIT(static_cast<char_type*>(AS_OBJ(result)->Pointer));
-                }
-                else
-                {
-                    PUSH_WITH_ASSIGN(NULL_VAL);
-                }
+                PUSH_WITH_ASSIGN(result);
 			}
 			else
 			{

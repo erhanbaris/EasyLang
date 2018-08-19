@@ -7,7 +7,13 @@ Value toInt(vm_system* type)
 {
     Value value = type->getObject();
     if (IS_STRING(value))
-         return numberToValue(std::stoi(static_cast<char_type*>(AS_OBJ(value)->Pointer)));
+    {
+        try {
+            return numberToValue(std::stoi(static_cast<char_type*>(AS_OBJ(value)->Pointer)));
+        } catch ( ... ) {
+            return NULL_VAL;
+        }
+    }
     else if (IS_NUM(value))
         return numberToValue((int)valueToNumber(value));
     else if (IS_BOOL(value))
@@ -22,9 +28,15 @@ Value toDouble(vm_system* type)
 {
     Value value = type->getObject();
     if (IS_STRING(value))
-         return numberToValue(std::stoi(static_cast<char_type*>(AS_OBJ(value)->Pointer)));
+    {
+        try {
+            return numberToValue(std::stod(static_cast<char_type*>(AS_OBJ(value)->Pointer)));
+        } catch ( ... ) {
+            return NULL_VAL;
+        }
+    }
     else if (IS_NUM(value))
-        return numberToValue((double)valueToNumber(value));
+        return value;
     else if (IS_BOOL(value))
         return TRUE_VAL == value ? numberToValue(1) : numberToValue(0);
     else if (IS_ARRAY(value))
@@ -44,7 +56,7 @@ Value toString(vm_system* type)
         size_t strLen = strlen((char_type*)o->Pointer);
 
         returnValue = new char_type[strLen + 1];
-        std::memcpy(returnValue, returnValue, strLen);
+        std::memcpy(returnValue, o->Pointer, strLen);
         returnValue[strLen] = 0;
     }
     else if (IS_NUM(value))
@@ -64,6 +76,8 @@ Value toString(vm_system* type)
         std::memcpy(returnValue, IS_FALSE(value) ? "false" : "true", 5);
         returnValue[5] = 0;
     }
+    else if (IS_ARRAY(value))
+        return NULL_VAL;
 
     return GET_VALUE_FROM_OBJ(new vm_object(returnValue));
 }
@@ -96,6 +110,8 @@ Value isEmpty(vm_system* type)
         return strlen(static_cast<char_type*>(AS_OBJ(value)->Pointer)) > 0 ? FALSE_VAL : TRUE_VAL;
     else if (IS_ARRAY(value))
         return static_cast<vm_array*>(AS_OBJ(value)->Pointer)->Indicator > 0 ? FALSE_VAL : TRUE_VAL;
+    else if (value == NULL_VAL)
+        return TRUE_VAL;
 
     return FALSE_VAL;
 }
@@ -163,7 +179,7 @@ Value length(vm_system* data)
     else if (IS_BOOL(value))
         return numberToValue(1);
     else if (IS_ARRAY(value))
-        return ((vm_array*)AS_OBJ(value))->Indicator;
+        return numberToValue(((vm_array*)(AS_OBJ(value))->Pointer)->Indicator);
 
     return numberToValue(0);
 }
