@@ -184,6 +184,19 @@ TEST_CASE("core::toString tests") {
     REQUIRE(*engine->Execute(_T("a = 123 core::toString(a)"))->String == "123");
     REQUIRE(*engine->Execute(_T("a = 123.1 core::toString(a)"))->String == "123.1");
 
+	
+	REQUIRE(engine->Execute(_T("core::toString([])"))->Type == PrimativeValue::Type::PRI_NULL);
+	REQUIRE(engine->Execute(_T("core::toString([1,2,3])"))->Type == PrimativeValue::Type::PRI_NULL);
+	REQUIRE(*engine->Execute(_T("core::toString(123)"))->String == "123");
+	REQUIRE(*engine->Execute(_T("core::toString(123.1)"))->String == "123.1");
+
+
+	REQUIRE(*engine->Execute(_T("core::toString(123 + 321)"))->String == "444");
+	REQUIRE(*engine->Execute(_T("core::toString(\"erhan\")"))->String == "erhan");
+	REQUIRE(*engine->Execute(_T("core::toString(\"erhan\" + \"baris\")"))->String == "erhanbaris");
+	REQUIRE(*engine->Execute(_T("core::toString(123 * 10)"))->String == "1230");
+	REQUIRE(*engine->Execute(_T("core::toString(123.1 / 10)"))->String == "12.31");
+
     delete engine;
 }
 

@@ -22,6 +22,7 @@ Value isArray(vm_system*type);
 Value isDictionary(vm_system*type);
 Value length(vm_system*data);
 Value exitApp(vm_system*type);
+Value gcClean(vm_system*type);
 
 class CoreLibInit {
 public:

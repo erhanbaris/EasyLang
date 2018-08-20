@@ -5,6 +5,8 @@
 
 #include <array>
 
+vm_gc::_init vm_gc::_initializer;
+
 namespace {
 	std::array<vm_inst, 18> LOCAL_LOADS
 	{
@@ -819,6 +821,9 @@ void VmBackend::visit(PrimativeValue* value) {
 	}
 	break;
 
+    case PrimativeValue::Type::PRI_NULL:
+        this->opcodes.push_back(vm_inst::OPT_EMPTY);
+        break;
 
 	default:
 		break;

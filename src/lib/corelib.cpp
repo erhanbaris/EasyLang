@@ -205,6 +205,18 @@ Value typeOf(vm_system* data)
     return GET_VALUE_FROM_OBJ(new vm_object("empty"));
 }
 
+Value gcClean(vm_system* data)
+{
+    console_out << "\r\nGC Informations :" << "\r\n"
+        << "Before Total Items : " << vm_gc::GetTotalItems() << "\r\n"
+        << "Before Dirty Items : " << vm_gc::GetDirtyItems() << "\r\n\r\n";
+    size_t deletedItems = vm_gc::Clean();
+    console_out << "After Total Items : " << vm_gc::GetTotalItems() << "\r\n"
+        << "After Dirty Items : " << vm_gc::GetDirtyItems() << "\r\n\r\n"
+        << "Deleted Items : " << deletedItems << "\r\n\r\n";
+    return NULL_VAL;
+}
+
 CoreLibInit::CoreLibInit()
 {
     System::SystemMethods[_T("core::toInt")] = toInt;
@@ -221,4 +233,5 @@ CoreLibInit::CoreLibInit()
     System::SystemMethods[_T("core::length")] = length;
     System::SystemMethods[_T("core::exit")] = exitApp;
     System::SystemMethods[_T("core::typeOf")] = typeOf;
+    System::SystemMethods[_T("core::gcClean")] = gcClean;
 }

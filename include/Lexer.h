@@ -77,7 +77,8 @@ DECLARE_ENUM(EASY_KEYWORD_TYPE,
 	TYPE_DOUBLE,
 	TYPE_STRING,
 	TYPE_ARRAY,
-	TYPE_DICTIONARY)
+	TYPE_DICTIONARY,
+	TYPE_EMPTY)
 
 struct EnumClassHash
 {
@@ -133,7 +134,8 @@ static std::unordered_map<string_type, EASY_KEYWORD_TYPE> Keywords {
 	{ _T("double"), EASY_KEYWORD_TYPE::TYPE_DOUBLE },
 	{ _T("string"), EASY_KEYWORD_TYPE::TYPE_STRING },
     //{ _T("array"), EASY_KEYWORD_TYPE::TYPE_ARRAY },
-    { _T("dict"), EASY_KEYWORD_TYPE::TYPE_DICTIONARY },
+	{ _T("dict"), EASY_KEYWORD_TYPE::TYPE_DICTIONARY },
+	{ _T("empty"), EASY_KEYWORD_TYPE::TYPE_EMPTY },
 };
 static std::unordered_map<string_type, EASY_KEYWORD_TYPE>::const_iterator KeywordsEnd = Keywords.cend();
 

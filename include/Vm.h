@@ -16,6 +16,8 @@ public:
 };
 
 typedef uint64_t Value;
+
+class vm_gc;
 class vm_array;
 class vm_object;
 class vm_system;
@@ -109,6 +111,33 @@ static inline double valueToNumber(Value num)
 }
 
 
+class vm_gc {
+public:
+    static vm_object* Create();
+    static void Set(vm_object* newObject);
+    static void MakeDirty(vm_object* obj);
+    static size_t Clean();
+    
+    static size_t GetTotalItems();
+    static size_t GetDeletedItems();
+    static size_t GetDirtyItems();
+
+    static class _init
+    {
+    public:
+        _init();
+    } _initializer;
+
+private:
+    static vm_object* head;
+    static vm_object* lastObject;
+
+    static size_t TotalItems;
+    static size_t DeletedItems;
+    static size_t DirtyItems;
+};
+
+
 class vm_object
 {
 public:
@@ -122,6 +151,9 @@ public:
 	vm_object()
 	{
 		Type = vm_object_type::EMPTY;
+        IsDeleted = false;
+        NextObject = nullptr;
+        vm_gc::Set(this);
 	}
 
 	~vm_object()
@@ -134,6 +166,9 @@ public:
     {
         Pointer = b;
         Type = vm_object_type::STR;
+        NextObject = nullptr;
+        IsDeleted = false;
+        vm_gc::Set(this);
     }
 
 	vm_object(string_type const & b)
@@ -141,12 +176,18 @@ public:
 		Pointer = new char_type[b.size()];
 		memcpy(Pointer, b.c_str(), b.size());
 		Type = vm_object_type::STR;
+        NextObject = nullptr;
+        IsDeleted = false;
+        vm_gc::Set(this);
 	}
 
 	vm_object(vm_array const * array)
 	{
 		Pointer = const_cast<void*>((void*)array);
 		Type = vm_object_type::ARRAY;
+        NextObject = nullptr;
+        IsDeleted = false;
+        vm_gc::Set(this);
 	}
 
 	static vm_object* CreateFromString(char_type* b)
@@ -156,6 +197,12 @@ public:
 		obj->Pointer = b;
 		return obj;
 	}
+
+
+    void MakeDirty()
+    {
+        vm_gc::MakeDirty(this);
+    }
 
 	vm_object_type Type;
     bool IsDeleted;
@@ -320,9 +367,9 @@ OPT_INITDICT,	//	110
 OPT_NOT_EQ,	//	111
 OPT_INDEX,	//	112
 OPT_INITEMPTYARRAY,	//	113
-OPT_APPEND	//	113
+OPT_APPEND,	//	113
+OPT_EMPTY	//	114
 )
-
 
 class vm_system
 {

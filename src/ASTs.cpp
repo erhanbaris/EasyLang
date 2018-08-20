@@ -48,7 +48,8 @@ public:
                                     isText(token) ||
                                     isDouble(token) ||
                                     (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::BOOL_TRUE) ||
-                                    (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::BOOL_FALSE));
+                                    (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::BOOL_FALSE) ||
+                                    (isKeyword(token) && getKeyword(token) == EASY_KEYWORD_TYPE::TYPE_EMPTY));
     }
     
     inline Token* advance() {
@@ -245,6 +246,8 @@ public:
 				ast = new PrimativeAst(true);
 			else if (getKeyword(token) == EASY_KEYWORD_TYPE::BOOL_FALSE)
 				ast = new PrimativeAst(false);
+            else if (getKeyword(token) == EASY_KEYWORD_TYPE::TYPE_EMPTY)
+                ast = new PrimativeAst();
 			break;
 		}
 

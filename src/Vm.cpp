@@ -36,6 +36,8 @@
 #define STORE(index, obj) FUNC_BEGIN() *(currentStore->variables + (index)) = obj; FUNC_END()
 #define LOAD(index) ((vm_object) currentStore[ index ])
 
+//#define CHECK_FOR_MAKE_DIRTY(obj) if (IS_OBJ(obj)) AS_OBJ(obj)->MakeDirty();
+
 #define GSTORE(index, obj) FUNC_BEGIN() *(globalStore.variables + (index)) = obj; FUNC_END()
 #define GLOAD(index) (globalStore.variables[ index ])
 
@@ -50,39 +52,18 @@
 #define POP_AS(type) AS_BOOL(currentStack[--stackIndex])
 #define SET(obj) currentStack[stackIndex - 1] = obj
 
-#define OPERATION(currentStack, stackIndex, op, type) currentStack [ stackIndex - 2]. type = currentStack [ stackIndex - 2]. type ##op currentStack [ stackIndex - 1]. type ;\
-    PRINT_AND_CHECK_STACK();\
-    -- stackIndex ;
+#define CHECK_FOR_MAKE_DIRTY() if (IS_OBJ(currentStack[stackIndex])) AS_OBJ(currentStack[stackIndex])->MakeDirty();
 
-#define PUSH_WITH_STACK(currentStack, stackIndex, type, obj) FUNC_BEGIN() currentStack [ stackIndex ]. type = obj . type ; PRINT_STACK(); ++ stackIndex; FUNC_END()
-#define PUSH_WITH_INIT(obj) currentStack [ stackIndex ] = GET_VALUE_FROM_OBJ(new vm_object( obj )) ; PRINT_STACK(); ++ stackIndex;
-#define PUSH_WITH_EMPTY() currentStack [ stackIndex ] = 0 ; PRINT_STACK(); ++ stackIndex;
-#define PUSH(type, obj) currentStack [ stackIndex ]. type = obj ; PRINT_STACK(); ++ stackIndex;
-#define PUSH_WITH_ASSIGN(obj) currentStack [ stackIndex ] = obj ; PRINT_STACK(); ++ stackIndex;
-#define PUSH_WITH_ASSIGN_INT(obj) currentStack [ stackIndex ] = numberToValue( obj ) ; PRINT_STACK(); ++ stackIndex;
-#define INC(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type = currentStack [ stackIndex - 1]. type + 1;
-#define DINC(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type = currentStack [ stackIndex - 1]. type - 1;
-#define NEG(currentStack, stackIndex, type) currentStack [ stackIndex - 1]. type =  currentStack [ stackIndex - 1]. type * -1;
+#define PUSH_WITH_INIT(obj) CHECK_FOR_MAKE_DIRTY(); currentStack [ stackIndex ] = GET_VALUE_FROM_OBJ(new vm_object( obj )) ; PRINT_STACK(); ++ stackIndex;
+#define PUSH_WITH_EMPTY() CHECK_FOR_MAKE_DIRTY(); currentStack [ stackIndex ] = NULL_VAL ; PRINT_STACK(); ++ stackIndex;
+#define PUSH_WITH_ASSIGN(obj) CHECK_FOR_MAKE_DIRTY(); currentStack [ stackIndex ] = obj ; PRINT_STACK(); ++ stackIndex;
+#define PUSH_WITH_ASSIGN_INT(obj) CHECK_FOR_MAKE_DIRTY(); currentStack [ stackIndex ] = numberToValue( obj ) ; PRINT_STACK(); ++ stackIndex;
 #define LOAD_AND_PUSH(index) FUNC_BEGIN() { currentStack[stackIndex] = *(currentStore->variables + index );\
     PRINT_STACK(); \
     ++ stackIndex; } FUNC_END()
 
 #define STACK_DINC() PRINT_AND_CHECK_STACK(); -- stackIndex ;
-#define GET_ITEM(index, type) currentStack[stackIndex - index ]. type
 #define GET_VALUE(index) currentStack[stackIndex - index ]
-#define OPERATION_ADD(var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) +  GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
-#define OPERATION_SUB(var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) -  GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
-#define OPERATION_MUL(var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) *  GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
-#define OPERATION_DIV(var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) /  GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
-#define OPERATION_EQ( var, type, condType) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, condType) == GET_ITEM(1, condType); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
-#define OPERATION_LT( var, type, condType) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, condType) <  GET_ITEM(1, condType); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
-#define OPERATION_LTE(var, type, condType) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, condType) <= GET_ITEM(1, condType); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
-#define OPERATION_GT( var, type, condType) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, condType) >  GET_ITEM(1, condType); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
-#define OPERATION_GTE(var, type, condType) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, condType) >= GET_ITEM(1, condType); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
-#define OPERATION_AND(var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) && GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
-#define OPERATION_OR( var, type) FUNC_BEGIN() GET_ITEM(2, var) = GET_ITEM(2, var) || GET_ITEM(1, var); GET_ITEM(2, Type) = type; STACK_DINC() FUNC_END()
-#define IS_EQUAL(condType) GET_ITEM(2, condType) == GET_ITEM(1, condType)
-#define CONVERT(from, to, toType) currentStack[stackIndex - 1]. to = currentStack[stackIndex - 1]. from ; currentStack[stackIndex - 1].Type = toType ;
 
 #define GLOAD_PRE(index) opt_GLOAD_##index:\
 ++code;\
@@ -151,6 +132,13 @@ GOTO_OPCODE();
 #  define STORE_ADDRESS(index,label) gotoAddresses[index] = &&label
 #  define GOTO_OPCODE() goto *gotoAddresses[*code]
 #endif
+
+vm_object* vm_gc::head;
+vm_object* vm_gc::lastObject;
+
+size_t vm_gc::TotalItems = 0;
+size_t vm_gc::DeletedItems = 0;
+size_t vm_gc::DirtyItems = 0;
 
 template <typename T>
 class vm_store
@@ -306,6 +294,10 @@ namespace
 
 			return status;
 		}
+
+        
+        if (IS_NULL(right) && IS_NULL(left))
+            return TRUE_VAL;
 
         return false;
     }
@@ -1025,6 +1017,13 @@ namespace
 		}
 		GOTO_OPCODE();
 
+
+    opt_EMPTY:
+        ++code; 
+        PRINT_OPCODE();
+        PUSH_WITH_ASSIGN(NULL_VAL);
+        GOTO_OPCODE();
+
     opt_CONST_STR:
 		++code; {
 			PRINT_OPCODE();
@@ -1211,8 +1210,7 @@ namespace
 		STORE_ADDRESS(112 /*OPT_INDEX*/, opt_INDEX);
         STORE_ADDRESS(113 /*OPT_INITEMPTYARRAY*/, opt_INITEMPTYARRAY);
         STORE_ADDRESS(114 /*OPT_APPEND*/, opt_APPEND);
-
-
+        STORE_ADDRESS(115 /*OPT_EMPTY*/, opt_EMPTY);
 	}
 
 	static void dumpOpcode(char_type* code, size_t len)
@@ -1456,4 +1454,84 @@ void vm_system::addMethod(string_type const & name, VmMethod method)
 {
 	::nativeMethods[name] = method;
 	::nativeMethodsEnd = ::nativeMethods.end();
+}
+
+vm_object* vm_gc::Create() {
+    vm_object* newObject = new vm_object;
+    lastObject->NextObject = newObject;
+    lastObject = newObject;
+    ++TotalItems;
+    return newObject;
+}
+
+void vm_gc::Set(vm_object* newObject) {
+    if (lastObject != nullptr)
+        lastObject->NextObject = newObject;
+
+    lastObject = newObject;
+    ++TotalItems;
+}
+
+void vm_gc::MakeDirty(vm_object* obj)
+{
+    if (obj->IsDeleted == false)
+    {
+        ++DirtyItems;
+        obj->IsDeleted = true;
+    }
+}
+
+size_t vm_gc::Clean()
+{
+    size_t deleteItems = 0;
+    vm_object* item = head;
+    vm_object* lastItem = nullptr;
+
+    while (item != nullptr)
+    {
+        if (item->IsDeleted)
+        {
+            lastItem->NextObject = item->NextObject;
+            ++DeletedItems;
+            --TotalItems;
+            --DirtyItems;
+            delete item;
+            item = lastItem;
+            ++deleteItems;
+        }
+
+        lastItem = item;
+        item = lastItem->NextObject;;
+    }
+
+    return deleteItems;
+}
+
+size_t vm_gc::GetTotalItems()
+{
+    return TotalItems;
+}
+
+size_t vm_gc::GetDeletedItems()
+{
+    return DeletedItems;
+}
+
+size_t vm_gc::GetDirtyItems()
+{
+    return DirtyItems;
+}
+
+vm_gc::_init::_init()
+{
+    if (TotalItems > 0)
+        Clean();
+
+    vm_gc::lastObject = new vm_object;
+    vm_gc::head = new vm_object;
+    vm_gc::head->NextObject = vm_gc::lastObject;
+    vm_gc::lastObject->NextObject = nullptr;
+    vm_gc::TotalItems = 0;
+    vm_gc::DeletedItems = 0;
+    vm_gc::DirtyItems = 0;
 }
