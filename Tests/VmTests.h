@@ -28,19 +28,19 @@ using namespace std::chrono;
 
 
 TEST_CASE("VM Fibonacci tests") {
-	auto* engine = new ENGINE;
-	high_resolution_clock::time_point t1 = high_resolution_clock::now();
-	engine->Execute(_T("func fibonacci(num){     if num == 1 || num == 2 then return 1    return fibonacci(num - 1) + fibonacci(num - 2) }"));
-	auto* result = engine->Execute(_T("fibonacci(25)"));
+    auto* engine = new ENGINE;
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    engine->Execute(_T("func fibonacci(num){     if num == 1 || num == 2 then return 1    return fibonacci(num - 1) + fibonacci(num - 2) }"));
+    auto* result = engine->Execute(_T("fibonacci(25)"));
 
-	high_resolution_clock::time_point t2 = high_resolution_clock::now();
-	duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
-	std::cout << "It took me " << time_span.count() << " seconds.";
-	std::cout << std::endl;
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+    std::cout << "It took me " << time_span.count() << " seconds.";
+    std::cout << std::endl;
 
-	REQUIRE(result->Integer == 75025);
-	delete engine;
-	delete result;
+    REQUIRE(result->Integer == 75025);
+    delete engine;
+    delete result;
 }
 
 TEST_CASE("number tests") {
@@ -56,57 +56,57 @@ TEST_CASE("number tests") {
     REQUIRE(engine->Execute(_T("-1.1 >= 1"))->Bool == false);
     REQUIRE(engine->Execute(_T("60-100"))->Integer == -40);
     REQUIRE(engine->Execute(_T("(40 - (10 * 10))"))->Integer == -60);
-	REQUIRE(engine->Execute(_T("((10 - 10) - (10 * 10))"))->Integer == -100);
-	REQUIRE(engine->Execute(_T("(40 - (10 * 10) * 2)"))->Integer == -160);
-	REQUIRE(engine->Execute(_T("((10 - 10) * 40)"))->Integer == 0);
-	REQUIRE(engine->Execute(_T("7 + 3 * (10 / (12 / (3 + 1) - 1))"))->Integer == 22);
-	REQUIRE(engine->Execute(_T("2 + 7 * 4"))->Integer == 30);
+    REQUIRE(engine->Execute(_T("((10 - 10) - (10 * 10))"))->Integer == -100);
+    REQUIRE(engine->Execute(_T("(40 - (10 * 10) * 2)"))->Integer == -160);
+    REQUIRE(engine->Execute(_T("((10 - 10) * 40)"))->Integer == 0);
+    REQUIRE(engine->Execute(_T("7 + 3 * (10 / (12 / (3 + 1) - 1))"))->Integer == 22);
+    REQUIRE(engine->Execute(_T("2 + 7 * 4"))->Integer == 30);
 
     delete engine;
 }
 
 TEST_CASE("bool tests") {
-	auto* engine = new ENGINE;
-	
-	REQUIRE(engine->Execute(_T("true == true"))->Bool == true);
-	REQUIRE(engine->Execute(_T("false == false"))->Bool == true);
-	REQUIRE(engine->Execute(_T("true == false"))->Bool == false);
-	REQUIRE(engine->Execute(_T("false == true"))->Bool == false);
+    auto* engine = new ENGINE;
+    
+    REQUIRE(engine->Execute(_T("true == true"))->Bool == true);
+    REQUIRE(engine->Execute(_T("false == false"))->Bool == true);
+    REQUIRE(engine->Execute(_T("true == false"))->Bool == false);
+    REQUIRE(engine->Execute(_T("false == true"))->Bool == false);
 
-	REQUIRE(engine->Execute(_T("true != true"))->Bool == false);
-	REQUIRE(engine->Execute(_T("false != false"))->Bool == false);
-	REQUIRE(engine->Execute(_T("true != false"))->Bool == true);
-	REQUIRE(engine->Execute(_T("false != true"))->Bool == true);
+    REQUIRE(engine->Execute(_T("true != true"))->Bool == false);
+    REQUIRE(engine->Execute(_T("false != false"))->Bool == false);
+    REQUIRE(engine->Execute(_T("true != false"))->Bool == true);
+    REQUIRE(engine->Execute(_T("false != true"))->Bool == true);
 
-	REQUIRE(engine->Execute(_T("true && true"))->Bool == true);
-	REQUIRE(engine->Execute(_T("false && false"))->Bool == false);
-	REQUIRE(engine->Execute(_T("true && false"))->Bool == false);
-	REQUIRE(engine->Execute(_T("false && true"))->Bool == false);
+    REQUIRE(engine->Execute(_T("true && true"))->Bool == true);
+    REQUIRE(engine->Execute(_T("false && false"))->Bool == false);
+    REQUIRE(engine->Execute(_T("true && false"))->Bool == false);
+    REQUIRE(engine->Execute(_T("false && true"))->Bool == false);
 
-	REQUIRE(engine->Execute(_T("true || true"))->Bool == true);
-	REQUIRE(engine->Execute(_T("false || false"))->Bool == false);
-	REQUIRE(engine->Execute(_T("true || false"))->Bool == true);
-	REQUIRE(engine->Execute(_T("false || true"))->Bool == true);
+    REQUIRE(engine->Execute(_T("true || true"))->Bool == true);
+    REQUIRE(engine->Execute(_T("false || false"))->Bool == false);
+    REQUIRE(engine->Execute(_T("true || false"))->Bool == true);
+    REQUIRE(engine->Execute(_T("false || true"))->Bool == true);
 
-	REQUIRE(engine->Execute(_T("true < true"))->Bool == false);
-	REQUIRE(engine->Execute(_T("false < true"))->Bool == true);
-	REQUIRE(engine->Execute(_T("true < false"))->Bool == false);
-	REQUIRE(engine->Execute(_T("false < false"))->Bool == false);
-	REQUIRE(engine->Execute(_T("true <= false"))->Bool == false);
-	REQUIRE(engine->Execute(_T("false <= true"))->Bool == true);
-	REQUIRE(engine->Execute(_T("false <= false"))->Bool == true);
-	REQUIRE(engine->Execute(_T("true <= true"))->Bool == true);
+    REQUIRE(engine->Execute(_T("true < true"))->Bool == false);
+    REQUIRE(engine->Execute(_T("false < true"))->Bool == true);
+    REQUIRE(engine->Execute(_T("true < false"))->Bool == false);
+    REQUIRE(engine->Execute(_T("false < false"))->Bool == false);
+    REQUIRE(engine->Execute(_T("true <= false"))->Bool == false);
+    REQUIRE(engine->Execute(_T("false <= true"))->Bool == true);
+    REQUIRE(engine->Execute(_T("false <= false"))->Bool == true);
+    REQUIRE(engine->Execute(_T("true <= true"))->Bool == true);
 
-	REQUIRE(engine->Execute(_T("true > true"))->Bool == false);
-	REQUIRE(engine->Execute(_T("false > true"))->Bool == false);
-	REQUIRE(engine->Execute(_T("true > false"))->Bool == true);
-	REQUIRE(engine->Execute(_T("false > false"))->Bool == false);
-	REQUIRE(engine->Execute(_T("true >= false"))->Bool == true);
-	REQUIRE(engine->Execute(_T("false >= true"))->Bool == false);
-	REQUIRE(engine->Execute(_T("false >= false"))->Bool == true);
-	REQUIRE(engine->Execute(_T("true >= true"))->Bool == true);
+    REQUIRE(engine->Execute(_T("true > true"))->Bool == false);
+    REQUIRE(engine->Execute(_T("false > true"))->Bool == false);
+    REQUIRE(engine->Execute(_T("true > false"))->Bool == true);
+    REQUIRE(engine->Execute(_T("false > false"))->Bool == false);
+    REQUIRE(engine->Execute(_T("true >= false"))->Bool == true);
+    REQUIRE(engine->Execute(_T("false >= true"))->Bool == false);
+    REQUIRE(engine->Execute(_T("false >= false"))->Bool == true);
+    REQUIRE(engine->Execute(_T("true >= true"))->Bool == true);
 
-	delete engine;
+    delete engine;
 }
 
 
@@ -184,18 +184,18 @@ TEST_CASE("core::toString tests") {
     REQUIRE(*engine->Execute(_T("a = 123 core::toString(a)"))->String == "123");
     REQUIRE(*engine->Execute(_T("a = 123.1 core::toString(a)"))->String == "123.1");
 
-	
-	REQUIRE(engine->Execute(_T("core::toString([])"))->Type == PrimativeValue::Type::PRI_NULL);
-	REQUIRE(engine->Execute(_T("core::toString([1,2,3])"))->Type == PrimativeValue::Type::PRI_NULL);
-	REQUIRE(*engine->Execute(_T("core::toString(123)"))->String == "123");
-	REQUIRE(*engine->Execute(_T("core::toString(123.1)"))->String == "123.1");
+    
+    REQUIRE(engine->Execute(_T("core::toString([])"))->Type == PrimativeValue::Type::PRI_NULL);
+    REQUIRE(engine->Execute(_T("core::toString([1,2,3])"))->Type == PrimativeValue::Type::PRI_NULL);
+    REQUIRE(*engine->Execute(_T("core::toString(123)"))->String == "123");
+    REQUIRE(*engine->Execute(_T("core::toString(123.1)"))->String == "123.1");
 
 
-	REQUIRE(*engine->Execute(_T("core::toString(123 + 321)"))->String == "444");
-	REQUIRE(*engine->Execute(_T("core::toString(\"erhan\")"))->String == "erhan");
-	REQUIRE(*engine->Execute(_T("core::toString(\"erhan\" + \"baris\")"))->String == "erhanbaris");
-	REQUIRE(*engine->Execute(_T("core::toString(123 * 10)"))->String == "1230");
-	REQUIRE(*engine->Execute(_T("core::toString(123.1 / 10)"))->String == "12.31");
+    REQUIRE(*engine->Execute(_T("core::toString(123 + 321)"))->String == "444");
+    REQUIRE(*engine->Execute(_T("core::toString(\"erhan\")"))->String == "erhan");
+    REQUIRE(*engine->Execute(_T("core::toString(\"erhan\" + \"baris\")"))->String == "erhanbaris");
+    REQUIRE(*engine->Execute(_T("core::toString(123 * 10)"))->String == "1230");
+    REQUIRE(*engine->Execute(_T("core::toString(123.1 / 10)"))->String == "12.31");
 
     delete engine;
 }

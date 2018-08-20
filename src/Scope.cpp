@@ -29,7 +29,7 @@ bool Scope::setVariable(string_type const & key, PrimativeValue* value)
 
 PrimativeValue* Scope::GetVariable(string_type const & key)
 {
-	auto item = variables.find(key);
+    auto item = variables.find(key);
     if (item != variablesEnd)
         return item->second;
 

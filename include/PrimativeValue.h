@@ -17,7 +17,7 @@ struct PrimativeValue {
         PRI_STRING,
         PRI_BOOL,
         PRI_ARRAY,
-		PRI_DICTIONARY,
+        PRI_DICTIONARY,
         PRI_NULL
     };
 
@@ -27,7 +27,7 @@ struct PrimativeValue {
         int Integer;
         double Double;
         bool Bool;
-		string_type* String;
+        string_type* String;
         std::vector<PrimativeValue*>* Array;
         std::unordered_map<string_type, PrimativeValue*>* Dictionary;
     };
@@ -41,107 +41,107 @@ struct PrimativeValue {
     PrimativeValue(std::unordered_map<string_type, PrimativeValue*>* value) { Dictionary = value; Type = Type::PRI_DICTIONARY;}
 
 
-	static PrimativeValue* CreateArray()
-	{
-		return new PrimativeValue(new std::vector<PrimativeValue*>());
-	}
+    static PrimativeValue* CreateArray()
+    {
+        return new PrimativeValue(new std::vector<PrimativeValue*>());
+    }
 
-	static PrimativeValue* CreateArray(size_t length)
-	{
-		return new PrimativeValue(new std::vector<PrimativeValue*>(length));
-	}
+    static PrimativeValue* CreateArray(size_t length)
+    {
+        return new PrimativeValue(new std::vector<PrimativeValue*>(length));
+    }
 
-	static PrimativeValue* CreateDictionary()
-	{
-		return new PrimativeValue(new std::unordered_map<string_type, PrimativeValue*>());
-	}
+    static PrimativeValue* CreateDictionary()
+    {
+        return new PrimativeValue(new std::unordered_map<string_type, PrimativeValue*>());
+    }
 
-	static PrimativeValue* CreateBool()
-	{
-		return new PrimativeValue(false);
-	}
+    static PrimativeValue* CreateBool()
+    {
+        return new PrimativeValue(false);
+    }
 
-	static PrimativeValue* CreateBool(bool value)
-	{
-		return new PrimativeValue(value);
-	}
+    static PrimativeValue* CreateBool(bool value)
+    {
+        return new PrimativeValue(value);
+    }
 
-	static PrimativeValue* CreateString(string_type const & value)
-	{
-		return new PrimativeValue(value);
-	}
+    static PrimativeValue* CreateString(string_type const & value)
+    {
+        return new PrimativeValue(value);
+    }
 
-	static PrimativeValue* CreateString()
-	{
-		return new PrimativeValue(L"");
-	}
+    static PrimativeValue* CreateString()
+    {
+        return new PrimativeValue(L"");
+    }
 
-	static PrimativeValue* CreateDouble(double value)
-	{
-		return new PrimativeValue(value);
-	}
+    static PrimativeValue* CreateDouble(double value)
+    {
+        return new PrimativeValue(value);
+    }
 
-	static PrimativeValue* CreateDouble()
-	{
-		return new PrimativeValue(0.0);
-	}
+    static PrimativeValue* CreateDouble()
+    {
+        return new PrimativeValue(0.0);
+    }
 
-	static PrimativeValue* CreateInteger(int value)
-	{
-		return new PrimativeValue(value);
-	}
+    static PrimativeValue* CreateInteger(int value)
+    {
+        return new PrimativeValue(value);
+    }
 
-	static PrimativeValue* CreateInteger()
-	{
-		return new PrimativeValue(0);
-	}
+    static PrimativeValue* CreateInteger()
+    {
+        return new PrimativeValue(0);
+    }
 
 
     ~PrimativeValue() { 
-		switch (Type)
-		{
-			case PrimativeValue::Type::PRI_STRING:
-				delete String;
-				break;
+        switch (Type)
+        {
+            case PrimativeValue::Type::PRI_STRING:
+                delete String;
+                break;
 
-			case PrimativeValue::Type::PRI_ARRAY:
-			{
-				size_t totalArray = Array->size();
-				for (size_t i = 0; i < totalArray; i++)
-					delete Array->at(i);
+            case PrimativeValue::Type::PRI_ARRAY:
+            {
+                size_t totalArray = Array->size();
+                for (size_t i = 0; i < totalArray; i++)
+                    delete Array->at(i);
 
-				delete Array;
-			}
-			break;
+                delete Array;
+            }
+            break;
 
-			case PrimativeValue::Type::PRI_DICTIONARY:
-			{
-				auto end = Dictionary->end();
-				for (auto it = Dictionary->begin(); it != end; ++it)
-					delete it->second;
+            case PrimativeValue::Type::PRI_DICTIONARY:
+            {
+                auto end = Dictionary->end();
+                for (auto it = Dictionary->begin(); it != end; ++it)
+                    delete it->second;
 
-				delete Dictionary;
-			}
-			break;
+                delete Dictionary;
+            }
+            break;
 
-		}
-	}
+        }
+    }
 
-	string_type Describe()
-	{
-		switch (Type)
-		{
-		case PrimativeValue::Type::PRI_BOOL:
-			return Bool ? _T("(BOOL) true") : _T("(BOOL) false");
-		case PrimativeValue::Type::PRI_DOUBLE:
-			return _T("(DOUBLE) ") + AS_STRING(Double);
-		case PrimativeValue::Type::PRI_INTEGER:
-			return _T("(INTEGER) ") + AS_STRING(Integer);
-		case PrimativeValue::Type::PRI_STRING:
-			return _T("(STRING) ") + *String;
+    string_type Describe()
+    {
+        switch (Type)
+        {
+        case PrimativeValue::Type::PRI_BOOL:
+            return Bool ? _T("(BOOL) true") : _T("(BOOL) false");
+        case PrimativeValue::Type::PRI_DOUBLE:
+            return _T("(DOUBLE) ") + AS_STRING(Double);
+        case PrimativeValue::Type::PRI_INTEGER:
+            return _T("(INTEGER) ") + AS_STRING(Integer);
+        case PrimativeValue::Type::PRI_STRING:
+            return _T("(STRING) ") + *String;
         case PrimativeValue::Type::PRI_ARRAY:
         {
-			string_stream stream;
+            string_stream stream;
             stream << _T("(ARRAY) ");
 
             if (Array != nullptr && !Array->empty())
@@ -163,8 +163,8 @@ struct PrimativeValue {
         }
         }
 
-		return _T("(empty)");
-	}
+        return _T("(empty)");
+    }
     
     operator string_type ()
     {
@@ -183,36 +183,36 @@ struct PrimativeValue {
         }
     }
 
-	PrimativeValue* Clone()
-	{
-		switch (Type)
-		{
-			case PrimativeValue::Type::PRI_BOOL:
-				return new PrimativeValue(Bool);
-			case PrimativeValue::Type::PRI_DOUBLE:
-				return new PrimativeValue(Double);
-			case PrimativeValue::Type::PRI_INTEGER:
-				return new PrimativeValue(Integer);
-			case PrimativeValue::Type::PRI_STRING:
-				return new PrimativeValue(*String);
-			case PrimativeValue::Type::PRI_ARRAY:
-			{
-				auto* returnValue = new PrimativeValue();
-				returnValue->SetArray(new std::vector<PrimativeValue*>());
+    PrimativeValue* Clone()
+    {
+        switch (Type)
+        {
+            case PrimativeValue::Type::PRI_BOOL:
+                return new PrimativeValue(Bool);
+            case PrimativeValue::Type::PRI_DOUBLE:
+                return new PrimativeValue(Double);
+            case PrimativeValue::Type::PRI_INTEGER:
+                return new PrimativeValue(Integer);
+            case PrimativeValue::Type::PRI_STRING:
+                return new PrimativeValue(*String);
+            case PrimativeValue::Type::PRI_ARRAY:
+            {
+                auto* returnValue = new PrimativeValue();
+                returnValue->SetArray(new std::vector<PrimativeValue*>());
 
-				if (Array != nullptr && !Array->empty())
-				{
-					for (int i = 0; i < Array->size(); ++i) {
-						returnValue->Array->push_back(Array->at(i)->Clone());
-					}
-				}
+                if (Array != nullptr && !Array->empty())
+                {
+                    for (int i = 0; i < Array->size(); ++i) {
+                        returnValue->Array->push_back(Array->at(i)->Clone());
+                    }
+                }
 
-				return returnValue;
-			}
-		}
+                return returnValue;
+            }
+        }
 
-		return nullptr;
-	}
+        return nullptr;
+    }
 
     void SetInteger(int value) { Integer = value; Type = Type::PRI_INTEGER; }
     void SetDouble(double value) { Double = value; Type = Type::PRI_DOUBLE; }
@@ -222,8 +222,8 @@ struct PrimativeValue {
         Type = Type::PRI_STRING;
     }
     void SetBool(bool value) { Bool = value; Type = Type::PRI_BOOL; }
-	void SetArray(std::vector<PrimativeValue*>* value) { Array = value; Type = Type::PRI_ARRAY; }
-	void SetDictionary(std::unordered_map<string_type, PrimativeValue*>* value) { Dictionary = value; Type = Type::PRI_DICTIONARY; }
+    void SetArray(std::vector<PrimativeValue*>* value) { Array = value; Type = Type::PRI_ARRAY; }
+    void SetDictionary(std::unordered_map<string_type, PrimativeValue*>* value) { Dictionary = value; Type = Type::PRI_DICTIONARY; }
     void SetNull() { Integer = 0; Type = Type::PRI_NULL; }
 
     bool IsInteger() { return Type == Type::PRI_INTEGER; }
@@ -263,24 +263,24 @@ struct PrimativeValue {
         }
     }
 
-	Any* AsAny()
-	{
-		switch (this->Type)
-		{
-		case PrimativeValue::Type::PRI_BOOL:
-			return new Any(this->Bool);
-			break;
+    Any* AsAny()
+    {
+        switch (this->Type)
+        {
+        case PrimativeValue::Type::PRI_BOOL:
+            return new Any(this->Bool);
+            break;
 
-		case PrimativeValue::Type::PRI_DOUBLE:
-			return new Any(this->Double);
-			break;
+        case PrimativeValue::Type::PRI_DOUBLE:
+            return new Any(this->Double);
+            break;
 
-		case PrimativeValue::Type::PRI_INTEGER:
-			return new Any(this->Integer);
-			break;
+        case PrimativeValue::Type::PRI_INTEGER:
+            return new Any(this->Integer);
+            break;
 
-		case PrimativeValue::Type::PRI_STRING:
-			return new Any(*this->String);
+        case PrimativeValue::Type::PRI_STRING:
+            return new Any(*this->String);
                 break;
                 
             case PrimativeValue::Type::PRI_ARRAY:
@@ -297,22 +297,22 @@ struct PrimativeValue {
             case PrimativeValue::Type::PRI_DICTIONARY:
                 return new Any(*this->Dictionary);
                 break;
-		}
+        }
 
-		return new Any();
-	}
+        return new Any();
+    }
 
-	void FromAny(Any& any)
-	{
-		if (any.is<int>())
-			this->SetInteger(any.cast<int>());
-		else if (any.is<bool>())
-			this->SetBool(any.cast<bool>());
-		else if (any.is<string_type>())
-			this->SetString(any.cast<string_type>());
-		else if (any.is<double>())
-			this->SetDouble(any.cast<double>());
-	}
+    void FromAny(Any& any)
+    {
+        if (any.is<int>())
+            this->SetInteger(any.cast<int>());
+        else if (any.is<bool>())
+            this->SetBool(any.cast<bool>());
+        else if (any.is<string_type>())
+            this->SetString(any.cast<string_type>());
+        else if (any.is<double>())
+            this->SetDouble(any.cast<double>());
+    }
 
     PrimativeValue & operator=(const PrimativeValue &rhs)
     {

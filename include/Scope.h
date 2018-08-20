@@ -22,7 +22,7 @@ protected:
 private:
     Scope* baseScope { nullptr };
     std::unordered_map<string_type, PrimativeValue*> variables;
-	std::unordered_map<string_type, PrimativeValue*>::iterator variablesEnd;
+    std::unordered_map<string_type, PrimativeValue*>::iterator variablesEnd;
 };
 
 

@@ -27,8 +27,8 @@ class Backend {
 public:
     virtual void Prepare(std::shared_ptr<std::vector<Ast*>> asts) = 0;
     virtual PrimativeValue* Execute() = 0;
-	virtual void Execute(std::vector<char_type> const & opcodes) = 0;
-	virtual void Compile(std::vector<char_type> & opcodes) = 0;
+    virtual void Execute(std::vector<char_type> const & opcodes) = 0;
+    virtual void Compile(std::vector<char_type> & opcodes) = 0;
 };
 
 template <class T>

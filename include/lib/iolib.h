@@ -13,7 +13,7 @@ Value readLine(vm_system* vm);
 
 class IOLibInit {
 public:
-	IOLibInit();
+    IOLibInit();
 };
 
 #endif //EASYLANG_IOLIB_H

@@ -38,14 +38,14 @@ static void SplitEnumArgs(const char* szArgs, std::string Array[], int nMax)
 
 #define INIT_BEGIN namespace\
 {\
-	class __init\
-	{\
-	public:\
-		__init()\
-		{
+    class __init\
+    {\
+    public:\
+        __init()\
+        {
 #define INIT_END }\
-	};\
-	__init init;\
+    };\
+    __init init;\
 }
 
 
