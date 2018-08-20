@@ -33,12 +33,12 @@
 #define FUNC_END()
 #endif
 
-#define STORE(index, obj) FUNC_BEGIN() *(currentStore->variables + (index)) = obj; FUNC_END()
-#define LOAD(index) ((vm_object) currentStore[ index ])
+#define STORE(index, obj) FUNC_BEGIN() CHECK_FOR_MAKE_DIRTY((*(currentStore->variables + (index)))); *(currentStore->variables + (index)) = obj; FUNC_END()
 
-//#define CHECK_FOR_MAKE_DIRTY(obj) if (IS_OBJ(obj)) AS_OBJ(obj)->MakeDirty();
+#define CHECK_FOR_MAKE_DIRTY(obj) if (IS_OBJ(obj)) AS_OBJ(obj)->MakeDirty();
+#define INCREASE_REF_COUNTER(obj) if (IS_OBJ(obj)) { ++AS_OBJ(obj)->RefCounter; }
 
-#define GSTORE(index, obj) FUNC_BEGIN() *(globalStore.variables + (index)) = obj; FUNC_END()
+#define GSTORE(index, obj) FUNC_BEGIN() CHECK_FOR_MAKE_DIRTY((*(globalStore.variables + (index)))); *(globalStore.variables + (index)) = obj; FUNC_END()
 #define GLOAD(index) (globalStore.variables[ index ])
 
 
@@ -50,25 +50,33 @@
 #define POP() (currentStack[--stackIndex])
 #define POP_VALUE() (currentStack[--stackIndex])
 #define POP_AS(type) AS_BOOL(currentStack[--stackIndex])
-#define SET(obj) currentStack[stackIndex - 1] = obj
 
-#define CHECK_FOR_MAKE_DIRTY() if (IS_OBJ(currentStack[stackIndex])) AS_OBJ(currentStack[stackIndex])->MakeDirty();
-
-#define PUSH_WITH_INIT(obj) CHECK_FOR_MAKE_DIRTY(); currentStack [ stackIndex ] = GET_VALUE_FROM_OBJ(new vm_object( obj )) ; PRINT_STACK(); ++ stackIndex;
-#define PUSH_WITH_EMPTY() CHECK_FOR_MAKE_DIRTY(); currentStack [ stackIndex ] = NULL_VAL ; PRINT_STACK(); ++ stackIndex;
-#define PUSH_WITH_ASSIGN(obj) CHECK_FOR_MAKE_DIRTY(); currentStack [ stackIndex ] = obj ; PRINT_STACK(); ++ stackIndex;
-#define PUSH_WITH_ASSIGN_INT(obj) CHECK_FOR_MAKE_DIRTY(); currentStack [ stackIndex ] = numberToValue( obj ) ; PRINT_STACK(); ++ stackIndex;
-#define LOAD_AND_PUSH(index) FUNC_BEGIN() { currentStack[stackIndex] = *(currentStore->variables + index );\
-    PRINT_STACK(); \
-    ++ stackIndex; } FUNC_END()
+#define PUSH_WITH_INIT(obj) CHECK_FOR_MAKE_DIRTY(currentStack [ stackIndex ]); currentStack [ stackIndex ] = GET_VALUE_FROM_OBJ(new vm_object( obj )) ; PRINT_STACK(); ++ stackIndex;
+#define PUSH_WITH_EMPTY() CHECK_FOR_MAKE_DIRTY(currentStack [ stackIndex ]); currentStack [ stackIndex ] = NULL_VAL ; PRINT_STACK(); ++ stackIndex;
+#define PUSH_WITH_ASSIGN(obj) CHECK_FOR_MAKE_DIRTY(currentStack [ stackIndex ]); currentStack [ stackIndex ] = obj ; PRINT_STACK(); ++ stackIndex;
+#define PUSH_WITH_ASSIGN_INT(obj) CHECK_FOR_MAKE_DIRTY(currentStack [ stackIndex ]); currentStack [ stackIndex ] = numberToValue( obj ) ; PRINT_STACK(); ++ stackIndex;
+#define LOAD_AND_PUSH(index) \
+FUNC_BEGIN() \
+{\
+	INCREASE_REF_COUNTER((*(currentStore->variables + index )));\
+	CHECK_FOR_MAKE_DIRTY(currentStack[stackIndex]);\
+	currentStack[stackIndex] = *(currentStore->variables + index );\
+    PRINT_STACK();\
+    ++ stackIndex;\
+} FUNC_END()
 
 #define STACK_DINC() PRINT_AND_CHECK_STACK(); -- stackIndex ;
 #define GET_VALUE(index) currentStack[stackIndex - index ]
+#define SET_VALUE(index, obj) CHECK_FOR_MAKE_DIRTY(currentStack [ stackIndex - index ]); currentStack[ stackIndex - index ] = obj ; PRINT_STACK();
 
 #define GLOAD_PRE(index) opt_GLOAD_##index:\
 ++code;\
-PRINT_OPCODE();\
-PUSH_WITH_ASSIGN(GLOAD( index ));\
+{\
+	PRINT_OPCODE();\
+	Value value = GLOAD( index );\
+	INCREASE_REF_COUNTER(value);\
+	PUSH_WITH_ASSIGN(value);\
+}\
 GOTO_OPCODE();
 
 #define GSTORE_PRE(index) opt_GSTORE_##index:\
@@ -264,7 +272,7 @@ namespace
             return left == right;
 
         if (IS_NUM(left) && IS_NUM(right))
-            return left == right;
+        	return left == right;
 
         if ((IS_BOOL(left) && IS_NUM(right)) ||
             (IS_BOOL(right) && IS_NUM(left)))
@@ -295,7 +303,7 @@ namespace
 			return status;
 		}
 
-        
+
         if (IS_NULL(right) && IS_NULL(left))
             return TRUE_VAL;
 
@@ -322,9 +330,13 @@ namespace
             Value right = GET_VALUE(1);
 
             if (IS_NUM(left) && IS_NUM(right))
-                GET_VALUE(2) = numberToValue(valueToNumber(left) + valueToNumber(right));
-            else if (IS_BOOL(left) && IS_BOOL(right))
-                GET_VALUE(2) = AS_BOOL(left) || AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+            {
+				SET_VALUE(2, numberToValue(valueToNumber(left) + valueToNumber(right)));
+			}
+			else if (IS_BOOL(left) && IS_BOOL(right))
+			{
+				SET_VALUE(2, AS_BOOL(left) || AS_BOOL(right) ? TRUE_VAL : FALSE_VAL);
+			}
 			else if (IS_STRING(right) || IS_STRING(left))
 			{
 				bool deleteLeftStr = false;
@@ -341,7 +353,7 @@ namespace
 				std::memcpy(newStr + leftLen, rightStr, rightLen);
 				newStr[leftLen + rightLen] = '\0';
 
-				GET_VALUE(2) = GET_VALUE_FROM_OBJ(new vm_object(newStr));
+				SET_VALUE(2, GET_VALUE_FROM_OBJ(new vm_object(newStr)));
 
 				if (deleteLeftStr)
 					delete[] leftStr;
@@ -350,7 +362,9 @@ namespace
 					delete[] rightStr;
 			}
             else
-                GET_VALUE(2) = NULL_VAL;
+			{
+				SET_VALUE(2, NULL_VAL);
+			}
 
             STACK_DINC();
         }
@@ -366,11 +380,17 @@ namespace
             Value right = GET_VALUE(1);
 
             if (IS_NUM(left) && IS_NUM(right))
-                GET_VALUE(2) = numberToValue(valueToNumber(left) - valueToNumber(right));
+			{
+				SET_VALUE(2, numberToValue(valueToNumber(left) - valueToNumber(right)));
+			}
             else if (IS_BOOL(left) && IS_BOOL(right))
-                GET_VALUE(2) = AS_BOOL(left) && AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+			{
+				SET_VALUE(2, AS_BOOL(left) && AS_BOOL(right) ? TRUE_VAL : FALSE_VAL);
+			}
             else
-                GET_VALUE(2) = NULL_VAL;
+			{
+				SET_VALUE(2, NULL_VAL);
+			}
 
             STACK_DINC();
         }
@@ -386,9 +406,13 @@ namespace
 			Value right = GET_VALUE(1);
 
 			if (IS_NUM(left) && IS_NUM(right))
-				GET_VALUE(2) = numberToValue(valueToNumber(left) * valueToNumber(right));
+			{
+				SET_VALUE(2, numberToValue(valueToNumber(left) * valueToNumber(right)));
+			}
 			else if (IS_BOOL(left) && IS_BOOL(right))
-				GET_VALUE(2) = AS_BOOL(left) || AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+			{
+				SET_VALUE(2, AS_BOOL(left) || AS_BOOL(right) ? TRUE_VAL : FALSE_VAL);
+			}
             else if ((IS_STRING(right) && IS_NUM(left)) ||
                      (IS_STRING(left) && IS_NUM(right)))
 			{
@@ -414,13 +438,16 @@ namespace
                     std::memcpy(newStr + (numLen * i), strValue, numLen);
 
                 newStr[(numLen * numValue)] = '\0';
-				GET_VALUE(2) = GET_VALUE_FROM_OBJ(new vm_object(newStr));
+				SET_VALUE(2, GET_VALUE_FROM_OBJ(new vm_object(newStr)));
+				delete[] newStr;
 
                 if (deleteStr)
                     delete[] strValue;
 			}
 			else
-				GET_VALUE(2) = NULL_VAL;
+			{
+				SET_VALUE(2, NULL_VAL);
+			}
 
 			STACK_DINC();
 		}
@@ -436,11 +463,17 @@ namespace
 			Value right = GET_VALUE(1);
 
 			if (IS_NUM(left) && IS_NUM(right))
-				GET_VALUE(2) = numberToValue(valueToNumber(left) / valueToNumber(right));
+			{
+				SET_VALUE(2, numberToValue(valueToNumber(left) / valueToNumber(right)));
+			}
 			else if (IS_BOOL(left) && IS_BOOL(right))
-				GET_VALUE(2) = AS_BOOL(left) || AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+			{
+				SET_VALUE(2, AS_BOOL(left) || AS_BOOL(right) ? TRUE_VAL : FALSE_VAL);
+			}
 			else
-				GET_VALUE(2) = NULL_VAL;
+			{
+				SET_VALUE(2, NULL_VAL);
+			}
 
 			STACK_DINC();
 		}
@@ -452,7 +485,7 @@ namespace
 		PRINT_OPCODE();
 		FUNC_BEGIN()
 		{
-			GET_VALUE(2) = is_equal() ? TRUE_VAL : FALSE_VAL;
+			SET_VALUE(2, is_equal() ? TRUE_VAL : FALSE_VAL);
 			STACK_DINC();
 		}
 		FUNC_END();
@@ -463,7 +496,7 @@ namespace
 		PRINT_OPCODE();
 		FUNC_BEGIN()
 		{
-			GET_VALUE(2) = is_equal() ? FALSE_VAL : TRUE_VAL;
+			SET_VALUE(2, is_equal() ? FALSE_VAL : TRUE_VAL);
 			STACK_DINC();
 		}
 		FUNC_END();
@@ -477,11 +510,17 @@ namespace
 			Value right = GET_VALUE(1);
 
 			if (IS_NUM(left) && IS_NUM(right))
-				GET_VALUE(2) = valueToNumber(left) < valueToNumber(right) ? TRUE_VAL : FALSE_VAL;
+			{
+				SET_VALUE(2, valueToNumber(left) < valueToNumber(right) ? TRUE_VAL : FALSE_VAL);
+			}
 			else if (IS_BOOL(left) && IS_BOOL(right))
-				GET_VALUE(2) = AS_BOOL(left) < AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+			{
+				SET_VALUE(2, AS_BOOL(left) < AS_BOOL(right) ? TRUE_VAL : FALSE_VAL);
+			}
 			else
-				GET_VALUE(2) = NULL_VAL;
+			{
+				SET_VALUE(2, NULL_VAL);
+			}
 
 			STACK_DINC();
 		}
@@ -495,11 +534,17 @@ namespace
 			Value right = GET_VALUE(1);
 
 			if (IS_NUM(left) && IS_NUM(right))
-				GET_VALUE(2) = valueToNumber(left) <= valueToNumber(right) ? TRUE_VAL : FALSE_VAL;
+			{
+				SET_VALUE(2, valueToNumber(left) <= valueToNumber(right) ? TRUE_VAL : FALSE_VAL);
+			}
 			else if (IS_BOOL(left) && IS_BOOL(right))
-				GET_VALUE(2) = AS_BOOL(left) <= AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+			{
+				SET_VALUE(2, AS_BOOL(left) <= AS_BOOL(right) ? TRUE_VAL : FALSE_VAL);
+			}
 			else
-				GET_VALUE(2) = NULL_VAL;
+			{
+				SET_VALUE(2, NULL_VAL);
+			}
 
 			STACK_DINC();
 		}
@@ -513,11 +558,17 @@ namespace
 			Value right = GET_VALUE(1);
 
 			if (IS_NUM(left) && IS_NUM(right))
-				GET_VALUE(2) = valueToNumber(left) > valueToNumber(right) ? TRUE_VAL : FALSE_VAL;
+			{
+				SET_VALUE(2, valueToNumber(left) > valueToNumber(right) ? TRUE_VAL : FALSE_VAL);
+			}
 			else if (IS_BOOL(left) && IS_BOOL(right))
-				GET_VALUE(2) = AS_BOOL(left) > AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+			{
+				SET_VALUE(2, AS_BOOL(left) > AS_BOOL(right) ? TRUE_VAL : FALSE_VAL);
+			}
 			else
-				GET_VALUE(2) = NULL_VAL;
+			{
+				SET_VALUE(2, NULL_VAL);
+			}
 
 			STACK_DINC();
 		}
@@ -531,11 +582,17 @@ namespace
 			Value right = GET_VALUE(1);
 
 			if (IS_NUM(left) && IS_NUM(right))
-				GET_VALUE(2) = valueToNumber(left) >= valueToNumber(right) ? TRUE_VAL : FALSE_VAL;
+			{
+				SET_VALUE(2, valueToNumber(left) >= valueToNumber(right) ? TRUE_VAL : FALSE_VAL);
+			}
 			else if (IS_BOOL(left) && IS_BOOL(right))
-				GET_VALUE(2) = AS_BOOL(left) >= AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+			{
+				SET_VALUE(2, AS_BOOL(left) >= AS_BOOL(right) ? TRUE_VAL : FALSE_VAL);
+			}
 			else
-				GET_VALUE(2) = NULL_VAL;
+			{
+				SET_VALUE(2, NULL_VAL);
+			}
 
 			STACK_DINC();
 		}
@@ -549,7 +606,7 @@ namespace
             Value left = GET_VALUE(2);
             Value right = GET_VALUE(1);
 
-            GET_VALUE(2) = AS_BOOL(left) && AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+            SET_VALUE(2, AS_BOOL(left) && AS_BOOL(right) ? TRUE_VAL : FALSE_VAL);
             STACK_DINC()
         }
         FUNC_END()
@@ -563,7 +620,7 @@ namespace
             Value left = GET_VALUE(2);
             Value right = GET_VALUE(1);
 
-            GET_VALUE(2) = AS_BOOL(left) || AS_BOOL(right) ? TRUE_VAL : FALSE_VAL;
+            SET_VALUE(2, AS_BOOL(left) || AS_BOOL(right) ? TRUE_VAL : FALSE_VAL);
             STACK_DINC()
         }
         FUNC_END()
@@ -588,7 +645,7 @@ namespace
 			PUSH_WITH_INIT(array);
 		}
 		GOTO_OPCODE();
-	
+
 	opt_INITEMPTYARRAY:
 		++code;
 		PRINT_OPCODE();
@@ -746,11 +803,17 @@ namespace
 			Value val = GET_VALUE(1);
 
 			if (IS_NUM(val))
-				GET_VALUE(1) = numberToValue(valueToNumber(val) * -1);
+			{
+				SET_VALUE(1, numberToValue(valueToNumber(val) * -1));
+			}
 			else if (IS_BOOL(val))
-				GET_VALUE(1) = AS_BOOL(val) ? FALSE_VAL : TRUE_VAL;
+			{
+				SET_VALUE(1, AS_BOOL(val) ? FALSE_VAL : TRUE_VAL);
+			}
 			else
-				GET_VALUE(1) = val;
+			{
+				SET_VALUE(1, val);
+			}
 		}
 		GOTO_OPCODE();
 
@@ -761,11 +824,17 @@ namespace
 			Value val = GET_VALUE(1);
 
 			if (IS_NUM(val))
-				GET_VALUE(1) = numberToValue(valueToNumber(val) + 1);
+			{
+				SET_VALUE(1, numberToValue(valueToNumber(val) + 1));
+			}
 			else if (IS_BOOL(val))
-				GET_VALUE(1) = AS_BOOL(val) ? FALSE_VAL : TRUE_VAL;
+			{
+				SET_VALUE(1, AS_BOOL(val) ? FALSE_VAL : TRUE_VAL);
+			}
 			else
-				GET_VALUE(1) = val;
+			{
+				SET_VALUE(1, val);
+			}
 		}
 		GOTO_OPCODE();
 
@@ -776,11 +845,17 @@ namespace
 			Value val = GET_VALUE(1);
 
 			if (IS_NUM(val))
-				GET_VALUE(1) = numberToValue(valueToNumber(val) - 1);
+			{
+				SET_VALUE(1, numberToValue(valueToNumber(val) - 1));
+			}
 			else if (IS_BOOL(val))
-				GET_VALUE(1) = AS_BOOL(val) ? FALSE_VAL : TRUE_VAL;
+			{
+				SET_VALUE(1, AS_BOOL(val) ? FALSE_VAL : TRUE_VAL);
+			}
 			else
-				GET_VALUE(1) = val;
+			{
+				SET_VALUE(1, val);
+			}
 		}
 		GOTO_OPCODE();
 
@@ -837,8 +912,12 @@ namespace
 
 	opt_GLOAD:
 		++code;
-		PRINT_OPCODE();
-		PUSH_WITH_ASSIGN(GLOAD(*++code));
+		{
+			PRINT_OPCODE();
+			Value value = GLOAD(*++code);
+			INCREASE_REF_COUNTER(value);
+			PUSH_WITH_ASSIGN(value);
+		}
 		GOTO_OPCODE();
 
     GLOAD_PRE(0);
@@ -1019,7 +1098,7 @@ namespace
 
 
     opt_EMPTY:
-        ++code; 
+        ++code;
         PRINT_OPCODE();
         PUSH_WITH_ASSIGN(NULL_VAL);
         GOTO_OPCODE();
@@ -1040,6 +1119,7 @@ namespace
 
 			chars[integer.Int] = '\0';
 			PUSH_WITH_INIT(chars);
+			delete[] chars;
 		}
 		GOTO_OPCODE();
 
@@ -1094,7 +1174,7 @@ namespace
 		return;
 
 	initSystem:
-		void** testCodes = gotoAddresses; // this dummy codes used by vc++ 
+		void** testCodes = gotoAddresses; // this dummy codes used by vc++
 		STORE_ADDRESS(0 /*OPT_HALT*/, opt_HALT);
 		STORE_ADDRESS(1 /*OPT_ADD*/, opt_ADD);
 		STORE_ADDRESS(2 /*OPT_SUB*/, opt_SUB);
@@ -1277,19 +1357,23 @@ namespace
 
             case vm_inst::OPT_CALL_NATIVE:
 			{
+				++code;
 				vm_int_t integer;
 				integer.Int = 0;
-				ASSIGN_1(integer.Chars, code);
-				index += 1;
+				ASSIGN_4(integer.Chars, code);
+				index += 4;
 				index += integer.Int;
 
 				char_type * chars = new char_type[integer.Int + 1];
-				for (int i = integer.Int - 1; i >= 0; --i)
-					chars[i] = *++code;
+				for (int i = 0; i < integer.Int; ++i)
+				{
+					chars[i] = *code;
+					++code;
+				}
 
 				chars[integer.Int] = '\0';
-
 				console_out << _T(" \"") << chars << _T("\"");
+				--code;
 			}
 			break;
 
@@ -1474,7 +1558,7 @@ void vm_gc::Set(vm_object* newObject) {
 
 void vm_gc::MakeDirty(vm_object* obj)
 {
-    if (obj->IsDeleted == false)
+    if (obj->RefCounter-- == 0 && obj->IsDeleted == false)
     {
         ++DirtyItems;
         obj->IsDeleted = true;

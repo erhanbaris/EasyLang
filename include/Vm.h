@@ -153,31 +153,42 @@ public:
 		Type = vm_object_type::EMPTY;
         IsDeleted = false;
         NextObject = nullptr;
+		RefCounter = 1;
         vm_gc::Set(this);
 	}
 
 	~vm_object()
 	{
 		if (Type == vm_object_type::STR)
-			delete (char_type*)Pointer;
+			delete[] (char_type*)Pointer;
+		else if (Type == vm_object_type::ARRAY)
+			delete (vm_array*)Pointer;
 	}
 
     vm_object(char_type* b)
     {
-        Pointer = b;
+		size_t totalLen = strlen(b);
+		Pointer = new char_type[totalLen + 1];
+		memcpy(Pointer, b, totalLen);
+		((char_type*)Pointer)[totalLen] = 0;
+
         Type = vm_object_type::STR;
         NextObject = nullptr;
         IsDeleted = false;
+		RefCounter = 1;
         vm_gc::Set(this);
     }
 
 	vm_object(string_type const & b)
 	{
-		Pointer = new char_type[b.size()];
-		memcpy(Pointer, b.c_str(), b.size());
+		size_t totalLen = b.size();
+		Pointer = new char_type[totalLen + 1];
+		memcpy(Pointer, b.c_str(), totalLen);
+		((char_type*)Pointer)[totalLen] = 0;
 		Type = vm_object_type::STR;
         NextObject = nullptr;
         IsDeleted = false;
+		RefCounter = 1;
         vm_gc::Set(this);
 	}
 
@@ -187,23 +198,16 @@ public:
 		Type = vm_object_type::ARRAY;
         NextObject = nullptr;
         IsDeleted = false;
+		RefCounter = 1;
         vm_gc::Set(this);
 	}
-
-	static vm_object* CreateFromString(char_type* b)
-	{
-		vm_object* obj = new vm_object;
-		obj->Type = vm_object::vm_object_type::STR;
-		obj->Pointer = b;
-		return obj;
-	}
-
 
     void MakeDirty()
     {
         vm_gc::MakeDirty(this);
     }
 
+    size_t RefCounter;
 	vm_object_type Type;
     bool IsDeleted;
     vm_object* NextObject;
@@ -247,8 +251,12 @@ public:
 	
 	~vm_array()
 	{
-		/*if (Array != nullptr)
-			delete[] Array;*/
+		for (int i = 0; i < Indicator; ++i) {
+			if (IS_OBJ((Array[i])))
+				delete AS_OBJ(Array[i]);
+		}
+
+		delete[] Array;
 	}
 };
 

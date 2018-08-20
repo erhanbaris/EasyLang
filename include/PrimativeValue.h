@@ -163,7 +163,7 @@ struct PrimativeValue {
         }
         }
 
-		return _T("(NULL)");
+		return _T("(empty)");
 	}
     
     operator string_type ()
