@@ -15,10 +15,10 @@
 
 class VmEasyEngine: public EasyEngine<StandartTokinizer, AstParser, VmBackend> {
 public:
-	VmEasyEngine() : EasyEngine()
-	{
+    VmEasyEngine() : EasyEngine()
+    {
 
-	}
+    }
 };
 
 #endif //EASYLANG_VMEASYENGINE_H

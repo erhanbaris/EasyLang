@@ -49,16 +49,16 @@ public:
                 ++line;
                 continue;
             }
-			else if (ch == '_' && (chNext == '\0' || (isSymbol(ch) == false && ch >= '0' && ch <= '9')))
-			{
-				auto* opt = new OperatorToken;
-				opt->Value = EASY_OPERATOR_TYPE ::UNDERLINE;
+            else if (ch == '_' && (chNext == '\0' || (isSymbol(ch) == false && ch >= '0' && ch <= '9')))
+            {
+                auto* opt = new OperatorToken;
+                opt->Value = EASY_OPERATOR_TYPE ::UNDERLINE;
                 opt->Line = line;
                 opt->Current = column;
-				TokenList->push_back(reinterpret_cast<Token*>(opt));
-				increase();
-				continue;
-			}
+                TokenList->push_back(reinterpret_cast<Token*>(opt));
+                increase();
+                continue;
+            }
             else if (isSymbol(ch))
             {
                 getSymbol();
@@ -125,23 +125,23 @@ public:
             increase();
         }
 
-		auto data = stream.str();
-		if (Keywords.find(data) != KeywordsEnd)
-		{
-			auto *token = new KeywordToken;
-			token->Value = Keywords.find(data)->second;
+        auto data = stream.str();
+        if (Keywords.find(data) != KeywordsEnd)
+        {
+            auto *token = new KeywordToken;
+            token->Value = Keywords.find(data)->second;
             token->Line = line;
             token->Current = column - data.size();
-			TokenList->push_back(reinterpret_cast<Token*>(token));
-		}
-		else
-		{
-			auto *token = new SymbolToken;
-			token->Value = stream.str();
+            TokenList->push_back(reinterpret_cast<Token*>(token));
+        }
+        else
+        {
+            auto *token = new SymbolToken;
+            token->Value = stream.str();
             token->Line = line;
             token->Current = column - data.size();
-			TokenList->push_back(reinterpret_cast<Token*>(token));
-		}
+            TokenList->push_back(reinterpret_cast<Token*>(token));
+        }
     }
 
     void getVariable()
@@ -205,8 +205,8 @@ public:
             increase();
         }
 
-		if (ch != '"')
-			throw ParseError(_T("Text has ends with '\"'"));
+        if (ch != '"')
+            throw ParseError(_T("Text has ends with '\"'"));
 
         auto *token = new TextToken;
         token->Value = stream.str();
@@ -275,13 +275,13 @@ public:
                     break;
 
                 case '=':
-					if (chNext == '=')
-					{
-						opt->Value = EASY_OPERATOR_TYPE::EQUAL;
-						increase();
-					}
-					else 
-						opt->Value = EASY_OPERATOR_TYPE::ASSIGN;
+                    if (chNext == '=')
+                    {
+                        opt->Value = EASY_OPERATOR_TYPE::EQUAL;
+                        increase();
+                    }
+                    else 
+                        opt->Value = EASY_OPERATOR_TYPE::ASSIGN;
                     break;
 
                 case '>':
@@ -332,33 +332,33 @@ public:
                     opt->Value = EASY_OPERATOR_TYPE::SQUARE_BRACKET_START;
                     break;
 
-				case ']':
-					opt->Value = EASY_OPERATOR_TYPE::SQUARE_BRACKET_END;
-					break;   
-				
-				case '!':
+                case ']':
+                    opt->Value = EASY_OPERATOR_TYPE::SQUARE_BRACKET_END;
+                    break;   
+                
+                case '!':
                     if (chNext == '=')
                     {
                         opt->Value = EASY_OPERATOR_TYPE::NOT_EQUAL;
                         increase();
                     }
                     else
-						opt->Value = EASY_OPERATOR_TYPE::INDEXER;
-						break;
+                        opt->Value = EASY_OPERATOR_TYPE::INDEXER;
+                        break;
 
-				case ',':
-					opt->Value = EASY_OPERATOR_TYPE::COMMA;
-					break;
+                case ',':
+                    opt->Value = EASY_OPERATOR_TYPE::COMMA;
+                    break;
 
-				case '&':
-					if (chNext == '&')
-					{
-						opt->Value = EASY_OPERATOR_TYPE::AND;
-						increase();
-					}
-					else
-						throw ParseError(_T("Unknown char '&'"));
-					break;
+                case '&':
+                    if (chNext == '&')
+                    {
+                        opt->Value = EASY_OPERATOR_TYPE::AND;
+                        increase();
+                    }
+                    else
+                        throw ParseError(_T("Unknown char '&'"));
+                    break;
 
                 case '|':
                     if (chNext == '|')
@@ -382,7 +382,7 @@ public:
 
 
                 default:
-					throw ParseError(_T("Unknown char"));
+                    throw ParseError(_T("Unknown char"));
                     break;
             }
 
@@ -477,7 +477,7 @@ public:
         errorMessage = message;
     }
 
-	char_type getChar()
+    char_type getChar()
     {
         if (!isEnd())
             return content[index];
@@ -501,7 +501,7 @@ StandartTokinizer::StandartTokinizer()
 
 StandartTokinizer::~StandartTokinizer()
 {
-	delete impl;
+    delete impl;
 }
 
 void StandartTokinizer::Parse(string_type const & data, std::shared_ptr<std::vector<Token*>>Tokens)
@@ -519,44 +519,44 @@ void StandartTokinizer::Parse(string_type const & data, std::shared_ptr<std::vec
 
 void StandartTokinizer::Dump(std::shared_ptr <std::vector<Token *>> Tokens)
 {
-	auto TokenEnd = Tokens->cend();
+    auto TokenEnd = Tokens->cend();
 
-	for (auto it = Tokens->cbegin(); it != TokenEnd; ++it)
-	{
-		switch ((*it)->GetType())
-		{
-		case EASY_TOKEN_TYPE::TOKEN_DOUBLE:
-			console_out << _T("DOUBLE : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<DoubleToken*>(*it)->Value << std::endl;
-			break;
+    for (auto it = Tokens->cbegin(); it != TokenEnd; ++it)
+    {
+        switch ((*it)->GetType())
+        {
+        case EASY_TOKEN_TYPE::TOKEN_DOUBLE:
+            console_out << _T("DOUBLE : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<DoubleToken*>(*it)->Value << std::endl;
+            break;
 
-		case EASY_TOKEN_TYPE::TOKEN_INTEGER:
-			console_out << _T("INTEGER : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<IntegerToken*>(*it)->Value << std::endl;
-			break;
+        case EASY_TOKEN_TYPE::TOKEN_INTEGER:
+            console_out << _T("INTEGER : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<IntegerToken*>(*it)->Value << std::endl;
+            break;
 
-		case EASY_TOKEN_TYPE::TOKEN_OPERATOR:
-			console_out << _T("OPERATOR : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << EASY_OPERATOR_TYPEToString (reinterpret_cast<OperatorToken*>(*it)->Value) << std::endl;
-			break;
+        case EASY_TOKEN_TYPE::TOKEN_OPERATOR:
+            console_out << _T("OPERATOR : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << EASY_OPERATOR_TYPEToString (reinterpret_cast<OperatorToken*>(*it)->Value) << std::endl;
+            break;
 
-		case EASY_TOKEN_TYPE::TOKEN_SYMBOL:
-			console_out << _T("SYMBOL : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<SymbolToken*>(*it)->Value << std::endl;
-			break;
+        case EASY_TOKEN_TYPE::TOKEN_SYMBOL:
+            console_out << _T("SYMBOL : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<SymbolToken*>(*it)->Value << std::endl;
+            break;
 
-		case EASY_TOKEN_TYPE::TOKEN_TEXT:
-			console_out << _T("TEXT : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<TextToken*>(*it)->Value << std::endl;
-			break;
+        case EASY_TOKEN_TYPE::TOKEN_TEXT:
+            console_out << _T("TEXT : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<TextToken*>(*it)->Value << std::endl;
+            break;
 
-		case EASY_TOKEN_TYPE::TOKEN_VARIABLE:
-			console_out << _T("VARIABLE : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<VariableToken*>(*it)->Value << std::endl;
-			break;
+        case EASY_TOKEN_TYPE::TOKEN_VARIABLE:
+            console_out << _T("VARIABLE : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << reinterpret_cast<VariableToken*>(*it)->Value << std::endl;
+            break;
 
-		case EASY_TOKEN_TYPE::TOKEN_KEYWORD:
-			console_out << _T("KEYWORD : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << EASY_KEYWORD_TYPEToString(reinterpret_cast<KeywordToken*>(*it)->Value) << std::endl;
-			break;
+        case EASY_TOKEN_TYPE::TOKEN_KEYWORD:
+            console_out << _T("KEYWORD : ") << _T(" Line : ") << (*it)->Line << _T(" Column : ") << (*it)->Current << _T(" ") << EASY_KEYWORD_TYPEToString(reinterpret_cast<KeywordToken*>(*it)->Value) << std::endl;
+            break;
 
-		case EASY_TOKEN_TYPE::TOKEN_NONE:
-			break;
-		}
-	}
+        case EASY_TOKEN_TYPE::TOKEN_NONE:
+            break;
+        }
+    }
 }
 
 bool StandartTokinizer::HasError()

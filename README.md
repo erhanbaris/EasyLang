@@ -4,6 +4,7 @@ It is a programming language that has begun to be developed for testing purposes
 ![EasyLang](EasyLang.gif)
 
 ### Primative Types
+0. Empty
 1. Integer
 2. Double
 3. String
@@ -94,21 +95,21 @@ Result
 (STRING) 123
 ```
 
-### Function decleration
-##### Function decleration
-Singline decleration
+### Function declaration
+##### Function declaration
+Singline declaration
 ```
-func HelloWorld():string
+func HelloWorld()
     return "hello world"
 
-func SumTwoNumber(a:int, b:int):int
+func SumTwoNumber(a, b)
     return a + b
 ```
 
-Multiline decleration
+Multiline declaration
 ```
 
-func SumAndPrint(a:int, b:int):int
+func SumAndPrint(a, b)
 {
     sum = a + b
     io::print (sum)
@@ -159,17 +160,11 @@ for i in data1 to data5 then
 
 Fibonacci Code Example.
 ```
-func fibonacci(num:int):int
-{ 
-    if num == 0 then 
-        return 0
-
-    if num == 1 then 
-        return 1 
-        
-    left = fibonacci(num - 1)
-    right = fibonacci(num - 2) 
-    return left + right 
+func fibonacci(num)
+{
+    if num == 1 || num == 2 then
+        return 1
+    return fibonacci(num - 1) + fibonacci(num - 2)
 }
 
 fibonacci(10)
@@ -218,171 +213,176 @@ string io::readline()
 
 
 ### Virtual Machine
-Easy Language source code is interpreting but not converting opcode (yet). I am planning to convert codes to opcode. But it will take a time for developing VM.
+All codes compiles to opcodes and execute. Virtual machine is still developing and increasing performance.
 
 ##### VM Instruction Set
 ```
-iADD    : Sum last 2 int item
-iSUB    : Subtract last 2 int item
-iMUL    : Multiply the last two int item
-iDIV    : Divide the last two int item
+DELETE            : Delete item
+HALT              : Stop system
+OPT_EMPTY         : Empty type
 
-dADD    : Sum last 2 double item
-dSUB    : Subtract last 2 double item
-dMUL    : Multiply the last two double item
-dDIV    : Divide the last two double item
+ADD               : Sum last 2 item
+SUB               : Subtract last 2 item
+MUL               : Multiply the last two item
+DIV               : Divide the last two item
 
-//LOGIC
-EQ      : Is the last two item equal
-LT      : Little control for last two item
-LTE     : Little or equal control for last two item
-GT      : Greater control for last two item
-GTE     : Greater or equal control for last two item
-AND     : And operator
-OR      : Or operator
+EQ                : Pop last 2 item and check for equal then push bool status
+NOT_EQ            : Pop last 2 item and check for not equal then push bool status
+LT                : Pop last 2 item and check for lower then push bool status
+LTE               : Pop last 2 item and check for lower or equal then push bool status
+GT                : Pop last 2 item and check for greater then push bool status
+GTE               : Pop last 2 item and check for greater or equal then push bool status
+AND               : And logic for last 2 item and push bool status
+OR                : Or logic for last 2 item and push bool status
 
-DUP     : Dublicate last item
-POP     : Remove last item
+CONST_STR         : Push string value to stack
+CONST_INT         : Push int value to stack
+CONST_INT_0       : Push 0 to stack
+CONST_INT_1       : Push 1 to stack
+CONST_BOOL_TRUE   : Push true to stack
+CONST_BOOL_FALSE  : Push false to stack
+CONST_DOUBLE      : Push double value to stack
+CONST_DOUBLE_0    : Push 0.0 to stack
+CONST_DOUBLE_1    : Push 1.0 to stack
 
-iPUSH   : Push int
-dPUSH   : Push double
-bPUSH   : Push bool
-sPUSH   : Push string
-iPUSH_0 : Push int 0
-iPUSH_1 : Push int 1
-iPUSH_2 : Push int 2
-iPUSH_3 : Push int 3
-iPUSH_4 : Push int 4
-dPUSH_0 : Push double 0
-dPUSH_1 : Push double 1
-dPUSH_2 : Push double 2
-dPUSH_3 : Push double 3
-dPUSH_4 : Push double 4
-bPUSH_0 : Push false
-bPUSH_1 : Push true
+JMP               : Jump to address
+JIF               : If last item true then jump to address
+IF_EQ             : If last two items are equal then jump to address
+JNIF              : If last item false then jump to address
 
-// JUMP AND IF
-JMP     : Jump to address
-JIF     : If last item true then jump to address
-IF_EQ   : If last two items are equal then jump to address
-JNIF    : If last item false then jump to address
+INC               : Increment last item
+DEC               : Decrement last item
+NEG               : Make negative last item
 
-INC     : Increment last item
-DEC     : Decrement last item
+LOAD              : Load item from memory and push to stack
+LOAD_0            : Load item 0 from memory and push to stack
+LOAD_1            : Load item 1 from memory and push to stack
+LOAD_2            : Load item 2 from memory and push to stack
+LOAD_3            : Load item 3 from memory and push to stack
+LOAD_4            : Load item 4 from memory and push to stack
+LOAD_5            : Load item 5 from memory and push to stack
+LOAD_6            : Load item 6 from memory and push to stack
+LOAD_7            : Load item 7 from memory and push to stack
+LOAD_8            : Load item 8 from memory and push to stack
+LOAD_9            : Load item 9 from memory and push to stack
+LOAD_10           : Load item 10 from memory and push to stack
+LOAD_11           : Load item 11 from memory and push to stack
+LOAD_12           : Load item 12 from memory and push to stack
+LOAD_13           : Load item 13 from memory and push to stack
+LOAD_14           : Load item 14 from memory and push to stack
+LOAD_15           : Load item 15 from memory and push to stack
+LOAD_16           : Load item 16 from memory and push to stack
 
-//FOR LOCAL VARIABLE 
-LOAD    : Load item from memory and push to stack
-LOAD_0  : Load item 0 from memory and push to stack
-LOAD_1  : Load item 1 from memory and push to stack
-LOAD_2  : Load item 2 from memory and push to stack
-LOAD_3  : Load item 3 from memory and push to stack
-LOAD_4  : Load item 4 from memory and push to stack
-STORE   : Save item to memory and pop from stack
-STORE_0 : Save item 0 to memory and pop from stack
-STORE_1 : Save item 1 to memory and pop from stack
-STORE_2 : Save item 2 to memory and pop from stack
-STORE_3 : Save item 3 to memory and pop from stack
-STORE_4 : Save item 4 to memory and pop from stack
+STORE             : Save item to memory and pop from stack
+STORE_0           : Save item 0 to memory and pop from stack
+STORE_1           : Save item 1 to memory and pop from stack
+STORE_2           : Save item 2 to memory and pop from stack
+STORE_3           : Save item 3 to memory and pop from stack
+STORE_4           : Save item 4 to memory and pop from stack
+STORE_5           : Save item 5 to memory and pop from stack
+STORE_6           : Save item 6 to memory and pop from stack
+STORE_7           : Save item 7 to memory and pop from stack
+STORE_8           : Save item 8 to memory and pop from stack
+STORE_9           : Save item 9 to memory and pop from stack
+STORE_10          : Save item 10 to memory and pop from stack
+STORE_11          : Save item 11 to memory and pop from stack
+STORE_12          : Save item 12 to memory and pop from stack
+STORE_13          : Save item 13 to memory and pop from stack
+STORE_14          : Save item 14 to memory and pop from stack
+STORE_15          : Save item 15 to memory and pop from stack
+STORE_16          : Save item 16 to memory and pop from stack
 
-//FOR GLOBAL VARIABLE 
-GLOAD   : Load item from global memory and push to stack
-GLOAD_0 : Load item 0 from global memory and push to stack
-GLOAD_1 : Load item 1 from global memory and push to stack
-GLOAD_2 : Load item 2 from global memory and push to stack
-GLOAD_3 : Load item 3 from global memory and push to stack
-GLOAD_4 : Load item 4 from global memory and push to stack
-GSTORE  : Save item to global memory and pop from stack
-GSTORE_0: Save item 0 to global memory and pop from stack
-GSTORE_1: Save item 1 to global memory and pop from stack
-GSTORE_2: Save item 2 to global memory and pop from stack
-GSTORE_3: Save item 3 to global memory and pop from stack
-GSTORE_4: Save item 4 to global memory and pop from stack
+GLOAD             : Load item from global memory and push to stack
+GLOAD_0           : Load item 0 from global memory and push to stack
+GLOAD_1           : Load item 1 from global memory and push to stack
+GLOAD_2           : Load item 2 from global memory and push to stack
+GLOAD_3           : Load item 3 from global memory and push to stack
+GLOAD_4           : Load item 4 from global memory and push to stack
+GLOAD_5           : Load item 5 from global memory and push to stack
+GLOAD_6           : Load item 6 from global memory and push to stack
+GLOAD_7           : Load item 7 from global memory and push to stack
+GLOAD_8           : Load item 8 from global memory and push to stack
+GLOAD_9           : Load item 9 from global memory and push to stack
+GLOAD_10          : Load item 10 from global memory and push to stack
+GLOAD_11          : Load item 11 from global memory and push to stack
+GLOAD_12          : Load item 12 from global memory and push to stack
+GLOAD_13          : Load item 13 from global memory and push to stack
+GLOAD_14          : Load item 14 from global memory and push to stack
+GLOAD_15          : Load item 15 from global memory and push to stack
+GLOAD_16          : Load item 16 from global memory and push to stack
 
-//CONVERT
-I2D     : Int to double
-D2I     : Double to int
-I2B     : Int to bool
-B2I     : Bool to int
-D2B     : Double do bool
-B2D     : Bool to double
+GSTORE            : Save item to global memory and pop from stack
+GSTORE_0          : Save item 0 to global memory and pop from stack
+GSTORE_1          : Save item 1 to global memory and pop from stack
+GSTORE_2          : Save item 2 to global memory and pop from stack
+GSTORE_3          : Save item 3 to global memory and pop from stack
+GSTORE_4          : Save item 4 to global memory and pop from stack
+GSTORE_5          : Save item 5 to global memory and pop from stack
+GSTORE_6          : Save item 6 to global memory and pop from stack
+GSTORE_7          : Save item 7 to global memory and pop from stack
+GSTORE_8          : Save item 8 to global memory and pop from stack
+GSTORE_9          : Save item 9 to global memory and pop from stack
+GSTORE_10         : Save item 10 to global memory and pop from stack
+GSTORE_11         : Save item 11 to global memory and pop from stack
+GSTORE_12         : Save item 12 to global memory and pop from stack
+GSTORE_13         : Save item 13 to global memory and pop from stack
+GSTORE_14         : Save item 14 to global memory and pop from stack
+GSTORE_15         : Save item 15 to global memory and pop from stack
+GSTORE_16         : Save item 16 to global memory and pop from stack
 
-CALL    : Create new stack and jump to address
-RETURN  : Dispose current stack and jump to last CALL instruction address
+DUP               : Dublicate last item and push
+POP               : Pop last item from stack
+PUSH              : Push item to stack
+PRINT             : Print last item
 
-PRINT   : Print last item
-HALT    : Stop system
+CALL              : Create new stack and jump to address
+RETURN            : Dispose current stack and jump to last CALL instruction address
+
+CALL_NATIVE       : Call native(c/c++) method
+METHOD_DEF        : Method definition
+INITARRAY         : Initialize array with items
+INITDICT          : Initialize dictionary with items
+INDEX             : Get item from item
+INITEMPTYARRAY    : Initialize empty array
+APPEND	          : Append item to item
+
 ```
 
 ##### Vm Usage Example (Fibonacci)
 ```cpp
-/*
-func fibonacci(num:int):int
-{ 
-    if num == 0 then 
-        return 0
-
-    if num == 1 then 
-        return 1 
-        
-    left = fibonacci(num - 1)
-    right = fibonacci(num - 2) 
-    return left + right 
+func fibonacci(num)
+{
+    if num == 1 || num == 2 then
+        return 1
+    return fibonacci(num - 1) + fibonacci(num - 2)
 }
-*/
 
-vm_system vm;
-std::vector<size_t> codes{
-    iPUSH, 10, // number
-    iCALL, 5,  // jump and create new stack
-    iHALT,
+------------DUMP OPCODES------------
+>>> 0. OPT_JMP 55
+>>> 5. OPT_METHOD_DEF "fibonacci"
+>>> 19. OPT_STORE_0
+>>> 20. OPT_LOAD_0
+>>> 21. OPT_CONST_INT_1
+>>> 22. OPT_EQ
+>>> 23. OPT_LOAD_0
+>>> 24. OPT_CONST_INT 2
+>>> 29. OPT_EQ
+>>> 30. OPT_OR
+>>> 31. OPT_JIF 2
+>>> 36. OPT_CONST_INT_1
+>>> 37. OPT_RETURN
+>>> 38. OPT_LOAD_0
+>>> 39. OPT_CONST_INT_1
+>>> 40. OPT_SUB
+>>> 41. OPT_CALL -27
+>>> 46. OPT_LOAD_0
+>>> 47. OPT_CONST_INT 2
+>>> 52. OPT_SUB
+>>> 53. OPT_CALL -39
+>>> 58. OPT_ADD
+>>> 59. OPT_RETURN
+>>> 60. OPT_HALT
 
-    // Init variables
-    iSTORE_0, // save number
+------------DUMP OPCODES------------
 
-    /*
-    if num = 0 then 
-        return 0 
-    */
-    iLOAD_0,  // get num
-    iPUSH, 0,
-    iEQ,
-    iJIF, 15,
-    iPUSH, 0,
-    iRETURN,  // return 0
-
-    /*
-    if num = 1 then 
-        return 1 
-    */
-    iLOAD, 0, // get num
-    iPUSH, 1,
-    iEQ,
-    iJIF, 25,
-    iPUSH, 1,
-    iRETURN,  // return 1
-
-    /* 
-    left = fibonacci(num - 1)
-    */
-    iLOAD_0,  // get num
-    iPUSH, 1,
-    iSUB,     // num - 1
-    iCALL, 5, // fibonacci(num - 1)
-    
-    /*
-    right = fibonacci(num - 2) 
-    */
-    iLOAD_0,  // get num
-    iPUSH, 2,
-    iSUB,     // num - 2
-    iCALL, 5, // fibonacci(num - 1)
-    
-    /*
-    return left + right 
-    */
-    iADD,     
-    iRETURN
-};
-vm.execute(&codes[0], codes.size());
-size_t result = vm.getUInt(); // 55
 ```

@@ -8,12 +8,12 @@
 #include "PrimativeValue.h"
 #include "Vm.h"
 
-vm_object* print(vm_system* vm);
-vm_object* readLine(vm_system* vm);
+Value print(vm_system* vm);
+Value readLine(vm_system* vm);
 
 class IOLibInit {
 public:
-	IOLibInit();
+    IOLibInit();
 };
 
 #endif //EASYLANG_IOLIB_H

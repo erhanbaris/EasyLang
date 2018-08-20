@@ -24,7 +24,7 @@ static void SplitEnumArgs(const char* szArgs, std::string Array[], int nMax)
     }
 };
 #define DECLARE_ENUM(ename, ...) \
-    enum ename { __VA_ARGS__, MAX_NUMBER_OF_##ename }; \
+    enum ename : char { __VA_ARGS__, MAX_NUMBER_OF_##ename }; \
     static std::string ename##Strings[MAX_NUMBER_OF_##ename]; \
     static const char* ename##ToString(ename e) { \
         if (ename##Strings[0].empty()) { SplitEnumArgs(#__VA_ARGS__, ename##Strings, MAX_NUMBER_OF_##ename); } \
@@ -38,14 +38,14 @@ static void SplitEnumArgs(const char* szArgs, std::string Array[], int nMax)
 
 #define INIT_BEGIN namespace\
 {\
-	class __init\
-	{\
-	public:\
-		__init()\
-		{
+    class __init\
+    {\
+    public:\
+        __init()\
+        {
 #define INIT_END }\
-	};\
-	__init init;\
+    };\
+    __init init;\
 }
 
 

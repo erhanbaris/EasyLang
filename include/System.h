@@ -20,19 +20,19 @@ typedef void(*MethodCallback)(std::shared_ptr<std::vector<PrimativeValue*> > con
 
 class FunctionInfo {
 public:
-	FunctionDefinetionAst* FunctionAst { nullptr };
-	std::function<void(std::unordered_map<string_type, PrimativeValue*> const &, PrimativeValue *, Scope & scope)> Callback;
+    FunctionDefinetionAst* FunctionAst { nullptr };
+    std::function<void(std::unordered_map<string_type, PrimativeValue*> const &, PrimativeValue *, Scope & scope)> Callback;
 };
 
 class System {
 public:
-	static std::unordered_map<string_type, FunctionInfo*> UserMethods;
+    static std::unordered_map<string_type, FunctionInfo*> UserMethods;
 
-	static std::unordered_map<string_type, std::unordered_map<string_type, Caller*>> SystemPackages;
-	static std::unordered_map<string_type, VmMethod> SystemMethods;
+    static std::unordered_map<string_type, std::unordered_map<string_type, Caller*>> SystemPackages;
+    static std::unordered_map<string_type, VmMethod> SystemMethods;
 
-	static std::unordered_map<string_type, std::unordered_map<string_type, FunctionInfo*>> UserPackages;
-	static void WarmUp();
+    static std::unordered_map<string_type, std::unordered_map<string_type, FunctionInfo*>> UserPackages;
+    static void WarmUp();
 };
 
 #endif //EASYLANG_SYSTEM_H

@@ -7,9 +7,9 @@
 class ParseError : public std::runtime_error
 {
 public:
-	ParseError(string_type const & message) : std::runtime_error(AS_CHAR(message.c_str()))
-	{
-	}
+    ParseError(string_type const & message) : std::runtime_error(AS_CHAR(message.c_str()))
+    {
+    }
 };
 
 class ConvertError : public std::runtime_error
@@ -31,9 +31,9 @@ public:
 class NullException : public std::runtime_error
 {
 public:
-	NullException(string_type const & message) : std::runtime_error(AS_CHAR(message.c_str()))
-	{
-	}
+    NullException(string_type const & message) : std::runtime_error(AS_CHAR(message.c_str()))
+    {
+    }
 };
 
 #endif //EASYLANG_EXCEPTIONS_H

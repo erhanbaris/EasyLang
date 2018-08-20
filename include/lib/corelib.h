@@ -8,20 +8,21 @@
 #include "PrimativeValue.h"
 #include <Vm.h>
 
-vm_object* toInt(vm_system*type);
-vm_object* toDouble(vm_system*type);
-vm_object* toString(vm_system*type);
-vm_object* toBool(vm_system*type);
-vm_object* isEmpty(vm_system*type);
+Value toInt(vm_system*type);
+Value toDouble(vm_system*type);
+Value toString(vm_system*type);
+Value toBool(vm_system*type);
+Value isEmpty(vm_system*type);
 
-vm_object* isInt(vm_system*type);
-vm_object* isDouble(vm_system*type);
-vm_object* isString(vm_system*type);
-vm_object* isBool(vm_system*type);
-vm_object* isArray(vm_system*type);
-vm_object* isDictionary(vm_system*type);
-vm_object* length(vm_system*data);
-vm_object* exitApp(vm_system*type);
+Value isInt(vm_system*type);
+Value isDouble(vm_system*type);
+Value isString(vm_system*type);
+Value isBool(vm_system*type);
+Value isArray(vm_system*type);
+Value isDictionary(vm_system*type);
+Value length(vm_system*data);
+Value exitApp(vm_system*type);
+Value gcClean(vm_system*type);
 
 class CoreLibInit {
 public:

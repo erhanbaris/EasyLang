@@ -15,10 +15,10 @@
 
 class LLVMEasyEngine: public EasyEngine<StandartTokinizer, AstParser, LLVMBackend> {
 public:
-	LLVMEasyEngine() : EasyEngine()
-	{
+    LLVMEasyEngine() : EasyEngine()
+    {
 
-	}
+    }
 };
 
 #endif //EASYLANG_LLVMEASYENGINE_H

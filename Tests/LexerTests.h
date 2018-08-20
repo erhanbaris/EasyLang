@@ -214,10 +214,10 @@ TEST_CASE( "Package lexer test" ) {
 }
 
 TEST_CASE("for i to 1 to 10 then core::print i") {
-	Tokinizer* parser = new StandartTokinizer();
-	auto tokens = make_shared<std::vector<Token*>>();
-	parser->Parse(_T("for i to 1 to 10 then core::print i"), tokens);
-	REQUIRE(tokens->size() == 12);
+    Tokinizer* parser = new StandartTokinizer();
+    auto tokens = make_shared<std::vector<Token*>>();
+    parser->Parse(_T("for i to 1 to 10 then core::print i"), tokens);
+    REQUIRE(tokens->size() == 12);
 }
 
 #endif
