@@ -91,7 +91,7 @@ PrimativeValue* InterpreterBackend::getData(Ast* ast, Scope & scope)
     }
     break;
 
-    case EASY_AST_TYPE::FUNCTION_DECLERATION:
+    case EASY_AST_TYPE::FUNCTION_DECLARATION:
     {
         FunctionDefinetionAst* func = static_cast<FunctionDefinetionAst*>(ast);
         FunctionInfo* info = new FunctionInfo;

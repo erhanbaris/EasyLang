@@ -163,7 +163,7 @@ BACKEND_ITEM_TYPE LLVMBackend::detectType(Ast* ast)
             return BACKEND_ITEM_TYPE::EMPTY;
             break;
             
-        case EASY_AST_TYPE::FUNCTION_DECLERATION:
+        case EASY_AST_TYPE::FUNCTION_DECLARATION:
             //static_cast<FunctionDefinetionAst*>(ast)->accept(this);
             break;
             
@@ -279,7 +279,7 @@ llvm::Value* LLVMBackend::getAstItem(Ast* ast)
         static_cast<BlockAst*>(ast)->accept(this);
         break;
 
-    case EASY_AST_TYPE::FUNCTION_DECLERATION:
+    case EASY_AST_TYPE::FUNCTION_DECLARATION:
         static_cast<FunctionDefinetionAst*>(ast)->accept(this);
         break;
 

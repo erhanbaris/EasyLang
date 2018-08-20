@@ -4,6 +4,7 @@ It is a programming language that has begun to be developed for testing purposes
 ![EasyLang](EasyLang.gif)
 
 ### Primative Types
+0. Empty
 1. Integer
 2. Double
 3. String
@@ -94,9 +95,9 @@ Result
 (STRING) 123
 ```
 
-### Function decleration
-##### Function decleration
-Singline decleration
+### Function declaration
+##### Function declaration
+Singline declaration
 ```
 func HelloWorld()
     return "hello world"
@@ -105,7 +106,7 @@ func SumTwoNumber(a, b)
     return a + b
 ```
 
-Multiline decleration
+Multiline declaration
 ```
 
 func SumAndPrint(a, b)
@@ -212,12 +213,13 @@ string io::readline()
 
 
 ### Virtual Machine
-Easy Language source code is interpreting but not converting opcode (yet). I am planning to convert codes to opcode. But it will take a time for developing VM.
+All codes compiles to opcodes and execute. Virtual machine is still developing and increasing performance.
 
 ##### VM Instruction Set
 ```
 DELETE            : Delete item
 HALT              : Stop system
+OPT_EMPTY         : Empty type
 
 ADD               : Sum last 2 item
 SUB               : Subtract last 2 item
@@ -348,68 +350,39 @@ APPEND	          : Append item to item
 
 ##### Vm Usage Example (Fibonacci)
 ```cpp
-/*
 func fibonacci(num)
 {
     if num == 1 || num == 2 then
         return 1
     return fibonacci(num - 1) + fibonacci(num - 2)
 }
-*/
 
-vm_system vm;
-std::vector<size_t> codes{
-    iPUSH, 10, // number
-    iCALL, 5,  // jump and create new stack
-    iHALT,
+------------DUMP OPCODES------------
+>>> 0. OPT_JMP 55
+>>> 5. OPT_METHOD_DEF "fibonacci"
+>>> 19. OPT_STORE_0
+>>> 20. OPT_LOAD_0
+>>> 21. OPT_CONST_INT_1
+>>> 22. OPT_EQ
+>>> 23. OPT_LOAD_0
+>>> 24. OPT_CONST_INT 2
+>>> 29. OPT_EQ
+>>> 30. OPT_OR
+>>> 31. OPT_JIF 2
+>>> 36. OPT_CONST_INT_1
+>>> 37. OPT_RETURN
+>>> 38. OPT_LOAD_0
+>>> 39. OPT_CONST_INT_1
+>>> 40. OPT_SUB
+>>> 41. OPT_CALL -27
+>>> 46. OPT_LOAD_0
+>>> 47. OPT_CONST_INT 2
+>>> 52. OPT_SUB
+>>> 53. OPT_CALL -39
+>>> 58. OPT_ADD
+>>> 59. OPT_RETURN
+>>> 60. OPT_HALT
 
-    // Init variables
-    iSTORE_0, // save number
+------------DUMP OPCODES------------
 
-    /*
-    if num = 0 then 
-        return 0 
-    */
-    iLOAD_0,  // get num
-    iPUSH, 0,
-    iEQ,
-    iJIF, 15,
-    iPUSH, 0,
-    iRETURN,  // return 0
-
-    /*
-    if num = 1 then 
-        return 1 
-    */
-    iLOAD, 0, // get num
-    iPUSH, 1,
-    iEQ,
-    iJIF, 25,
-    iPUSH, 1,
-    iRETURN,  // return 1
-
-    /* 
-    left = fibonacci(num - 1)
-    */
-    iLOAD_0,  // get num
-    iPUSH, 1,
-    iSUB,     // num - 1
-    iCALL, 5, // fibonacci(num - 1)
-    
-    /*
-    right = fibonacci(num - 2) 
-    */
-    iLOAD_0,  // get num
-    iPUSH, 2,
-    iSUB,     // num - 2
-    iCALL, 5, // fibonacci(num - 1)
-    
-    /*
-    return left + right 
-    */
-    iADD,     
-    iRETURN
-};
-vm.execute(&codes[0], codes.size());
-size_t result = vm.getUInt(); // 55
 ```

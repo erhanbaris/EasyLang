@@ -518,7 +518,7 @@ TEST_CASE( "Function asd test" ) {
         astParser->Parse(tokens, asts);
         
         REQUIRE(asts->size() == 1);
-        REQUIRE(asts->at(0)->GetType() == EASY_AST_TYPE::FUNCTION_DECLERATION);
+        REQUIRE(asts->at(0)->GetType() == EASY_AST_TYPE::FUNCTION_DECLARATION);
         
         auto* decl = static_cast<FunctionDefinetionAst*>(asts->at(0));
         REQUIRE(decl->Name == _T("test"));
@@ -536,7 +536,7 @@ TEST_CASE( "Function asd test" ) {
         astParser->Parse(tokens, asts);
 
         REQUIRE(asts->size() == 1);
-        REQUIRE(asts->at(0)->GetType() == EASY_AST_TYPE::FUNCTION_DECLERATION);
+        REQUIRE(asts->at(0)->GetType() == EASY_AST_TYPE::FUNCTION_DECLARATION);
 
         auto* decl = static_cast<FunctionDefinetionAst*>(asts->at(0));
         REQUIRE(decl->Name == _T("test"));
@@ -554,7 +554,7 @@ TEST_CASE( "Function asd test" ) {
         astParser->Parse(tokens, asts);
         
         REQUIRE(asts->size() == 1);
-        REQUIRE(asts->at(0)->GetType() == EASY_AST_TYPE::FUNCTION_DECLERATION);
+        REQUIRE(asts->at(0)->GetType() == EASY_AST_TYPE::FUNCTION_DECLARATION);
         
         auto* decl = static_cast<FunctionDefinetionAst*>(asts->at(0));
         REQUIRE(decl->Name == _T("test"));
@@ -576,7 +576,7 @@ TEST_CASE( "Function asd test" ) {
         astParser->Parse(tokens, asts);
 
         REQUIRE(asts->size() == 1);
-        REQUIRE(asts->at(0)->GetType() == EASY_AST_TYPE::FUNCTION_DECLERATION);
+        REQUIRE(asts->at(0)->GetType() == EASY_AST_TYPE::FUNCTION_DECLARATION);
 
         auto* decl = static_cast<FunctionDefinetionAst*>(asts->at(0));
         REQUIRE(decl->Name == _T("test"));

@@ -308,6 +308,65 @@ PrimativeValue* VmBackend::getPrimative(Ast* ast)
     return primative;
 }
 
+PrimativeValue* VmBackend::getExpressionAstItem(Ast* ast)
+{
+    if (ast == nullptr)
+        return nullptr;
+
+    switch (ast->GetType())
+    {
+        case EASY_AST_TYPE::UNARY:
+        {
+            auto* unary = static_cast<UnaryAst*>(ast);
+            getAstItem(unary->Data);
+            unary->accept(this);
+            return nullptr;
+        }
+            break;
+
+        case EASY_AST_TYPE::PRIMATIVE:
+            static_cast<PrimativeAst*>(ast)->accept(this);
+            break;
+
+        case EASY_AST_TYPE::PARENTHESES_BLOCK:
+            static_cast<ParenthesesGroupAst*>(ast)->accept(this);
+            break;
+
+        case EASY_AST_TYPE::EXPR_STATEMENT:
+            static_cast<ExprStatementAst*>(ast)->accept(this);
+            break;
+
+        case EASY_AST_TYPE::VARIABLE:
+            static_cast<VariableAst*>(ast)->accept(this);
+            break;
+
+        case EASY_AST_TYPE::BLOCK:
+            static_cast<BlockAst*>(ast)->accept(this);
+            break;
+
+        case EASY_AST_TYPE::FUNCTION_CALL:
+            static_cast<FunctionCallAst*>(ast)->accept(this);
+            break;
+
+        case EASY_AST_TYPE::BINARY_OPERATION:
+            static_cast<BinaryAst*>(ast)->accept(this);
+            break;
+
+        case EASY_AST_TYPE::STRUCT_OPERATION:
+            static_cast<StructAst*>(ast)->accept(this);
+            break;
+
+        case EASY_AST_TYPE::CONTROL_OPERATION:
+            static_cast<ControlAst*>(ast)->accept(this);
+            break;
+
+        case EASY_AST_TYPE::NONE:
+            break;
+    }
+
+    return nullptr;
+}
+
 PrimativeValue* VmBackend::getAstItem(Ast* ast)
 {
     if (ast == nullptr)
@@ -315,49 +374,16 @@ PrimativeValue* VmBackend::getAstItem(Ast* ast)
 
     switch (ast->GetType())
     {
-    case EASY_AST_TYPE::UNARY:
-    {
-        auto* unary = static_cast<UnaryAst*>(ast);
-        getAstItem(unary->Data);
-        unary->accept(this);
-        return nullptr;
-    }
-    break;
-
-    case EASY_AST_TYPE::PRIMATIVE:
-        static_cast<PrimativeAst*>(ast)->accept(this);
-        break;
-
     case EASY_AST_TYPE::RETURN:
         static_cast<ReturnAst*>(ast)->accept(this);
-        break;
-
-    case EASY_AST_TYPE::PARENTHESES_BLOCK:
-        static_cast<ParenthesesGroupAst*>(ast)->accept(this);
-        break;
-
-    case EASY_AST_TYPE::EXPR_STATEMENT:
-        static_cast<ExprStatementAst*>(ast)->accept(this);
-        break;
-
-    case EASY_AST_TYPE::VARIABLE:
-        static_cast<VariableAst*>(ast)->accept(this);
         break;
 
     case EASY_AST_TYPE::ASSIGNMENT:
         static_cast<AssignmentAst*>(ast)->accept(this);
         break;
 
-    case EASY_AST_TYPE::BLOCK:
-        static_cast<BlockAst*>(ast)->accept(this);
-        break;
-
-    case EASY_AST_TYPE::FUNCTION_DECLERATION:
+    case EASY_AST_TYPE::FUNCTION_DECLARATION:
         static_cast<FunctionDefinetionAst*>(ast)->accept(this);
-        break;
-
-    case EASY_AST_TYPE::FUNCTION_CALL:
-        static_cast<FunctionCallAst*>(ast)->accept(this);
         break;
 
     case EASY_AST_TYPE::IF_STATEMENT:
@@ -367,24 +393,9 @@ PrimativeValue* VmBackend::getAstItem(Ast* ast)
     case EASY_AST_TYPE::FOR:
         static_cast<ForStatementAst*>(ast)->accept(this);
         break;
-
-    case EASY_AST_TYPE::BINARY_OPERATION:
-        static_cast<BinaryAst*>(ast)->accept(this);
-        break;
-
-    case EASY_AST_TYPE::STRUCT_OPERATION:
-        static_cast<StructAst*>(ast)->accept(this);
-        break;
-
-    case EASY_AST_TYPE::CONTROL_OPERATION:
-        static_cast<ControlAst*>(ast)->accept(this);
-        break;
-
-    case EASY_AST_TYPE::NONE:
-        break;
     }
 
-    return nullptr;
+    return getExpressionAstItem(ast);
 }
 
 
@@ -903,8 +914,8 @@ void VmBackend::visit(BinaryAst* ast)
 
 void VmBackend::visit(StructAst* ast) 
 {
-    getAstItem(ast->Target);
-    getAstItem(ast->Source1);
+    getExpressionAstItem(ast->Target);
+    getExpressionAstItem(ast->Source1);
 
     switch (ast->Op)
     {

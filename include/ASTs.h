@@ -28,7 +28,7 @@ enum class EASY_AST_TYPE {
     BLOCK,
     PARENTHESES_BLOCK,
     FOR,
-    FUNCTION_DECLERATION,
+    FUNCTION_DECLARATION,
     RETURN,
     UNARY,
     EXPR_STATEMENT
@@ -299,8 +299,8 @@ public:
     string_type Name;
     std::vector<FunctionDefinetionArg*> Args;
     StmtAst* Body {nullptr};
-    FunctionDefinetionAst() { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; }
-    FunctionDefinetionAst(string_type const & name, std::vector<FunctionDefinetionArg*> & args, StmtAst* body) { Type = EASY_AST_TYPE::FUNCTION_DECLERATION; Name = name; Args = args; Body = body; }
+    FunctionDefinetionAst() { Type = EASY_AST_TYPE::FUNCTION_DECLARATION; }
+    FunctionDefinetionAst(string_type const & name, std::vector<FunctionDefinetionArg*> & args, StmtAst* body) { Type = EASY_AST_TYPE::FUNCTION_DECLARATION; Name = name; Args = args; Body = body; }
     string_type print(StmtVisitor<string_type>* visitor) override { return visitor->visit(this); }
     void accept(StmtVisitor<void>* visitor) override { visitor->visit(this); }
 
